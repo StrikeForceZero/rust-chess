@@ -38,8 +38,21 @@ mod tests {
             ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::King, BitBoard::from_value(bit_board::KING << BoardRank::Eight.as_shift_offset()))),
         ];
         let mut b = BitBoard::from_value(0);
+        // b.fill_diag_from_pos(BoardPosition::from(BoardFile::A, BoardRank::One));
+        // println!("----");
         b.fill_diag_from_pos(BoardPosition::from(BoardFile::A, BoardRank::One));
-        println!("{:064b}", b.bitmap().as_value());
-        println!("\n{}", b.as_multiline_str());
+        println!("----");
+        b.fill_diag_from_pos(BoardPosition::from(BoardFile::B, BoardRank::Two));
+        println!("----");
+        b.fill_diag_from_pos(BoardPosition::from(BoardFile::H, BoardRank::Five));
+        println!("----");
+        b.fill_diag_from_pos(BoardPosition::from(BoardFile::B, BoardRank::Five));
+        println!("----");
+        b.fill_diag_from_pos(BoardPosition::from(BoardFile::E, BoardRank::Four));
+        println!("----");
+        b.fill_diag_from_pos(BoardPosition::from(BoardFile::H, BoardRank::Eight));
+        // b.fill_diag_from_pos(BoardPosition::from(BoardFile::H, BoardRank::Eight));
+        // println!("{:064b}", b.bitmap().as_value());
+        // println!("\n{}", b.as_multiline_str());
     }
 }

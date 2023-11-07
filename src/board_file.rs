@@ -34,6 +34,18 @@ impl BoardFile {
             Self::H => 'H',
         }
     }
+    pub fn as_usize(&self) -> usize {
+        match self {
+            Self::A => 1,
+            Self::B => 2,
+            Self::C => 3,
+            Self::D => 4,
+            Self::E => 5,
+            Self::F => 6,
+            Self::G => 7,
+            Self::H => 8,
+        }
+    }
     pub fn as_zero_based_index(&self) -> usize {
         match self {
             Self::A => 0,

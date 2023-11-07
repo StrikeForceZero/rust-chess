@@ -1,6 +1,7 @@
-use std::ops;
+use std::{ops, usize};
 use bitmaps::Bitmap;
 use crate::board_file::BoardFile;
+use crate::board_position;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 
@@ -16,6 +17,8 @@ pub const FULL_RANK: u64 = 0b11111111;
 pub const FULL_FILE: u64 = 0b_00000001_00000001_00000001_00000001_00000001_00000001_00000001_00000001;
 pub const FULL_DIAG_RIGHT: u64 = 0b_10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001;
 pub const FULL_DIAG_LEFT: u64 = 0b_00000001_00000010_00000100_00001000_00010000_00100000_01000000_10000000;
+// 1 = 0b_10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001
+// 2 = 0b_00000000_10000000_01000000_00100000_00010000_00001000_00000100_00000010
 
 pub const PAWN: u64 =   0b11111111;
 pub const ROOK: u64 =   0b10000001;
@@ -54,13 +57,55 @@ impl BitBoard {
         self
     }
     pub fn fill_diag_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
+        let file_num = board_position.file().as_usize();
+        let rank_num = board_position.rank().as_usize();
         let file_shift = board_position.file().as_shift_offset();
         let rank_shift = board_position.rank().as_shift_offset();
-        let right_a: u64 = FULL_DIAG_RIGHT << (file_shift + rank_shift);
-        let right_b: u64 = FULL_DIAG_RIGHT >> (file_shift + rank_shift);
-        let left_a: u64 = FULL_DIAG_LEFT << (file_shift + rank_shift);
-        let left_b: u64 = FULL_DIAG_LEFT >> (file_shift + rank_shift);
-        let cross: u64 = left_a | left_b | right_a | right_b;
+        let index = file_shift + rank_shift;
+        let right_offset = file_num.abs_diff(rank_num);
+        let left_offset = (file_num + rank_num).abs_diff(9);
+
+
+        let mut left: u64 = FULL_DIAG_LEFT;
+        let mut right: u64 = FULL_DIAG_RIGHT;
+
+        if right_offset == 0 {
+            println!("right_shift_left: 0");
+        }
+        else if file_num < rank_num {
+            let right_shift_left = right_offset * 8;
+            println!("right_shift_left: {right_shift_left}");
+            right = right << right_shift_left;
+        } else {
+            let right_shift_right = right_offset * 8;
+            println!("right_shift_right: {right_shift_right}");
+            right = right >> right_shift_right;
+        };
+
+        if left_offset == 0 {
+            let left_shift_right = 0;
+            println!("left_shift_right: {left_shift_right}");
+            left = left >> left_shift_right;
+        } else if file_num < rank_num {
+            let left_shift_right = left_offset * 8;
+            println!("left_shift_right: {left_shift_right}");
+            left = left << left_shift_right;
+        } else {
+            let left_shift_left = left_offset * 8;
+            println!("left_shift_left: {left_shift_left}");
+            left = left >> left_shift_left;
+            if file_num > 4 {
+                left = left << index;
+            }
+        }
+
+
+        println!("index: {}, left_offset:{}, right_offset: {}, pos: {}", index, left_offset, right_offset, board_position);
+        println!("left:\n{}", BitBoard::from_value(left).as_multiline_str());
+        println!("right:\n{}", BitBoard::from_value(right).as_multiline_str());
+
+
+        let cross: u64 = left | right;
         *self.bitmap_mut() |= BitBoardData::from_value(cross);
         self
     }
@@ -68,6 +113,8 @@ impl BitBoard {
         let mut res = String::from(" ┌ABCDEFGH");
         for ix in 0..64 {
             if ix % 8 == 0 {
+                res.push('|');
+                res.push_str(ix.to_string().as_str());
                 res.push('\n');
                 res.push(BoardRank::from_zero_based_index(ix / 8).unwrap().as_char());
                 res.push('|');
@@ -78,6 +125,8 @@ impl BitBoard {
                 res.push(' ');
             }
         }
+        res.push('|');
+        res.push_str("64");
         res
     }
 }
