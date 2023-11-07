@@ -22,20 +22,6 @@ mod tests {
     use super::*;
     #[test]
     fn transposition() {
-        println!("{}", 7 - (BoardFile::H.as_zero_based_index() as i64 - BoardRank::One.as_zero_based_index() as i64) as i64 - 7);
-        println!("A2:{}", 7 - (BoardFile::A.as_zero_based_index() as i64 - BoardRank::Two.as_zero_based_index() as i64) as i64 - 7);
-        println!("B5:{}", 7 - (BoardFile::B.as_zero_based_index() as i64 - BoardRank::Five.as_zero_based_index() as i64) as i64 - 7);
-        println!("B2:{}", 7 - (BoardFile::B.as_zero_based_index() as i64 - BoardRank::Two.as_zero_based_index() as i64) as i64 - 7);
-        println!("C3:{}", 7 - (BoardFile::C.as_zero_based_index() as i64 - BoardRank::Three.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::H.as_zero_based_index() as i64 - BoardRank::Two.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::G.as_zero_based_index() as i64 - BoardRank::One.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::A.as_zero_based_index() as i64 - BoardRank::One.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::E.as_zero_based_index() as i64 - BoardRank::One.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::A.as_zero_based_index() as i64 - BoardRank::Eight.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::A.as_zero_based_index() as i64 - BoardRank::One.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::A.as_zero_based_index() as i64 - BoardRank::Three.as_zero_based_index() as i64) as i64 - 7);
-        println!("{}", 7 - (BoardFile::H.as_zero_based_index() as i64 - BoardRank::Seven.as_zero_based_index() as i64) as i64 - 7);
-
         println!("-7: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 7).as_multiline_str()); // h1
         println!("-6: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 6).as_multiline_str()); // g1 - h2
         println!("-5: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 5).as_multiline_str()); // f1 - h3
@@ -43,14 +29,14 @@ mod tests {
         println!("-3: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 3).as_multiline_str()); // d1 - h5
         println!("-2: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 2).as_multiline_str()); // c1 - h6
         println!("-1: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT >> 8 * 1).as_multiline_str()); // b1 - h7
-        println!("0: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT).as_multiline_str());          // a1 - h8
-        println!("1: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 1).as_multiline_str()); // a2 - g8
-        println!("2: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 2).as_multiline_str()); // a3 - f8
-        println!("3: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 3).as_multiline_str()); // a4 - e8
-        println!("4: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 4).as_multiline_str()); // a5 - d8
-        println!("5: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 5).as_multiline_str()); // a6 - c8
-        println!("6: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 6).as_multiline_str()); // a7 - b8
-        println!("7: \n{}", BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 7).as_multiline_str()); // a8
+        println!("0: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT).as_multiline_str());          // a1 - h8
+        println!("1: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 1).as_multiline_str()); // a2 - g8
+        println!("2: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 2).as_multiline_str()); // a3 - f8
+        println!("3: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 3).as_multiline_str()); // a4 - e8
+        println!("4: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 4).as_multiline_str()); // a5 - d8
+        println!("5: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 5).as_multiline_str()); // a6 - c8
+        println!("6: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 6).as_multiline_str()); // a7 - b8
+        println!("7: \n{}",  BitBoard::from_value(bit_board::FULL_DIAG_RIGHT << 8 * 7).as_multiline_str()); // a8
     }
     #[test]
     fn test() {

@@ -26,7 +26,6 @@ pub const QUEEN: u64 =  0b00001000;
 pub const KING: u64 =   0b00010000;
 
 const PLACES: usize = 7;
-const PLACES_I8: i8 = PLACES as i8;
 
 impl BitBoard {
     pub fn bitmap(&self) -> &BitBoardData {
@@ -61,9 +60,9 @@ impl BitBoard {
         let file_num = board_position.file().as_zero_based_index();
         let rank_num = board_position.rank().as_zero_based_index();
         let sum = file_num + rank_num;
-        let difference = file_num as i8 - rank_num as i8;
+        let difference = rank_num as i8 - file_num as i8;
         let left_offset = sum.abs_diff(PLACES);
-        let right_offset = PLACES_I8 - difference - PLACES_I8;
+        let right_offset = difference;
 
 
         let mut left: u64 = FULL_DIAG_LEFT;
