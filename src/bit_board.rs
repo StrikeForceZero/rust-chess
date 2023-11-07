@@ -60,9 +60,8 @@ impl BitBoard {
         let file_num = board_position.file().as_zero_based_index();
         let rank_num = board_position.rank().as_zero_based_index();
         let sum = file_num + rank_num;
-        let difference = rank_num as i8 - file_num as i8;
         let left_offset = sum.abs_diff(PLACES);
-        let right_offset = difference;
+        let right_offset = file_num.abs_diff(rank_num);
 
 
         let mut left: u64 = FULL_DIAG_LEFT;
@@ -80,8 +79,8 @@ impl BitBoard {
         }
 
         if right_offset != 0 {
-            let shift_amount = 8 * right_offset.abs();
-            if right_offset < 0 {
+            let shift_amount = 8 * right_offset;
+            if rank_num < file_num {
                 // negative offset shifts right
                 right >>= shift_amount;
             } else {
