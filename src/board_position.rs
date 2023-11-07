@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
 
 impl BoardPosition {

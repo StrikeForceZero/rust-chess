@@ -7,7 +7,7 @@ pub enum BoardRankError {
     InvalidNumber(usize),
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum BoardRank {
     One,
     Two,

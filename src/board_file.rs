@@ -9,7 +9,7 @@ pub enum BoardFileError {
     InvalidUsize(usize),
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum BoardFile {
     A,
     B,

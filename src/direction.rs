@@ -52,19 +52,16 @@ impl Direction {
             (None, _) | (_, None) => None,
         }
     }
-    pub fn get_next_pos_n(&self, from: BoardPosition, n: u8) -> Option<BoardPosition> {
+
+    pub fn get_next_pos_n(&self, mut from: BoardPosition, n: u8) -> Option<BoardPosition> {
         if n == 0 {
+            // TODO: warn for potentially wrong, yet valid usage
             panic!("n must be greater than 0");
         }
-        let mut n = n;
-        let mut final_pos: Option<BoardPosition> = Some(from);
-        while n > 0 {
-            let Some(pos) = final_pos
-                else { break; };
-            final_pos = self.get_next_pos(pos);
-            n -= 1;
+        for _ in 0..n {
+            from = self.get_next_pos(from)?;
         }
-        final_pos
+        Some(from)
     }
 }
 
@@ -103,5 +100,17 @@ impl DiagonalDirection {
             DiagonalDirection::SouthWest => Direction::SouthWest,
             DiagonalDirection::NorthWest => Direction::NorthWest,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::direction::Direction;
+    use crate::position::{A1, A2};
+
+    #[test]
+    fn direction() {
+        assert_eq!(Direction::East.get_next_pos_n(A1, 1).unwrap(), A2);
+        assert_eq!(Direction::East.get_next_pos_n(A1, 7).unwrap(), A2);
     }
 }
