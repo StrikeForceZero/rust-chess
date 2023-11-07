@@ -25,6 +25,9 @@ pub const BISHOP: u64 = 0b00100100;
 pub const QUEEN: u64 =  0b00001000;
 pub const KING: u64 =   0b00010000;
 
+const PLACES: usize = 7;
+const PLACES_I8: i8 = PLACES as i8;
+
 impl BitBoard {
     pub fn bitmap(&self) -> &BitBoardData {
         &self.0
@@ -57,33 +60,34 @@ impl BitBoard {
     pub fn fill_diag_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
         let file_num = board_position.file().as_zero_based_index();
         let rank_num = board_position.rank().as_zero_based_index();
-        let file_shift = board_position.file().as_shift_offset();
-        let rank_shift = board_position.rank().as_shift_offset();
-        let index = file_shift + rank_shift;
-        let right_offset = file_num.abs_diff(rank_num);
         let sum = file_num + rank_num;
         let difference = file_num as i8 - rank_num as i8;
-        let sum_less_than_seven = sum < 7;
-        let left_offset = (sum).abs_diff(7);
-        let right_offset = 7 - difference - 7;
+        let left_offset = sum.abs_diff(PLACES);
+        let right_offset = PLACES_I8 - difference - PLACES_I8;
 
 
         let mut left: u64 = FULL_DIAG_LEFT;
         let mut right: u64 = FULL_DIAG_RIGHT;
 
         if left_offset != 0 {
-            if sum_less_than_seven {
-                left >>= 8 * left_offset;
+            let shift_amount = 8 * left_offset;
+            if sum < PLACES {
+                // negative offset shifts right
+                left >>= shift_amount;
             } else {
-                left <<= 8 * left_offset;
+                // positive offset shifts left
+                left <<= shift_amount;
             }
         }
 
-        if right_offset != 0 || file_num == rank_num {
-            if difference < 0 {
-                right >>= 8 * right_offset.abs();
+        if right_offset != 0 {
+            let shift_amount = 8 * right_offset.abs();
+            if right_offset < 0 {
+                // negative offset shifts right
+                right >>= shift_amount;
             } else {
-                right >>= 8 * right_offset.abs();
+                // positive offset shifts left
+                right <<= shift_amount;
             }
         }
 
