@@ -9,7 +9,7 @@ pub enum BoardFileError {
     InvalidUsize(usize),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BoardFile {
     A,
     B,
@@ -85,6 +85,31 @@ impl BoardFile {
             6 => Self::G,
             7 => Self::H,
             _ => return Err(BoardFileError::InvalidUsize(n))
+        })
+    }
+    pub fn next(&self) -> Option<Self> {
+        Some(match self {
+            Self::A => Self::B,
+            Self::B => Self::C,
+            Self::C => Self::D,
+            Self::D => Self::E,
+            Self::E => Self::F,
+            Self::F => Self::G,
+            Self::G => Self::H,
+            Self::H => return None,
+        })
+    }
+
+    pub fn prev(&self) -> Option<Self> {
+        Some(match self {
+            Self::A => return None,
+            Self::B => Self::A,
+            Self::C => Self::B,
+            Self::D => Self::C,
+            Self::E => Self::D,
+            Self::F => Self::E,
+            Self::G => Self::F,
+            Self::H => Self::G,
         })
     }
 }

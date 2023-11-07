@@ -7,7 +7,7 @@ pub enum BoardRankError {
     InvalidNumber(usize),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum BoardRank {
     One,
     Two,
@@ -83,6 +83,31 @@ impl BoardRank {
             6 => Self::Seven,
             7 => Self::Eight,
             _ => return Err(BoardRankError::InvalidNumber(n))
+        })
+    }
+    pub fn next(&self) -> Option<Self> {
+        Some(match self {
+            Self::One => Self::Two,
+            Self::Two => Self::Three,
+            Self::Three => Self::Four,
+            Self::Four => Self::Five,
+            Self::Five => Self::Six,
+            Self::Six => Self::Seven,
+            Self::Seven => Self::Eight,
+            Self::Eight => return None,
+        })
+    }
+
+    pub fn prev(&self) -> Option<Self> {
+        Some(match self {
+            Self::One => return None,
+            Self::Two => Self::One,
+            Self::Three => Self::Two,
+            Self::Four => Self::Three,
+            Self::Five => Self::Four,
+            Self::Six => Self::Five,
+            Self::Seven => Self::Six,
+            Self::Eight => Self::Seven,
         })
     }
 }

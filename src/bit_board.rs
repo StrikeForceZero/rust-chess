@@ -67,26 +67,24 @@ impl BitBoard {
         let mut left: u64 = FULL_DIAG_LEFT;
         let mut right: u64 = FULL_DIAG_RIGHT;
 
-        if left_offset != 0 {
-            let shift_amount = 8 * left_offset;
-            if sum < PLACES {
-                // negative offset shifts right
-                left >>= shift_amount;
-            } else {
-                // positive offset shifts left
-                left <<= shift_amount;
-            }
+        // if left_offset != 0:
+        let shift_amount = 8 * left_offset;
+        if sum < PLACES {
+            // negative offset shifts right
+            left >>= shift_amount;
+        } else {
+            // positive offset shifts left
+            left <<= shift_amount;
         }
 
-        if right_offset != 0 {
-            let shift_amount = 8 * right_offset;
-            if rank_num < file_num {
-                // negative offset shifts right
-                right >>= shift_amount;
-            } else {
-                // positive offset shifts left
-                right <<= shift_amount;
-            }
+        // if right_offset != 0:
+        let shift_amount = 8 * right_offset;
+        if rank_num < file_num {
+            // negative offset shifts right
+            right >>= shift_amount;
+        } else {
+            // positive offset shifts left
+            right <<= shift_amount;
         }
 
         let cross: u64 = left | right;

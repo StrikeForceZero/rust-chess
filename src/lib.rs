@@ -8,6 +8,9 @@ mod fen;
 mod board_rank;
 mod board_file;
 mod board_position;
+mod direction;
+mod castle_side;
+mod position;
 
 #[cfg(test)]
 mod tests {

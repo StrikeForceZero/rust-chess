@@ -2,8 +2,8 @@ use std::fmt::{Display, Formatter};
 use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
 
-#[derive(Copy, Clone)]
-pub struct BoardPosition(BoardFile, BoardRank);
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct BoardPosition(pub BoardFile, pub BoardRank);
 
 impl BoardPosition {
     pub fn file(&self) -> &BoardFile {
@@ -24,6 +24,7 @@ impl BoardPosition {
 
 impl Display for BoardPosition {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}{}", self.file(), self.rank())
+        let BoardPosition(file, rank) = self;
+        write!(f, "{file}{rank}")
     }
 }
