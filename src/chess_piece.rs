@@ -1,6 +1,7 @@
-use crate::bit_board;
+use crate::{bit_board, chess_piece_move_rulesets};
 use crate::bit_board::BitBoard;
 use crate::board_rank::{BLACK_BACK_RANK, BLACK_PAWNN_RANK, WHITE_BACK_RANK, WHITE_PAWNN_RANK};
+use crate::chess_piece_move_ruleset::ChessPieceMoveRuleset;
 use crate::color::Color;
 use crate::piece::Piece;
 
@@ -60,7 +61,7 @@ impl ChessPiece {
             Self::BlackPawn => Piece::Pawn,
         }
     }
-    pub fn from(color: Color, piece: Piece) -> Self {
+    pub const fn from(color: Color, piece: Piece) -> Self {
         match color {
             Color::White => match piece {
                 Piece::Pawn => Self::WhiteKing,
@@ -95,5 +96,42 @@ impl ChessPiece {
             Self::BlackQueen => BitBoard::from_value(bit_board::QUEEN_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
             Self::BlackKing => BitBoard::from_value(bit_board::KING_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
         }
+    }
+
+    const fn as_move_set_10(&self) -> Option<ChessPieceMoveRuleset<10>> {
+        Some(match self {
+            Self::WhiteKing => chess_piece_move_rulesets::WHITE_KING,
+            Self::BlackKing => chess_piece_move_rulesets::BLACK_KING,
+            _ => return None,
+        })
+    }
+
+    const fn as_move_set_8(&self) -> Option<ChessPieceMoveRuleset<8>> {
+        Some(match self {
+            Self::WhiteKnight => chess_piece_move_rulesets::WHITE_KNIGHT,
+            Self::WhiteQueen => chess_piece_move_rulesets::WHITE_QUEEN,
+            Self::BlackKnight => chess_piece_move_rulesets::BLACK_KNIGHT,
+            Self::BlackQueen => chess_piece_move_rulesets::BLACK_QUEEN,
+            _ => return None,
+        })
+    }
+
+
+    const fn as_move_set_6(&self) -> Option<ChessPieceMoveRuleset<6>> {
+        Some(match self {
+            Self::WhitePawn => chess_piece_move_rulesets::WHITE_PAWN,
+            Self::BlackPawn => chess_piece_move_rulesets::BLACK_PAWN,
+            _ => return None,
+        })
+    }
+
+    const fn as_move_set_4(&self) -> Option<ChessPieceMoveRuleset<4>> {
+        Some(match self {
+            Self::WhiteRook => chess_piece_move_rulesets::WHITE_ROOK,
+            Self::WhiteBishop => chess_piece_move_rulesets::WHITE_BISHOP,
+            Self::BlackRook => chess_piece_move_rulesets::BLACK_ROOK,
+            Self::BlackBishop => chess_piece_move_rulesets::BLACK_BISHOP,
+            _ => return None,
+        })
     }
 }

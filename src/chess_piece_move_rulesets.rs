@@ -1,26 +1,16 @@
-use crate::chess_piece::ChessPiece;
-use crate::chess_piece_move_ruleset::ChessPieceMoveRuleset;
-use crate::direction::Direction;
-use crate::direction_amount::DirectionAmount;
-use crate::move_ruleset::{DirectionRestriction, MoveRuleset};
+use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, PAWN_SIZE, KNIGHT_SIZE, BISHOP_SIZE, ROOK_SIZE, QUEEN_SIZE, KING_SIZE};
+use crate::color::Color;
 
-const WHITE_PAWN: ChessPieceMoveRuleset<1> = ChessPieceMoveRuleset {
-    chess_piece: ChessPiece::WhitePawn,
-    move_rulesets: [
-        MoveRuleset {
-            directional_restriction: Some(DirectionRestriction::Amount(DirectionAmount(Direction::North, 1))),
-            ..MoveRuleset::default()
-        },
-    ],
-};
+pub const WHITE_KING: ChessPieceMoveRuleset<KING_SIZE> = ChessPieceMoveRuleset::king(Color::White);
+pub const WHITE_QUEEN: ChessPieceMoveRuleset<QUEEN_SIZE> = ChessPieceMoveRuleset::queen(Color::White);
+pub const WHITE_ROOK: ChessPieceMoveRuleset<ROOK_SIZE> = ChessPieceMoveRuleset::rook(Color::White);
+pub const WHITE_BISHOP: ChessPieceMoveRuleset<BISHOP_SIZE> = ChessPieceMoveRuleset::bishop(Color::White);
+pub const WHITE_KNIGHT: ChessPieceMoveRuleset<KNIGHT_SIZE> = ChessPieceMoveRuleset::knight(Color::White);
+pub const WHITE_PAWN: ChessPieceMoveRuleset<PAWN_SIZE> = ChessPieceMoveRuleset::pawn(Color::White);
 
-
-const BLACK_PAWN: ChessPieceMoveRuleset<1> = ChessPieceMoveRuleset {
-    chess_piece: ChessPiece::BlackPawn,
-    move_rulesets: [
-        MoveRuleset {
-            directional_restriction: Some(DirectionRestriction::Amount(DirectionAmount(Direction::South, 1))),
-            ..MoveRuleset::default()
-        },
-    ],
-};
+pub const BLACK_KING: ChessPieceMoveRuleset<KING_SIZE> = ChessPieceMoveRuleset::king(Color::Black);
+pub const BLACK_QUEEN: ChessPieceMoveRuleset<QUEEN_SIZE> = ChessPieceMoveRuleset::queen(Color::Black);
+pub const BLACK_ROOK: ChessPieceMoveRuleset<ROOK_SIZE> = ChessPieceMoveRuleset::rook(Color::Black);
+pub const BLACK_BISHOP: ChessPieceMoveRuleset<BISHOP_SIZE> = ChessPieceMoveRuleset::bishop(Color::Black);
+pub const BLACK_KNIGHT: ChessPieceMoveRuleset<KNIGHT_SIZE> = ChessPieceMoveRuleset::knight(Color::Black);
+pub const BLACK_PAWN: ChessPieceMoveRuleset<PAWN_SIZE> = ChessPieceMoveRuleset::pawn(Color::Black);

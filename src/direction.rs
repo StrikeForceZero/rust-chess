@@ -95,6 +95,20 @@ impl SimpleDirection {
             Self::West => Direction::West,
         }
     }
+    pub const fn as_perpendicular_simple_direction_tuple(&self) -> (SimpleDirection, SimpleDirection) {
+        match self {
+            Self::North =>  (Self::West, Self::South),
+            Self::East =>   (Self::North, Self::South),
+            Self::South =>  (Self::West, Self::East),
+            Self::West =>   (Self::South, Self::North),
+        }
+    }
+}
+
+impl From<SimpleDirection> for Direction {
+    fn from(value: SimpleDirection) -> Self {
+        value.as_direction()
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -121,6 +135,12 @@ impl DiagonalDirection {
             Self::SouthWest => FacingDirection::South,
             Self::NorthWest => FacingDirection::North,
         }
+    }
+}
+
+impl From<DiagonalDirection> for Direction {
+    fn from(value: DiagonalDirection) -> Self {
+        value.as_direction()
     }
 }
 

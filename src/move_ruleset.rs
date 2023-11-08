@@ -1,5 +1,5 @@
 use crate::castle_side::CastleSide;
-use crate::direction::{DiagonalDirection, Direction};
+use crate::direction::{DiagonalDirection, Direction, SimpleDirection};
 use crate::direction_amount::DirectionAmount;
 use crate::facing_direction::FacingDirection;
 
@@ -72,6 +72,20 @@ impl MoveRuleset {
             ..Self::default()
         }
     }
+    pub const fn l_jump(first_direction_amount: DirectionAmount, second_direction_amount: DirectionAmount) -> Self {
+        Self {
+            is_jump: true,
+            directional_restriction: Some(DirectionRestriction::LMove(first_direction_amount, second_direction_amount)),
+            ..Self::default()
+        }
+    }
+    pub const fn either_l_jump(simple_direction: SimpleDirection) -> [Self; 2] {
+        let (perp_a, perp_b) = simple_direction.as_perpendicular_simple_direction_tuple();
+        [
+            Self::l_jump(DirectionAmount(simple_direction.as_direction(), 2), DirectionAmount(perp_a.as_direction(), 1)),
+            Self::l_jump(DirectionAmount(simple_direction.as_direction(), 2), DirectionAmount(perp_b.as_direction(), 1)),
+        ]
+    }
     pub const fn en_passant(diagonal_direction: DiagonalDirection) -> Self {
         let mut move_ruleset = Self::single(diagonal_direction.as_direction(), true);
         move_ruleset.move_type = MoveType::WhenCapturingOnly(CaptureOnlyType::EnPassant);
@@ -82,6 +96,9 @@ impl MoveRuleset {
         let mut move_ruleset = Self::double(castle_side.as_simple_direction().as_direction());
         move_ruleset.move_type = MoveType::Castle;
         move_ruleset
+    }
+    pub const fn forward(facing_direction: FacingDirection) -> Self {
+        Self::single(facing_direction.as_simple_direction().as_direction(), false)
     }
     pub const fn any_single() -> [Self; 8] {
         [
@@ -129,6 +146,13 @@ impl MoveRuleset {
             Self::full(Direction::West),
             Self::full(Direction::NorthWest),
         ]
+    }
+    pub const fn any_l_jump() -> [Self; 8] {
+        let [a, b] = MoveRuleset::either_l_jump(SimpleDirection::North);
+        let [c, d] = MoveRuleset::either_l_jump(SimpleDirection::East);
+        let [e, f] = MoveRuleset::either_l_jump(SimpleDirection::South);
+        let [g, h] = MoveRuleset::either_l_jump(SimpleDirection::West);
+        [a,b,c,d,e,f,g,h]
     }
     pub const fn any_en_passant(facing_direction: FacingDirection) -> [Self; 2] {
         let (left, right) = facing_direction.split();

@@ -1,4 +1,4 @@
-use crate::direction::{DiagonalDirection, SimpleDirection};
+use crate::direction::{DiagonalDirection, Direction, SimpleDirection};
 
 pub enum FacingDirection {
     North,
@@ -17,5 +17,17 @@ impl FacingDirection {
             FacingDirection::North => (DiagonalDirection::NorthWest, DiagonalDirection::NorthEast),
             FacingDirection::South => (DiagonalDirection::SouthWest, DiagonalDirection::SouthEast),
         }
+    }
+}
+
+impl From<FacingDirection> for Direction {
+    fn from(value: FacingDirection) -> Self {
+        value.as_simple_direction().as_direction()
+    }
+}
+
+impl From<FacingDirection> for SimpleDirection {
+    fn from(value: FacingDirection) -> Self {
+        value.as_simple_direction()
     }
 }
