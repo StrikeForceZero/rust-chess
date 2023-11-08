@@ -17,46 +17,46 @@ pub enum Direction {
 impl Direction {
     pub fn reverse(&self) -> Direction {
         match self {
-            Direction::North => Direction::South,
-            Direction::NorthEast => Direction::SouthWest,
-            Direction::East => Direction::West,
-            Direction::SouthEast => Direction::NorthWest,
-            Direction::South => Direction::North,
-            Direction::SouthWest => Direction::NorthEast,
-            Direction::West => Direction::East,
-            Direction::NorthWest => Direction::SouthEast,
+            Self::North => Self::South,
+            Self::NorthEast => Self::SouthWest,
+            Self::East => Self::West,
+            Self::SouthEast => Self::NorthWest,
+            Self::South => Self::North,
+            Self::SouthWest => Self::NorthEast,
+            Self::West => Self::East,
+            Self::NorthWest => Self::SouthEast,
         }
     }
-    pub fn split(&self) -> (Direction, Direction) {
+    pub fn split(&self) -> (Self, Self) {
         match self {
-            Direction::North => (Direction::NorthWest, Direction::NorthEast),
-            Direction::NorthEast => (Direction::North, Direction::East),
-            Direction::East => (Direction::NorthEast, Direction::SouthEast),
-            Direction::SouthEast => (Direction::South, Direction::East),
-            Direction::South => (Direction::SouthWest, Direction::SouthEast),
-            Direction::SouthWest => (Direction::West, Direction::South),
-            Direction::West => (Direction::SouthWest, Direction::NorthWest),
-            Direction::NorthWest => (Direction::West, Direction::North),
+            Self::North => (Self::NorthWest, Self::NorthEast),
+            Self::NorthEast => (Self::North, Self::East),
+            Self::East => (Self::NorthEast, Self::SouthEast),
+            Self::SouthEast => (Self::South, Self::East),
+            Self::South => (Self::SouthWest, Self::SouthEast),
+            Self::SouthWest => (Self::West, Self::South),
+            Self::West => (Self::SouthWest, Self::NorthWest),
+            Self::NorthWest => (Self::West, Self::North),
         }
     }
     pub fn get_next_pos(&self, from: BoardPosition) -> Option<BoardPosition> {
         let BoardPosition(file, rank) = from;
         let next_pos: (Option<BoardFile>, Option<BoardRank>) = match self {
-            Direction::North =>
+            Self::North =>
                 (Some(file), rank.next()),
-            Direction::NorthEast =>
+            Self::NorthEast =>
                 (file.next(), rank.next()),
-            Direction::East =>
+            Self::East =>
                 (file.next(), Some(rank)),
-            Direction::SouthEast =>
+            Self::SouthEast =>
                 (file.next(), rank.prev()),
-            Direction::South =>
+            Self::South =>
                 (Some(file), rank.prev()),
-            Direction::SouthWest =>
+            Self::SouthWest =>
                 (file.prev(), rank.prev()),
-            Direction::West =>
+            Self::West =>
                 (file.prev(), Some(rank)),
-            Direction::NorthWest =>
+            Self::NorthWest =>
                 (file.prev(), rank.next()),
         };
         match next_pos {
@@ -88,10 +88,10 @@ pub enum SimpleDirection {
 impl SimpleDirection {
     pub fn as_direction(&self) -> Direction {
         match self {
-            SimpleDirection::North => Direction::North,
-            SimpleDirection::East => Direction::East,
-            SimpleDirection::South => Direction::South,
-            SimpleDirection::West => Direction::West,
+            Self::North => Direction::North,
+            Self::East => Direction::East,
+            Self::South => Direction::South,
+            Self::West => Direction::West,
         }
     }
 }
@@ -107,10 +107,10 @@ pub enum DiagonalDirection {
 impl DiagonalDirection {
     pub fn as_direction(&self) -> Direction {
         match self {
-            DiagonalDirection::NorthEast => Direction::NorthEast,
-            DiagonalDirection::SouthEast => Direction::SouthEast,
-            DiagonalDirection::SouthWest => Direction::SouthWest,
-            DiagonalDirection::NorthWest => Direction::NorthWest,
+            Self::NorthEast => Direction::NorthEast,
+            Self::SouthEast => Direction::SouthEast,
+            Self::SouthWest => Direction::SouthWest,
+            Self::NorthWest => Direction::NorthWest,
         }
     }
 }
