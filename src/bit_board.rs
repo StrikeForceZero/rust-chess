@@ -1,11 +1,16 @@
 use std::{ops, usize};
+use std::cmp::Ordering;
 use bitmaps::Bitmap;
 use crate::board_file::BoardFile;
-use crate::board_position;
+use crate::{board_position, position};
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 
-pub type BitBoardData = Bitmap<64>;
+pub const SIZE: usize = 64;
+const PLACES: usize = 8;
+const ZERO_INDEX_PLACES: usize = PLACES - 1;
+
+pub type BitBoardData = Bitmap<SIZE>;
 
 #[repr(transparent)]
 #[derive(Default, Clone)]
@@ -18,6 +23,8 @@ pub const FULL_FILE: u64 = 0b_00000001_00000001_00000001_00000001_00000001_00000
 pub const FULL_DIAG_RIGHT: u64 = 0b_10000000_01000000_00100000_00010000_00001000_00000100_00000010_00000001;
 pub const FULL_DIAG_LEFT: u64 = 0b_00000001_00000010_00000100_00001000_00010000_00100000_01000000_10000000;
 
+pub const THREE_X_THREE: u64 = 0b_00000000_00000000_00000000_00000000_00000000_00000111_00000111_00000111;
+
 pub const PAWN: u64 =   0b11111111;
 pub const ROOK: u64 =   0b10000001;
 pub const KNIGHT: u64 = 0b01000010;
@@ -25,7 +32,6 @@ pub const BISHOP: u64 = 0b00100100;
 pub const QUEEN: u64 =  0b00001000;
 pub const KING: u64 =   0b00010000;
 
-const PLACES: usize = 7;
 
 impl BitBoard {
     pub fn bitmap(&self) -> &BitBoardData {
@@ -65,7 +71,7 @@ impl BitBoard {
         let file_num = board_position.file().as_zero_based_index();
         let rank_num = board_position.rank().as_zero_based_index();
         let sum = file_num + rank_num;
-        let left_offset = sum.abs_diff(PLACES);
+        let left_offset = sum.abs_diff(ZERO_INDEX_PLACES);
         let right_offset = file_num.abs_diff(rank_num);
 
 
@@ -73,8 +79,8 @@ impl BitBoard {
         let mut right: u64 = FULL_DIAG_RIGHT;
 
         // if left_offset != 0:
-        let shift_amount = 8 * left_offset;
-        if sum < PLACES {
+        let shift_amount = PLACES * left_offset;
+        if sum < ZERO_INDEX_PLACES {
             // negative offset shifts right
             left >>= shift_amount;
         } else {
@@ -83,7 +89,7 @@ impl BitBoard {
         }
 
         // if right_offset != 0:
-        let shift_amount = 8 * right_offset;
+        let shift_amount = PLACES * right_offset;
         if rank_num < file_num {
             // negative offset shifts right
             right >>= shift_amount;
@@ -96,10 +102,54 @@ impl BitBoard {
         *self.bitmap_mut() |= BitBoardData::from_value(cross);
         self
     }
+    pub fn fill_3x3_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
+        let index = board_position.as_pos_index();
+
+        // center
+        self.bitmap_mut().set(index, true);
+        // west, center col
+        if board_position.file() > &BoardFile::A {
+            self.bitmap_mut().set(index - 1, true);
+        }
+        // east, center col
+        if board_position.file() < &BoardFile::H  {
+            self.bitmap_mut().set(index + 1, true);
+        };
+
+        // north line
+        if board_position.rank() < &BoardRank::Eight {
+            // north, center col
+            self.bitmap_mut().set(index + PLACES, true);
+            // north, west col
+            if board_position.file() > &BoardFile::A {
+                self.bitmap_mut().set(index + PLACES - 1, true);
+            }
+            // north, east col
+            if board_position.file() < &BoardFile::H {
+                self.bitmap_mut().set(index + 8 + 1, true);
+            }
+        }
+
+        // south line
+        if board_position.rank() > &BoardRank::One {
+            // south, center col
+            self.bitmap_mut().set(index - PLACES, true);
+            // south, west col
+            if board_position.file() > &BoardFile::A {
+                self.bitmap_mut().set(index - PLACES - 1, true);
+            }
+            // south, east col
+            if board_position.file() < &BoardFile::H {
+                self.bitmap_mut().set(index - PLACES + 1, true);
+            }
+        }
+
+        self
+    }
     pub fn as_multiline_str(&self) -> String {
         let mut res = String::from(" ┌ABCDEFGH");
-        for ix in 0..64 {
-            if ix % 8 == 0 {
+        for ix in 0..SIZE {
+            if ix % PLACES == 0 {
                 res.push('|');
                 res.push_str(ix.to_string().as_str());
                 res.push('\n');
@@ -259,5 +309,60 @@ mod tests {
         #[case] expected: &'static str,
     ) {
         assert_eq!(expected, BitBoard::default().fill_plus_from_pos(pos).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, " ┌ABCDEFGH|0\n\
+                1|##      |8\n\
+                2|##      |16\n\
+                3|        |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|        |48\n\
+                7|        |56\n\
+                8|        |64")]
+    #[rstest]
+    #[case(B2, " ┌ABCDEFGH|0\n\
+                1|###     |8\n\
+                2|###     |16\n\
+                3|###     |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|        |48\n\
+                7|        |56\n\
+                8|        |64")]
+    #[case(G7, " ┌ABCDEFGH|0\n\
+                1|        |8\n\
+                2|        |16\n\
+                3|        |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|     ###|48\n\
+                7|     ###|56\n\
+                8|     ###|64")]
+    #[case(H8, " ┌ABCDEFGH|0\n\
+                1|        |8\n\
+                2|        |16\n\
+                3|        |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|        |48\n\
+                7|      ##|56\n\
+                8|      ##|64")]
+    #[case(H1, " ┌ABCDEFGH|0\n\
+                1|      ##|8\n\
+                2|      ##|16\n\
+                3|        |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|        |48\n\
+                7|        |56\n\
+                8|        |64")]
+    fn fill_3x3_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] expected: &'static str,
+    ) {
+        println!("{pos}: \n{}", BitBoard::default().fill_3x3_from_pos(pos).as_multiline_str());
+        assert_eq!(expected, BitBoard::default().fill_3x3_from_pos(pos).as_multiline_str())
     }
 }
