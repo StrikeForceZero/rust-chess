@@ -27,6 +27,18 @@ impl Direction {
             Direction::NorthWest => Direction::SouthEast,
         }
     }
+    pub fn split(&self) -> (Direction, Direction) {
+        match self {
+            Direction::North => (Direction::NorthWest, Direction::NorthEast),
+            Direction::NorthEast => (Direction::North, Direction::East),
+            Direction::East => (Direction::NorthEast, Direction::SouthEast),
+            Direction::SouthEast => (Direction::South, Direction::East),
+            Direction::South => (Direction::SouthWest, Direction::SouthEast),
+            Direction::SouthWest => (Direction::West, Direction::South),
+            Direction::West => (Direction::SouthWest, Direction::NorthWest),
+            Direction::NorthWest => (Direction::West, Direction::North),
+        }
+    }
     pub fn get_next_pos(&self, from: BoardPosition) -> Option<BoardPosition> {
         let BoardPosition(file, rank) = from;
         let next_pos: (Option<BoardFile>, Option<BoardRank>) = match self {

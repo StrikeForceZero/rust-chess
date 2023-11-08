@@ -5,6 +5,7 @@ use crate::board_file::BoardFile;
 use crate::{board_position, position};
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
+use crate::direction::Direction;
 
 pub const SIZE: usize = 64;
 const PLACES: usize = 8;
@@ -175,6 +176,33 @@ impl BitBoard {
 
         self
     }
+    pub fn fill_single_from_pos(&mut self, board_position: BoardPosition, direction: Direction) -> &mut Self {
+        if let Some(target_pos) = direction.get_next_pos(board_position) {
+            self.bitmap_mut().set(target_pos.as_pos_index(), true);
+        }
+        self
+    }
+    pub fn fill_double_from_pos(&mut self, board_position: BoardPosition, direction: Direction) -> &mut Self {
+        let first = direction.get_next_pos(board_position);
+        if let Some(first_pos) = first {
+            if let Some(target_pos) = direction.get_next_pos(first_pos) {
+                // make sure both are available before settings
+                self.bitmap_mut().set(first_pos.as_pos_index(), true);
+                self.bitmap_mut().set(target_pos.as_pos_index(), true);
+            }
+        }
+        self
+    }
+    pub fn fill_single_diags_from_pos(&mut self, board_position: BoardPosition, direction: Direction) -> &mut Self {
+        let (a, b) = direction.split();
+        if let Some(target_pos) = a.get_next_pos(board_position) {
+            self.bitmap_mut().set(target_pos.as_pos_index(), true);
+        }
+        if let Some(target_pos) = b.get_next_pos(board_position) {
+            self.bitmap_mut().set(target_pos.as_pos_index(), true);
+        }
+        self
+    }
     pub fn as_multiline_str(&self) -> String {
         let mut res = String::from(" ┌ABCDEFGH");
         for ix in 0..SIZE {
@@ -204,6 +232,7 @@ mod tests {
     use crate::board_file::BoardFile;
     use crate::board_position::BoardPosition;
     use crate::board_rank::BoardRank;
+    use crate::direction::Direction;
     use crate::position::*;
 
     #[rstest]
@@ -400,7 +429,6 @@ mod tests {
                 6|        |48\n\
                 7|        |56\n\
                 8|        |64")]
-    #[rstest]
     #[case(E5, " ┌ABCDEFGH|0\n\
                 1|        |8\n\
                 2|        |16\n\
@@ -414,7 +442,128 @@ mod tests {
         #[case] pos: BoardPosition,
         #[case] expected: &'static str,
     ) {
-        println!("{pos}: \n{}", BitBoard::default().fill_l_jump_from_pos(pos).as_multiline_str());
         assert_eq!(expected, BitBoard::default().fill_l_jump_from_pos(pos).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|#       |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|        |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    #[case(E5, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|        |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|    #   |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    fn fill_single_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] direction: Direction,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_single_from_pos(pos, direction).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|#       |16\n\
+                                  3|#       |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|        |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    #[case(E5, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|        |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|    #   |48\n\
+                                  7|    #   |56\n\
+                                  8|        |64")]
+    #[case(A8, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|        |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|        |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    fn fill_double_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] direction: Direction,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_double_from_pos(pos, direction).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2| #      |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|        |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    #[case(E5, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|        |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|   # #  |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    #[case(A8, Direction::North, " ┌ABCDEFGH|0\n\
+                                  1|        |8\n\
+                                  2|        |16\n\
+                                  3|        |24\n\
+                                  4|        |32\n\
+                                  5|        |40\n\
+                                  6|        |48\n\
+                                  7|        |56\n\
+                                  8|        |64")]
+    fn fill_single_diags_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] direction: Direction,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_single_diags_from_pos(pos, direction).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(E5, " ┌ABCDEFGH|0\n\
+                1|#   #   |8\n\
+                2| #  #  #|16\n\
+                3|  # # # |24\n\
+                4|   ###  |32\n\
+                5|#### ###|40\n\
+                6|   ###  |48\n\
+                7|  # # # |56\n\
+                8| #  #  #|64")]
+    fn full_cross(
+        #[case] pos: BoardPosition,
+        #[case] expected: &'static str,
+    ) {
+        let BoardPosition(file, rank) = pos;
+        let b = BitBoard::default()
+            .fill_rank(rank)
+            .fill_file(file)
+            .fill_diag_from_pos(pos)
+            .as_multiline_str();
+        assert_eq!(expected, b)
     }
 }
