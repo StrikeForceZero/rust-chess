@@ -105,12 +105,98 @@ impl DiagonalDirection {
 
 #[cfg(test)]
 mod tests {
+    use rstest::rstest;
+    use crate::board_position::BoardPosition;
     use crate::direction::Direction;
-    use crate::position::{A1, A2};
+    use crate::position::*;
 
-    #[test]
-    fn direction() {
-        assert_eq!(Direction::East.get_next_pos_n(A1, 1).unwrap(), A2);
-        assert_eq!(Direction::East.get_next_pos_n(A1, 7).unwrap(), A2);
+    #[rstest]
+    #[case(Direction::East, A1, 1, Some(B1))]
+    #[case(Direction::East, A1, 2, Some(C1))]
+    #[case(Direction::East, A1, 3, Some(D1))]
+    #[case(Direction::East, A1, 4, Some(E1))]
+    #[case(Direction::East, A1, 5, Some(F1))]
+    #[case(Direction::East, A1, 6, Some(G1))]
+    #[case(Direction::East, A1, 7, Some(H1))]
+    #[case(Direction::East, A1, 8, None)]
+    fn direction_get_next_pos_n_east(
+        #[case] direction: Direction,
+        #[case] from: BoardPosition,
+        #[case] n: u8,
+        #[case] expected: Option<BoardPosition>
+    ) {
+        assert_eq!(expected, direction.get_next_pos_n(from, n));
+    }
+
+    #[rstest]
+    #[case(Direction::North, A1, 1, Some(A2))]
+    #[case(Direction::North, A1, 2, Some(A3))]
+    #[case(Direction::North, A1, 3, Some(A4))]
+    #[case(Direction::North, A1, 4, Some(A5))]
+    #[case(Direction::North, A1, 5, Some(A6))]
+    #[case(Direction::North, A1, 6, Some(A7))]
+    #[case(Direction::North, A1, 7, Some(A8))]
+    #[case(Direction::North, A1, 8, None)]
+    fn direction_get_next_pos_n_north(
+        #[case] direction: Direction,
+        #[case] from: BoardPosition,
+        #[case] n: u8,
+        #[case] expected: Option<BoardPosition>
+    ) {
+        assert_eq!(expected, direction.get_next_pos_n(from, n));
+    }
+
+    #[rstest]
+    #[case(Direction::NorthEast, A1, 1, Some(B2))]
+    #[case(Direction::NorthEast, A1, 2, Some(C3))]
+    #[case(Direction::NorthEast, A1, 3, Some(D4))]
+    #[case(Direction::NorthEast, A1, 4, Some(E5))]
+    #[case(Direction::NorthEast, A1, 5, Some(F6))]
+    #[case(Direction::NorthEast, A1, 6, Some(G7))]
+    #[case(Direction::NorthEast, A1, 7, Some(H8))]
+    #[case(Direction::NorthEast, A1, 8, None)]
+    fn direction_get_next_pos_n_north_east(
+        #[case] direction: Direction,
+        #[case] from: BoardPosition,
+        #[case] n: u8,
+        #[case] expected: Option<BoardPosition>
+    ) {
+        assert_eq!(expected, direction.get_next_pos_n(from, n));
+    }
+
+    #[rstest]
+    #[case(Direction::West, H1, 1, Some(G1))]
+    #[case(Direction::West, H1, 2, Some(F1))]
+    #[case(Direction::West, H1, 3, Some(E1))]
+    #[case(Direction::West, H1, 4, Some(D1))]
+    #[case(Direction::West, H1, 5, Some(C1))]
+    #[case(Direction::West, H1, 6, Some(B1))]
+    #[case(Direction::West, H1, 7, Some(A1))]
+    #[case(Direction::West, H1, 8, None)]
+    fn direction_get_next_pos_n_west(
+        #[case] direction: Direction,
+        #[case] from: BoardPosition,
+        #[case] n: u8,
+        #[case] expected: Option<BoardPosition>
+    ) {
+        assert_eq!(expected, direction.get_next_pos_n(from, n));
+    }
+
+    #[rstest]
+    #[case(Direction::South, H8, 1, Some(H7))]
+    #[case(Direction::South, H8, 2, Some(H6))]
+    #[case(Direction::South, H8, 3, Some(H5))]
+    #[case(Direction::South, H8, 4, Some(H4))]
+    #[case(Direction::South, H8, 5, Some(H3))]
+    #[case(Direction::South, H8, 6, Some(H2))]
+    #[case(Direction::South, H8, 7, Some(H1))]
+    #[case(Direction::South, H8, 8, None)]
+    fn direction_get_next_pos_n_south(
+        #[case] direction: Direction,
+        #[case] from: BoardPosition,
+        #[case] n: u8,
+        #[case] expected: Option<BoardPosition>
+    ) {
+        assert_eq!(expected, direction.get_next_pos_n(from, n));
     }
 }
