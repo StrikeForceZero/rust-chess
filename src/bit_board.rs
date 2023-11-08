@@ -56,6 +56,11 @@ impl BitBoard {
         *self.bitmap_mut() |= BitBoardData::from_value(FULL_FILE << board_file.as_shift_offset());
         self
     }
+    pub fn fill_plus_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
+        self.fill_file(*board_position.file());
+        self.fill_rank(*board_position.rank());
+        self
+    }
     pub fn fill_diag_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
         let file_num = board_position.file().as_zero_based_index();
         let rank_num = board_position.rank().as_zero_based_index();
@@ -117,7 +122,9 @@ impl BitBoard {
 mod tests {
     use rstest::rstest;
     use crate::bit_board::BitBoard;
+    use crate::board_file::BoardFile;
     use crate::board_position::BoardPosition;
+    use crate::board_rank::BoardRank;
     use crate::position::*;
 
     #[rstest]
@@ -171,5 +178,86 @@ mod tests {
         #[case] expected: &'static str,
     ) {
         assert_eq!(expected, BitBoard::default().fill_diag_from_pos(pos).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(BoardFile::A, " ┌ABCDEFGH|0\n\
+                          1|#       |8\n\
+                          2|#       |16\n\
+                          3|#       |24\n\
+                          4|#       |32\n\
+                          5|#       |40\n\
+                          6|#       |48\n\
+                          7|#       |56\n\
+                          8|#       |64")]
+    #[rstest]
+    #[case(BoardFile::E, " ┌ABCDEFGH|0\n\
+                          1|    #   |8\n\
+                          2|    #   |16\n\
+                          3|    #   |24\n\
+                          4|    #   |32\n\
+                          5|    #   |40\n\
+                          6|    #   |48\n\
+                          7|    #   |56\n\
+                          8|    #   |64")]
+    fn fill_file(
+        #[case] file: BoardFile,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_file(file).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(BoardRank::One, " ┌ABCDEFGH|0\n\
+                            1|########|8\n\
+                            2|        |16\n\
+                            3|        |24\n\
+                            4|        |32\n\
+                            5|        |40\n\
+                            6|        |48\n\
+                            7|        |56\n\
+                            8|        |64")]
+    #[rstest]
+    #[case(BoardRank::Five, " ┌ABCDEFGH|0\n\
+                            1|        |8\n\
+                            2|        |16\n\
+                            3|        |24\n\
+                            4|        |32\n\
+                            5|########|40\n\
+                            6|        |48\n\
+                            7|        |56\n\
+                            8|        |64")]
+    fn fill_rank(
+        #[case] rank: BoardRank,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_rank(rank).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, " ┌ABCDEFGH|0\n\
+                1|########|8\n\
+                2|#       |16\n\
+                3|#       |24\n\
+                4|#       |32\n\
+                5|#       |40\n\
+                6|#       |48\n\
+                7|#       |56\n\
+                8|#       |64")]
+    #[rstest]
+    #[case(E5, " ┌ABCDEFGH|0\n\
+                1|    #   |8\n\
+                2|    #   |16\n\
+                3|    #   |24\n\
+                4|    #   |32\n\
+                5|########|40\n\
+                6|    #   |48\n\
+                7|    #   |56\n\
+                8|    #   |64")]
+    fn fill_plus_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_plus_from_pos(pos).as_multiline_str())
     }
 }
