@@ -3,19 +3,19 @@ use crate::board_position::BoardPosition;
 use crate::direction::SimpleDirection;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
-pub enum BoardSide {
+pub enum CastleSide {
     King,
     Queen,
 }
 
-impl BoardSide {
-    pub fn as_simple_direction(&self) -> SimpleDirection {
+impl CastleSide {
+    pub const fn as_simple_direction(&self) -> SimpleDirection {
         match self {
             Self::King => SimpleDirection::East,
             Self::Queen => SimpleDirection::West,
         }
     }
-    pub fn from_pos(pos: BoardPosition) -> Self {
+    pub const fn from_pos(pos: BoardPosition) -> Self {
         let BoardPosition(file, _rank) = pos;
         match file {
             BoardFile::A => Self::Queen,

@@ -13,8 +13,10 @@ mod castle_side;
 mod position;
 mod chess_piece_move_ruleset;
 mod move_ruleset;
-mod direction_limit;
+mod chess_piece_move_rulesets;
+mod promotion_piece;
 mod direction_amount;
+mod facing_direction;
 
 #[cfg(test)]
 mod tests {

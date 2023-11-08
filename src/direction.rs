@@ -1,6 +1,7 @@
 use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
+use crate::facing_direction::FacingDirection;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Direction {
@@ -86,7 +87,7 @@ pub enum SimpleDirection {
 }
 
 impl SimpleDirection {
-    pub fn as_direction(&self) -> Direction {
+    pub const fn as_direction(&self) -> Direction {
         match self {
             Self::North => Direction::North,
             Self::East => Direction::East,
@@ -105,12 +106,20 @@ pub enum DiagonalDirection {
 }
 
 impl DiagonalDirection {
-    pub fn as_direction(&self) -> Direction {
+    pub const fn as_direction(&self) -> Direction {
         match self {
             Self::NorthEast => Direction::NorthEast,
             Self::SouthEast => Direction::SouthEast,
             Self::SouthWest => Direction::SouthWest,
             Self::NorthWest => Direction::NorthWest,
+        }
+    }
+    pub const fn as_facing_direction(&self) -> FacingDirection {
+        match self {
+            Self::NorthEast => FacingDirection::North,
+            Self::SouthEast => FacingDirection::South,
+            Self::SouthWest => FacingDirection::South,
+            Self::NorthWest => FacingDirection::North,
         }
     }
 }

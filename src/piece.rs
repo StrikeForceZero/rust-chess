@@ -1,4 +1,6 @@
 use thiserror::Error;
+use crate::chess_piece::ChessPiece;
+use crate::color::Color;
 
 #[derive(Error, Debug, Clone, Copy)]
 pub enum PieceError {
@@ -38,5 +40,8 @@ impl Piece {
             'K' | 'k' => Self::King,
             _ => return Err(PieceError::InvalidChar(char))
         })
+    }
+    pub fn as_chess_piece(self, color: Color) -> ChessPiece {
+        ChessPiece::from(color, self)
     }
 }
