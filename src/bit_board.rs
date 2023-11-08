@@ -1,8 +1,5 @@
-use std::{ops, usize};
-use std::cmp::Ordering;
 use bitmaps::Bitmap;
 use crate::board_file::BoardFile;
-use crate::{board_position, position};
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 use crate::direction::Direction;
