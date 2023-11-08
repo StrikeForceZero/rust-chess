@@ -11,21 +11,21 @@ pub enum BoardSide {
 impl BoardSide {
     pub fn as_simple_direction(&self) -> SimpleDirection {
         match self {
-            BoardSide::King => SimpleDirection::East,
-            BoardSide::Queen => SimpleDirection::West,
+            Self::King => SimpleDirection::East,
+            Self::Queen => SimpleDirection::West,
         }
     }
-    pub fn from_pos(pos: BoardPosition) -> BoardSide {
+    pub fn from_pos(pos: BoardPosition) -> Self {
         let BoardPosition(file, _rank) = pos;
         match file {
-            BoardFile::A => BoardSide::Queen,
-            BoardFile::B => BoardSide::Queen,
-            BoardFile::C => BoardSide::Queen,
-            BoardFile::D => BoardSide::Queen,
-            BoardFile::E => BoardSide::King,
-            BoardFile::F => BoardSide::King,
-            BoardFile::G => BoardSide::King,
-            BoardFile::H => BoardSide::King,
+            BoardFile::A => Self::Queen,
+            BoardFile::B => Self::Queen,
+            BoardFile::C => Self::Queen,
+            BoardFile::D => Self::Queen,
+            BoardFile::E => Self::King,
+            BoardFile::F => Self::King,
+            BoardFile::G => Self::King,
+            BoardFile::H => Self::King,
         }
     }
 }
