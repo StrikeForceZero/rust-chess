@@ -112,3 +112,64 @@ impl BitBoard {
         res
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+    use crate::bit_board::BitBoard;
+    use crate::board_position::BoardPosition;
+    use crate::position::*;
+
+    #[rstest]
+    #[case(A1, " ┌ABCDEFGH|0\n\
+                1|#       |8\n\
+                2| #      |16\n\
+                3|  #     |24\n\
+                4|   #    |32\n\
+                5|    #   |40\n\
+                6|     #  |48\n\
+                7|      # |56\n\
+                8|       #|64")]
+    #[case(B2, " ┌ABCDEFGH|0\n\
+                1|# #     |8\n\
+                2| #      |16\n\
+                3|# #     |24\n\
+                4|   #    |32\n\
+                5|    #   |40\n\
+                6|     #  |48\n\
+                7|      # |56\n\
+                8|       #|64")]
+    #[case(E4, " ┌ABCDEFGH|0\n\
+                1| #     #|8\n\
+                2|  #   # |16\n\
+                3|   # #  |24\n\
+                4|    #   |32\n\
+                5|   # #  |40\n\
+                6|  #   # |48\n\
+                7| #     #|56\n\
+                8|#       |64")]
+    #[case(A8, " ┌ABCDEFGH|0\n\
+                1|       #|8\n\
+                2|      # |16\n\
+                3|     #  |24\n\
+                4|    #   |32\n\
+                5|   #    |40\n\
+                6|  #     |48\n\
+                7| #      |56\n\
+                8|#       |64")]
+    #[case(H8, " ┌ABCDEFGH|0\n\
+                1|#       |8\n\
+                2| #      |16\n\
+                3|  #     |24\n\
+                4|   #    |32\n\
+                5|    #   |40\n\
+                6|     #  |48\n\
+                7|      # |56\n\
+                8|       #|64")]
+    fn fill_diag_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] expected: &'static str,
+    ) {
+        assert_eq!(expected, BitBoard::default().fill_diag_from_pos(pos).as_multiline_str())
+    }
+}
