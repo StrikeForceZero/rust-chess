@@ -6,15 +6,6 @@ pub struct PieceBitBoard {
     pub board: BitBoard,
 }
 
-pub struct FullPieceBitBoard {
-    pub pawn: BitBoard,
-    pub knight: BitBoard,
-    pub bishop: BitBoard,
-    pub rook: BitBoard,
-    pub queen: BitBoard,
-    pub king: BitBoard,
-}
-
 impl PieceBitBoard {
     pub const fn piece(&self) -> &Piece {
         &self.piece

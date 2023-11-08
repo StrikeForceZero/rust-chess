@@ -18,6 +18,9 @@ mod promotion_piece;
 mod direction_amount;
 mod facing_direction;
 mod board;
+mod full_piece_bit_board;
+mod full_color_piece_bit_board;
+mod utils;
 
 #[cfg(test)]
 mod tests {

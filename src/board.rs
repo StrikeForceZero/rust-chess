@@ -315,4 +315,5 @@ impl Board {
         self.set(board_position, chess_piece);
         removed_piece
     }
+    pub fn from_bit_boards()
 }
