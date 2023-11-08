@@ -2,17 +2,17 @@ use crate::bit_board::BitBoard;
 use crate::piece::Piece;
 
 pub struct PieceBitBoard {
-    piece: Piece,
-    board: BitBoard,
+    pub piece: Piece,
+    pub board: BitBoard,
 }
 
 pub struct FullPieceBitBoard {
-    pawn: BitBoard,
-    knight: BitBoard,
-    bishop: BitBoard,
-    rook: BitBoard,
-    queen: BitBoard,
-    king: BitBoard,
+    pub pawn: BitBoard,
+    pub knight: BitBoard,
+    pub bishop: BitBoard,
+    pub rook: BitBoard,
+    pub queen: BitBoard,
+    pub king: BitBoard,
 }
 
 impl PieceBitBoard {

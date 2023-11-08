@@ -11,6 +11,10 @@ mod board_position;
 mod direction;
 mod castle_side;
 mod position;
+mod chess_piece_move_ruleset;
+mod move_ruleset;
+mod direction_limit;
+mod direction_amount;
 
 #[cfg(test)]
 mod tests {

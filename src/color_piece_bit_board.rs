@@ -3,8 +3,8 @@ use crate::piece::Piece;
 use crate::piece_bit_board::PieceBitBoard;
 
 pub struct ColorPieceBitBoard {
-    color: Color,
-    piece_bit_board: PieceBitBoard,
+    pub color: Color,
+    pub piece_bit_board: PieceBitBoard,
 }
 
 impl ColorPieceBitBoard {

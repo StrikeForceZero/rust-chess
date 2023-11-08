@@ -2,7 +2,7 @@ use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Direction {
     North,
     NorthEast,
