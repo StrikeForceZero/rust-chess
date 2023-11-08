@@ -117,3 +117,8 @@ impl Display for BoardRank {
         write!(f, "{}", self.as_usize())
     }
 }
+
+pub const WHITE_BACK_RANK: BoardRank = BoardRank::One;
+pub const WHITE_PAWNN_RANK: BoardRank = BoardRank::Two;
+pub const BLACK_PAWNN_RANK: BoardRank = BoardRank::Seven;
+pub const BLACK_BACK_RANK: BoardRank = BoardRank::Eight;

@@ -3,7 +3,7 @@ mod color;
 mod piece;
 mod piece_bit_board;
 mod color_piece_bit_board;
-mod colored_piece;
+mod chess_piece;
 mod fen;
 mod board_rank;
 mod board_file;
