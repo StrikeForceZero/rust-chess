@@ -17,6 +17,7 @@ mod chess_piece_move_rulesets;
 mod promotion_piece;
 mod direction_amount;
 mod facing_direction;
+mod board;
 
 #[cfg(test)]
 mod tests {
