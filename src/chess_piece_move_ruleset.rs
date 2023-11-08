@@ -3,6 +3,15 @@ use crate::color::Color;
 use crate::move_ruleset::MoveRuleset;
 use crate::piece::Piece;
 
+pub enum ChessPieceMoveSet {
+    Set10(ChessPieceMoveRuleset<TEN>),
+    Set8(ChessPieceMoveRuleset<EIGHT>),
+    Set6(ChessPieceMoveRuleset<SIX>),
+    Set4(ChessPieceMoveRuleset<FOUR>),
+    // Other sets as needed
+}
+
+
 pub struct ChessPieceMoveRuleset<const Size: usize> {
     pub chess_piece: ChessPiece,
     pub move_rulesets: [MoveRuleset; Size],

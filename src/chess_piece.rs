@@ -1,7 +1,7 @@
 use crate::{bit_board, chess_piece_move_rulesets};
 use crate::bit_board::BitBoard;
 use crate::board_rank::{BLACK_BACK_RANK, BLACK_PAWNN_RANK, WHITE_BACK_RANK, WHITE_PAWNN_RANK};
-use crate::chess_piece_move_ruleset::ChessPieceMoveRuleset;
+use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
 use crate::color::Color;
 use crate::piece::Piece;
 
@@ -133,5 +133,22 @@ impl ChessPiece {
             Self::BlackBishop => chess_piece_move_rulesets::BLACK_BISHOP,
             _ => return None,
         })
+    }
+
+    const fn as_move_set(&self) -> ChessPieceMoveSet {
+        match self {
+            Self::WhiteRook => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::WHITE_ROOK),
+            Self::WhiteBishop => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::WHITE_BISHOP),
+            Self::BlackRook => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::BLACK_ROOK),
+            Self::BlackBishop => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::BLACK_BISHOP),
+            Self::WhitePawn => ChessPieceMoveSet::Set6(chess_piece_move_rulesets::WHITE_PAWN),
+            Self::BlackPawn => ChessPieceMoveSet::Set6(chess_piece_move_rulesets::BLACK_PAWN),
+            Self::WhiteKnight => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::WHITE_KNIGHT),
+            Self::WhiteQueen => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::WHITE_QUEEN),
+            Self::BlackKnight => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::BLACK_KNIGHT),
+            Self::BlackQueen => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::BLACK_QUEEN),
+            Self::WhiteKing => ChessPieceMoveSet::Set10(chess_piece_move_rulesets::WHITE_KING),
+            Self::BlackKing => ChessPieceMoveSet::Set10(chess_piece_move_rulesets::BLACK_KING),
+        }
     }
 }
