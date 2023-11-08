@@ -9,7 +9,7 @@ pub enum BoardSide {
 }
 
 impl BoardSide {
-    pub fn to_direction(&self) -> SimpleDirection {
+    pub fn as_simple_direction(&self) -> SimpleDirection {
         match self {
             BoardSide::King => SimpleDirection::East,
             BoardSide::Queen => SimpleDirection::West,

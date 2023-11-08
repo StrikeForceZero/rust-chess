@@ -44,19 +44,19 @@ mod tests {
     #[test]
     fn test() {
         let bit_boards = vec![
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Pawn, BitBoard::from_value(bit_board::PAWN << BoardRank::Two.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Rook, BitBoard::from_value(bit_board::ROOK))),
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Knight, BitBoard::from_value(bit_board::KNIGHT))),
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Bishop, BitBoard::from_value(bit_board::BISHOP))),
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Queen, BitBoard::from_value(bit_board::QUEEN))),
-            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::King, BitBoard::from_value(bit_board::KING))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Pawn, BitBoard::from_value(bit_board::PAWN_STARTING_POS << BoardRank::Two.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Rook, BitBoard::from_value(bit_board::ROOK_STARTING_POS))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Knight, BitBoard::from_value(bit_board::KNIGHT_STARTING_POS))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Bishop, BitBoard::from_value(bit_board::BISHOP_STARTING_POS))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::Queen, BitBoard::from_value(bit_board::QUEEN_STARTING_POS))),
+            ColorPieceBitBoard::from(Color::White, PieceBitBoard::from(Piece::King, BitBoard::from_value(bit_board::KING_STARTING_POS))),
 
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Pawn, BitBoard::from_value(bit_board::PAWN << BoardRank::Seven.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Rook, BitBoard::from_value(bit_board::ROOK << BoardRank::Eight.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Knight, BitBoard::from_value(bit_board::KNIGHT << BoardRank::Eight.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Bishop, BitBoard::from_value(bit_board::BISHOP << BoardRank::Eight.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Queen, BitBoard::from_value(bit_board::QUEEN << BoardRank::Eight.as_shift_offset()))),
-            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::King, BitBoard::from_value(bit_board::KING << BoardRank::Eight.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Pawn, BitBoard::from_value(bit_board::PAWN_STARTING_POS << BoardRank::Seven.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Rook, BitBoard::from_value(bit_board::ROOK_STARTING_POS << BoardRank::Eight.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Knight, BitBoard::from_value(bit_board::KNIGHT_STARTING_POS << BoardRank::Eight.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Bishop, BitBoard::from_value(bit_board::BISHOP_STARTING_POS << BoardRank::Eight.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::Queen, BitBoard::from_value(bit_board::QUEEN_STARTING_POS << BoardRank::Eight.as_shift_offset()))),
+            ColorPieceBitBoard::from(Color::Black, PieceBitBoard::from(Piece::King, BitBoard::from_value(bit_board::KING_STARTING_POS << BoardRank::Eight.as_shift_offset()))),
         ];
         let mut a = BitBoard::from_value(0);
         let mut b = BitBoard::from_value(0);

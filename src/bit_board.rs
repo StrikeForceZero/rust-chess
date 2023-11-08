@@ -24,12 +24,12 @@ pub const FULL_DIAG_LEFT: u64 = 0b_00000001_00000010_00000100_00001000_00010000_
 
 pub const THREE_X_THREE: u64 = 0b_00000000_00000000_00000000_00000000_00000000_00000111_00000111_00000111;
 
-pub const PAWN: u64 =   0b11111111;
-pub const ROOK: u64 =   0b10000001;
-pub const KNIGHT: u64 = 0b01000010;
-pub const BISHOP: u64 = 0b00100100;
-pub const QUEEN: u64 =  0b00001000;
-pub const KING: u64 =   0b00010000;
+pub const PAWN_STARTING_POS: u64 =   0b11111111;
+pub const ROOK_STARTING_POS: u64 =   0b10000001;
+pub const KNIGHT_STARTING_POS: u64 = 0b01000010;
+pub const BISHOP_STARTING_POS: u64 = 0b00100100;
+pub const QUEEN_STARTING_POS: u64 =  0b00001000;
+pub const KING_STARTING_POS: u64 =   0b00010000;
 
 const KNIGHT_MOVES: [(isize, isize); 8] = [
     (1, 2), (2, 1), (-1, 2), (2, -1), (-1, -2), (-2, -1), (1, -2), (-2, 1),

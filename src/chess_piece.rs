@@ -82,18 +82,18 @@ impl ChessPiece {
     }
     pub fn as_starting_bitboard(&self) -> BitBoard {
         match self {
-            Self::WhitePawn => BitBoard::from_value(bit_board::PAWN << WHITE_PAWNN_RANK.as_shift_offset()),
-            Self::WhiteRook => BitBoard::from_value(bit_board::ROOK << WHITE_BACK_RANK.as_shift_offset()),
-            Self::WhiteKnight => BitBoard::from_value(bit_board::KNIGHT << WHITE_BACK_RANK.as_shift_offset()),
-            Self::WhiteBishop => BitBoard::from_value(bit_board::BISHOP << WHITE_BACK_RANK.as_shift_offset()),
-            Self::WhiteQueen => BitBoard::from_value(bit_board::QUEEN << WHITE_BACK_RANK.as_shift_offset()),
-            Self::WhiteKing => BitBoard::from_value(bit_board::KING << WHITE_BACK_RANK.as_shift_offset()),
-            Self::BlackPawn => BitBoard::from_value(bit_board::PAWN << BLACK_PAWNN_RANK.as_shift_offset()),
-            Self::BlackRook => BitBoard::from_value(bit_board::ROOK << BLACK_BACK_RANK.as_shift_offset()),
-            Self::BlackKnight => BitBoard::from_value(bit_board::KNIGHT << BLACK_BACK_RANK.as_shift_offset()),
-            Self::BlackBishop => BitBoard::from_value(bit_board::BISHOP << BLACK_BACK_RANK.as_shift_offset()),
-            Self::BlackQueen => BitBoard::from_value(bit_board::QUEEN << BLACK_BACK_RANK.as_shift_offset()),
-            Self::BlackKing => BitBoard::from_value(bit_board::KING << BLACK_BACK_RANK.as_shift_offset()),
+            Self::WhitePawn => BitBoard::from_value(bit_board::PAWN_STARTING_POS << WHITE_PAWNN_RANK.as_shift_offset()),
+            Self::WhiteRook => BitBoard::from_value(bit_board::ROOK_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteKnight => BitBoard::from_value(bit_board::KNIGHT_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteBishop => BitBoard::from_value(bit_board::BISHOP_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteQueen => BitBoard::from_value(bit_board::QUEEN_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteKing => BitBoard::from_value(bit_board::KING_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::BlackPawn => BitBoard::from_value(bit_board::PAWN_STARTING_POS << BLACK_PAWNN_RANK.as_shift_offset()),
+            Self::BlackRook => BitBoard::from_value(bit_board::ROOK_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackKnight => BitBoard::from_value(bit_board::KNIGHT_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackBishop => BitBoard::from_value(bit_board::BISHOP_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackQueen => BitBoard::from_value(bit_board::QUEEN_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackKing => BitBoard::from_value(bit_board::KING_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
         }
     }
 }
