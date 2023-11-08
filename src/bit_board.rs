@@ -8,6 +8,7 @@ use crate::board_rank::BoardRank;
 
 pub const SIZE: usize = 64;
 const PLACES: usize = 8;
+const PLACES_ISIZE: isize = PLACES as isize;
 const ZERO_INDEX_PLACES: usize = PLACES - 1;
 
 pub type BitBoardData = Bitmap<SIZE>;
@@ -31,6 +32,10 @@ pub const KNIGHT: u64 = 0b01000010;
 pub const BISHOP: u64 = 0b00100100;
 pub const QUEEN: u64 =  0b00001000;
 pub const KING: u64 =   0b00010000;
+
+const KNIGHT_MOVES: [(isize, isize); 8] = [
+    (1, 2), (2, 1), (-1, 2), (2, -1), (-1, -2), (-2, -1), (1, -2), (-2, 1),
+];
 
 
 impl BitBoard {
@@ -65,11 +70,13 @@ impl BitBoard {
     pub fn fill_plus_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
         self.fill_file(*board_position.file());
         self.fill_rank(*board_position.rank());
+        self.bitmap_mut().set(board_position.as_pos_index(), false);
         self
     }
     pub fn fill_diag_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
-        let file_num = board_position.file().as_zero_based_index();
-        let rank_num = board_position.rank().as_zero_based_index();
+        let BoardPosition(file, rank) = board_position;
+        let file_num = file.as_zero_based_index();
+        let rank_num = rank.as_zero_based_index();
         let sum = file_num + rank_num;
         let left_offset = sum.abs_diff(ZERO_INDEX_PLACES);
         let right_offset = file_num.abs_diff(rank_num);
@@ -100,47 +107,69 @@ impl BitBoard {
 
         let cross: u64 = left | right;
         *self.bitmap_mut() |= BitBoardData::from_value(cross);
+
+        self.bitmap_mut().set(board_position.as_pos_index(), false);
+
         self
     }
     pub fn fill_3x3_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
         let index = board_position.as_pos_index();
+        let BoardPosition(file, rank) = board_position;
 
         // center
-        self.bitmap_mut().set(index, true);
+        // self.bitmap_mut().set(index, true);
         // west, center col
-        if board_position.file() > &BoardFile::A {
+        if file > BoardFile::A {
             self.bitmap_mut().set(index - 1, true);
         }
         // east, center col
-        if board_position.file() < &BoardFile::H  {
+        if file < BoardFile::H  {
             self.bitmap_mut().set(index + 1, true);
         };
 
         // north line
-        if board_position.rank() < &BoardRank::Eight {
+        if rank < BoardRank::Eight {
             // north, center col
             self.bitmap_mut().set(index + PLACES, true);
             // north, west col
-            if board_position.file() > &BoardFile::A {
+            if file > BoardFile::A {
                 self.bitmap_mut().set(index + PLACES - 1, true);
             }
             // north, east col
-            if board_position.file() < &BoardFile::H {
-                self.bitmap_mut().set(index + 8 + 1, true);
+            if file < BoardFile::H {
+                self.bitmap_mut().set(index + PLACES + 1, true);
             }
         }
 
         // south line
-        if board_position.rank() > &BoardRank::One {
+        if rank > BoardRank::One {
             // south, center col
             self.bitmap_mut().set(index - PLACES, true);
             // south, west col
-            if board_position.file() > &BoardFile::A {
+            if file > BoardFile::A {
                 self.bitmap_mut().set(index - PLACES - 1, true);
             }
             // south, east col
-            if board_position.file() < &BoardFile::H {
+            if file < BoardFile::H {
                 self.bitmap_mut().set(index - PLACES + 1, true);
+            }
+        }
+
+        self
+    }
+    pub fn fill_l_jump_from_pos(&mut self, board_position: BoardPosition) -> &mut Self {
+        let BoardPosition(file, rank) = board_position;
+        let file_index = file.as_zero_based_index() as isize;
+        let rank_index = rank.as_zero_based_index() as isize;
+
+        for (file_offset, rank_offset) in KNIGHT_MOVES {
+            let new_file = file_index + file_offset;
+            let new_rank = rank_index + rank_offset;
+
+            // Check if the new position is on the board
+            if (0..PLACES_ISIZE).contains(&new_file) && (0..PLACES_ISIZE).contains(&new_rank) {
+                let new_index = (new_rank * PLACES_ISIZE + new_file) as usize;
+                self.bitmap_mut().set(new_index, true);
             }
         }
 
@@ -179,7 +208,7 @@ mod tests {
 
     #[rstest]
     #[case(A1, " ┌ABCDEFGH|0\n\
-                1|#       |8\n\
+                1|        |8\n\
                 2| #      |16\n\
                 3|  #     |24\n\
                 4|   #    |32\n\
@@ -189,7 +218,7 @@ mod tests {
                 8|       #|64")]
     #[case(B2, " ┌ABCDEFGH|0\n\
                 1|# #     |8\n\
-                2| #      |16\n\
+                2|        |16\n\
                 3|# #     |24\n\
                 4|   #    |32\n\
                 5|    #   |40\n\
@@ -200,7 +229,7 @@ mod tests {
                 1| #     #|8\n\
                 2|  #   # |16\n\
                 3|   # #  |24\n\
-                4|    #   |32\n\
+                4|        |32\n\
                 5|   # #  |40\n\
                 6|  #   # |48\n\
                 7| #     #|56\n\
@@ -213,7 +242,7 @@ mod tests {
                 5|   #    |40\n\
                 6|  #     |48\n\
                 7| #      |56\n\
-                8|#       |64")]
+                8|        |64")]
     #[case(H8, " ┌ABCDEFGH|0\n\
                 1|#       |8\n\
                 2| #      |16\n\
@@ -222,7 +251,7 @@ mod tests {
                 5|    #   |40\n\
                 6|     #  |48\n\
                 7|      # |56\n\
-                8|       #|64")]
+                8|        |64")]
     fn fill_diag_from_pos(
         #[case] pos: BoardPosition,
         #[case] expected: &'static str,
@@ -240,7 +269,6 @@ mod tests {
                           6|#       |48\n\
                           7|#       |56\n\
                           8|#       |64")]
-    #[rstest]
     #[case(BoardFile::E, " ┌ABCDEFGH|0\n\
                           1|    #   |8\n\
                           2|    #   |16\n\
@@ -267,7 +295,6 @@ mod tests {
                             6|        |48\n\
                             7|        |56\n\
                             8|        |64")]
-    #[rstest]
     #[case(BoardRank::Five, " ┌ABCDEFGH|0\n\
                             1|        |8\n\
                             2|        |16\n\
@@ -286,7 +313,7 @@ mod tests {
 
     #[rstest]
     #[case(A1, " ┌ABCDEFGH|0\n\
-                1|########|8\n\
+                1| #######|8\n\
                 2|#       |16\n\
                 3|#       |24\n\
                 4|#       |32\n\
@@ -294,13 +321,12 @@ mod tests {
                 6|#       |48\n\
                 7|#       |56\n\
                 8|#       |64")]
-    #[rstest]
     #[case(E5, " ┌ABCDEFGH|0\n\
                 1|    #   |8\n\
                 2|    #   |16\n\
                 3|    #   |24\n\
                 4|    #   |32\n\
-                5|########|40\n\
+                5|#### ###|40\n\
                 6|    #   |48\n\
                 7|    #   |56\n\
                 8|    #   |64")]
@@ -313,7 +339,7 @@ mod tests {
 
     #[rstest]
     #[case(A1, " ┌ABCDEFGH|0\n\
-                1|##      |8\n\
+                1| #      |8\n\
                 2|##      |16\n\
                 3|        |24\n\
                 4|        |32\n\
@@ -321,10 +347,9 @@ mod tests {
                 6|        |48\n\
                 7|        |56\n\
                 8|        |64")]
-    #[rstest]
     #[case(B2, " ┌ABCDEFGH|0\n\
                 1|###     |8\n\
-                2|###     |16\n\
+                2|# #     |16\n\
                 3|###     |24\n\
                 4|        |32\n\
                 5|        |40\n\
@@ -338,7 +363,7 @@ mod tests {
                 4|        |32\n\
                 5|        |40\n\
                 6|     ###|48\n\
-                7|     ###|56\n\
+                7|     # #|56\n\
                 8|     ###|64")]
     #[case(H8, " ┌ABCDEFGH|0\n\
                 1|        |8\n\
@@ -348,9 +373,9 @@ mod tests {
                 5|        |40\n\
                 6|        |48\n\
                 7|      ##|56\n\
-                8|      ##|64")]
+                8|      # |64")]
     #[case(H1, " ┌ABCDEFGH|0\n\
-                1|      ##|8\n\
+                1|      # |8\n\
                 2|      ##|16\n\
                 3|        |24\n\
                 4|        |32\n\
@@ -362,7 +387,34 @@ mod tests {
         #[case] pos: BoardPosition,
         #[case] expected: &'static str,
     ) {
-        println!("{pos}: \n{}", BitBoard::default().fill_3x3_from_pos(pos).as_multiline_str());
         assert_eq!(expected, BitBoard::default().fill_3x3_from_pos(pos).as_multiline_str())
+    }
+
+    #[rstest]
+    #[case(A1, " ┌ABCDEFGH|0\n\
+                1|        |8\n\
+                2|  #     |16\n\
+                3| #      |24\n\
+                4|        |32\n\
+                5|        |40\n\
+                6|        |48\n\
+                7|        |56\n\
+                8|        |64")]
+    #[rstest]
+    #[case(E5, " ┌ABCDEFGH|0\n\
+                1|        |8\n\
+                2|        |16\n\
+                3|   # #  |24\n\
+                4|  #   # |32\n\
+                5|        |40\n\
+                6|  #   # |48\n\
+                7|   # #  |56\n\
+                8|        |64")]
+    fn fill_l_jump_from_pos(
+        #[case] pos: BoardPosition,
+        #[case] expected: &'static str,
+    ) {
+        println!("{pos}: \n{}", BitBoard::default().fill_l_jump_from_pos(pos).as_multiline_str());
+        assert_eq!(expected, BitBoard::default().fill_l_jump_from_pos(pos).as_multiline_str())
     }
 }
