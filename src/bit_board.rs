@@ -37,13 +37,13 @@ const KNIGHT_MOVES: [(isize, isize); 8] = [
 
 
 impl BitBoard {
-    pub fn bitmap(&self) -> &BitBoardData {
+    pub const fn bitmap(&self) -> &BitBoardData {
         &self.0
     }
     pub fn bitmap_mut(&mut self) -> &mut BitBoardData {
         &mut self.0
     }
-    pub fn from(bit_board_data: BitBoardData) -> Self {
+    pub const fn from(bit_board_data: BitBoardData) -> Self {
         Self(bit_board_data)
     }
     pub fn from_value(value: u64) -> Self {

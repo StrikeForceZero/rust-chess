@@ -71,7 +71,7 @@ pub enum Position {
 }
 
 impl Position {
-    pub fn to_board_pos(&self) -> BoardPosition {
+    pub const fn to_board_pos(&self) -> BoardPosition {
         match self {
             Self::A1 => A1,
             Self::A2 => A2,
@@ -139,7 +139,7 @@ impl Position {
             Self::G8 => G8,
         }
     }
-    pub fn from_board_pos(board_pos: BoardPosition) -> Position {
+    pub const fn from_board_pos(board_pos: BoardPosition) -> Position {
         match board_pos {
             A1 => Self::A1,
             A2 => Self::A2,

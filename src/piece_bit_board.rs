@@ -16,13 +16,13 @@ pub struct FullPieceBitBoard {
 }
 
 impl PieceBitBoard {
-    pub fn piece(&self) -> &Piece {
+    pub const fn piece(&self) -> &Piece {
         &self.piece
     }
-    pub fn bit_board(&self) -> &BitBoard {
+    pub const fn bit_board(&self) -> &BitBoard {
         &self.board
     }
-    pub fn from(piece: Piece, bit_board: BitBoard) -> Self {
+    pub const fn from(piece: Piece, bit_board: BitBoard) -> Self {
         PieceBitBoard {
             piece,
             board: bit_board,

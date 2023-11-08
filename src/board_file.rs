@@ -22,7 +22,7 @@ pub enum BoardFile {
 }
 
 impl BoardFile {
-    pub fn as_char(&self) -> char {
+    pub const fn as_char(&self) -> char {
         match self {
             Self::A => 'A',
             Self::B => 'B',
@@ -34,7 +34,7 @@ impl BoardFile {
             Self::H => 'H',
         }
     }
-    pub fn as_usize(&self) -> usize {
+    pub const fn as_usize(&self) -> usize {
         match self {
             Self::A => 1,
             Self::B => 2,
@@ -46,7 +46,7 @@ impl BoardFile {
             Self::H => 8,
         }
     }
-    pub fn as_zero_based_index(&self) -> usize {
+    pub const fn as_zero_based_index(&self) -> usize {
         match self {
             Self::A => 0,
             Self::B => 1,
@@ -58,10 +58,10 @@ impl BoardFile {
             Self::H => 7,
         }
     }
-    pub fn as_shift_offset(&self) -> usize {
+    pub const fn as_shift_offset(&self) -> usize {
         self.as_zero_based_index()
     }
-    pub fn from_char(char: char) -> Result<Self, BoardFileError> {
+    pub const fn from_char(char: char) -> Result<Self, BoardFileError> {
         Ok(match char {
             'A' | 'a' => Self::A,
             'B' | 'b' => Self::B,
@@ -74,7 +74,7 @@ impl BoardFile {
             _ => return Err(BoardFileError::InvalidChar(char))
         })
     }
-    pub fn from_zero_based_index(n: usize) -> Result<Self, BoardFileError> {
+    pub const fn from_zero_based_index(n: usize) -> Result<Self, BoardFileError> {
         Ok(match n {
             0 => Self::A,
             1 => Self::B,
@@ -87,7 +87,7 @@ impl BoardFile {
             _ => return Err(BoardFileError::InvalidUsize(n))
         })
     }
-    pub fn next(&self) -> Option<Self> {
+    pub const fn next(&self) -> Option<Self> {
         Some(match self {
             Self::A => Self::B,
             Self::B => Self::C,
@@ -100,7 +100,7 @@ impl BoardFile {
         })
     }
 
-    pub fn prev(&self) -> Option<Self> {
+    pub const fn prev(&self) -> Option<Self> {
         Some(match self {
             Self::A => return None,
             Self::B => Self::A,

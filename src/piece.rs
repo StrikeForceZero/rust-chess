@@ -20,7 +20,7 @@ pub enum Piece {
 }
 
 impl Piece {
-    pub fn as_char(&self) -> char {
+    pub const fn as_char(&self) -> char {
         match self {
             Self::Pawn => 'P',
             Self::Knight => 'N',
@@ -30,7 +30,7 @@ impl Piece {
             Self::King => 'K',
         }
     }
-    pub fn from_char(char: char) -> Result<Self, PieceError> {
+    pub const fn from_char(char: char) -> Result<Self, PieceError> {
         Ok(match char {
             'P' | 'p' => Self::Pawn,
             'N' | 'n' => Self::Knight,
@@ -41,7 +41,7 @@ impl Piece {
             _ => return Err(PieceError::InvalidChar(char))
         })
     }
-    pub fn as_chess_piece(self, color: Color) -> ChessPiece {
+    pub const fn as_chess_piece(self, color: Color) -> ChessPiece {
         ChessPiece::from(color, self)
     }
 }

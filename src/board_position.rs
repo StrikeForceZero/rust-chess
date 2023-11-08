@@ -6,13 +6,13 @@ use crate::board_rank::BoardRank;
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
 
 impl BoardPosition {
-    pub fn file(&self) -> &BoardFile {
+    pub const fn file(&self) -> &BoardFile {
         &self.0
     }
-    pub fn rank(&self) -> &BoardRank {
+    pub const fn rank(&self) -> &BoardRank {
         &self.1
     }
-    pub fn from(board_file: BoardFile, board_rank: BoardRank) -> Self {
+    pub const fn from(board_file: BoardFile, board_rank: BoardRank) -> Self {
         Self(board_file, board_rank)
     }
     pub fn as_pos_index(&self) -> usize {

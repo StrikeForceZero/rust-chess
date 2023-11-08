@@ -8,13 +8,13 @@ pub struct ColorPieceBitBoard {
 }
 
 impl ColorPieceBitBoard {
-    pub fn color(&self) -> &Color {
+    pub const fn color(&self) -> &Color {
         &self.color
     }
-    pub fn piece_bit_board(&self) -> &PieceBitBoard {
+    pub const fn piece_bit_board(&self) -> &PieceBitBoard {
         &self.piece_bit_board
     }
-    pub fn from(color: Color, piece_bit_board: PieceBitBoard) -> Self {
+    pub const fn from(color: Color, piece_bit_board: PieceBitBoard) -> Self {
         ColorPieceBitBoard {
             color,
             piece_bit_board,

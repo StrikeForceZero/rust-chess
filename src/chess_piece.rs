@@ -22,14 +22,14 @@ pub enum ChessPiece {
 }
 
 impl ChessPiece {
-    pub fn as_char(&self) -> char {
+    pub const fn as_char(&self) -> char {
         let piece = self.as_piece();
         match self.as_color() {
             Color::White => piece.as_char(),
             Color::Black => piece.as_char().to_ascii_lowercase(),
         }
     }
-    pub fn as_color(&self) -> Color {
+    pub const fn as_color(&self) -> Color {
         match self {
             Self::WhiteKing => Color::White,
             Self::WhiteQueen => Color::White,
@@ -45,7 +45,7 @@ impl ChessPiece {
             Self::BlackPawn => Color::Black,
         }
     }
-    pub fn as_piece(&self) -> Piece {
+    pub const fn as_piece(&self) -> Piece {
         match self {
             Self::WhiteKing => Piece::King,
             Self::WhiteQueen => Piece::Queen,
