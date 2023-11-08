@@ -2,6 +2,7 @@ use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum Position {
     A1,
     A2,

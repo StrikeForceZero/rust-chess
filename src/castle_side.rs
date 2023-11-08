@@ -2,6 +2,7 @@ use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
 use crate::direction::SimpleDirection;
 
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum BoardSide {
     King,
     Queen,
