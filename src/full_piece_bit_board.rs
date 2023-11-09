@@ -1,15 +1,17 @@
 use std::cell::RefMut;
 use crate::bit_board::BitBoard;
+use crate::bit_board_const::BitBoardConst;
 use crate::piece::Piece;
 use crate::utils::{CustomStructIterator, CustomStructIteratorMut};
 
+#[derive(Clone)]
 pub struct FullPieceBitBoard {
-    pub pawn: BitBoard,
-    pub knight: BitBoard,
-    pub bishop: BitBoard,
-    pub rook: BitBoard,
-    pub queen: BitBoard,
-    pub king: BitBoard,
+    pub pawn: BitBoardConst,
+    pub knight: BitBoardConst,
+    pub bishop: BitBoardConst,
+    pub rook: BitBoardConst,
+    pub queen: BitBoardConst,
+    pub king: BitBoardConst,
 }
 
 impl FullPieceBitBoard {
@@ -22,7 +24,7 @@ impl FullPieceBitBoard {
 }
 
 impl<'a> Iterator for CustomStructIterator<'a, FullPieceBitBoard> {
-    type Item = (Piece, &'a BitBoard);
+    type Item = (Piece, &'a BitBoardConst);
 
     fn next(&mut self) -> Option<Self::Item> {
         let res = Some(match self.index {

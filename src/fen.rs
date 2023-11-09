@@ -116,7 +116,8 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
             }
         }
     }
-    game_state.history.fen.push(Fen::Owned(fen_str.to_string()));
+    todo!("finish implementing");
+    // game_state.history.state_history.push();
     Ok(game_state)
 }
 

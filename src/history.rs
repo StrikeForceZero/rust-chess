@@ -1,23 +1,26 @@
+use std::collections::HashMap;
 use crate::fen::{Fen, FEN_STARTING_POS};
-use crate::pgn::Pgn;
+use crate::full_color_piece_bit_board::FullColorPieceBitBoard;
+use crate::move_history_entry::MoveHistoryEntry;
 
 #[derive(Clone)]
 pub struct History {
-    pub fen: Vec<Fen>,
-    pub pgn: Vec<Pgn>,
+    pub move_history: Vec<MoveHistoryEntry>,
+    // most moves in history 269
+    pub state_history: HashMap<FullColorPieceBitBoard, u8>,
 }
 
 impl History {
     pub const fn empty() -> Self {
         Self {
-            fen: Vec::new(),
-            pgn: Vec::new(),
+            move_history: Vec::new(),
+            state_history: HashMap::new(),
         }
     }
     pub const fn new() -> Self {
         Self {
-            fen: Vec::from([Fen::Static(FEN_STARTING_POS)]),
-            pgn: Vec::new(),
+            move_history: Vec::new(),
+            state_history: HashMap::new(),
         }
     }
 }

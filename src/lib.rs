@@ -30,6 +30,8 @@ mod castle_rights;
 mod color_castle_rights;
 mod game_status;
 mod move_handler;
+mod move_history_entry;
+mod bit_board_const;
 
 #[cfg(test)]
 mod tests {

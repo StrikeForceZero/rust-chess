@@ -1,4 +1,5 @@
 use crate::bit_board::{BitBoard, BitBoardData};
+use crate::bit_board_const::BitBoardConst;
 use crate::board_position::BoardPosition;
 use crate::chess_piece::ChessPiece;
 use crate::chess_piece::ChessPiece::{BlackBishop, BlackKing, BlackKnight, BlackPawn, BlackQueen, BlackRook, WhiteBishop, WhiteKing, WhiteKnight, WhitePawn, WhiteQueen, WhiteRook};
@@ -413,34 +414,34 @@ impl Board {
     }
 
     pub fn as_bit_boards(&self) -> FullColorPieceBitBoard {
-        let mut white_king: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut white_queen: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut white_rook: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut white_bishop: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut white_knight: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut white_pawn: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_king: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_queen: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_rook: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_bishop: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_knight: BitBoard = BitBoard::from(BitBoardData::new());
-        let mut black_pawn: BitBoard = BitBoard::from(BitBoardData::new());
+        let mut white_king = BitBoardConst::new();
+        let mut white_queen = BitBoardConst::new();
+        let mut white_rook = BitBoardConst::new();
+        let mut white_bishop = BitBoardConst::new();
+        let mut white_knight = BitBoardConst::new();
+        let mut white_pawn = BitBoardConst::new();
+        let mut black_king = BitBoardConst::new();
+        let mut black_queen = BitBoardConst::new();
+        let mut black_rook = BitBoardConst::new();
+        let mut black_bishop = BitBoardConst::new();
+        let mut black_knight = BitBoardConst::new();
+        let mut black_pawn = BitBoardConst::new();
 
         for (pos, maybePiece) in self.as_iter() {
             let Some(piece) = maybePiece else { continue };
             match piece {
-                ChessPiece::WhiteKing => white_king.set_pos(pos, true),
-                ChessPiece::WhiteQueen => white_queen.set_pos(pos, true),
-                ChessPiece::WhiteRook => white_rook.set_pos(pos, true),
-                ChessPiece::WhiteBishop => white_bishop.set_pos(pos, true),
-                ChessPiece::WhiteKnight => white_knight.set_pos(pos, true),
-                ChessPiece::WhitePawn => white_pawn.set_pos(pos, true),
-                ChessPiece::BlackKing => black_king.set_pos(pos, true),
-                ChessPiece::BlackQueen => black_queen.set_pos(pos, true),
-                ChessPiece::BlackRook => black_rook.set_pos(pos, true),
-                ChessPiece::BlackBishop => black_bishop.set_pos(pos, true),
-                ChessPiece::BlackKnight => black_knight.set_pos(pos, true),
-                ChessPiece::BlackPawn => black_pawn.set_pos(pos, true),
+                ChessPiece::WhiteKing => white_king = BitBoardConst::set_pos(white_king, pos, true),
+                ChessPiece::WhiteQueen => white_queen = BitBoardConst::set_pos(white_queen, pos, true),
+                ChessPiece::WhiteRook => white_rook = BitBoardConst::set_pos(white_rook, pos, true),
+                ChessPiece::WhiteBishop => white_bishop = BitBoardConst::set_pos(white_bishop, pos, true),
+                ChessPiece::WhiteKnight => white_knight = BitBoardConst::set_pos(white_knight, pos, true),
+                ChessPiece::WhitePawn => white_pawn = BitBoardConst::set_pos(white_pawn, pos, true),
+                ChessPiece::BlackKing => black_king = BitBoardConst::set_pos(black_king, pos, true),
+                ChessPiece::BlackQueen => black_queen = BitBoardConst::set_pos(black_queen, pos, true),
+                ChessPiece::BlackRook => black_rook = BitBoardConst::set_pos(black_rook, pos, true),
+                ChessPiece::BlackBishop => black_bishop = BitBoardConst::set_pos(black_bishop, pos, true),
+                ChessPiece::BlackKnight => black_knight = BitBoardConst::set_pos(black_knight, pos, true),
+                ChessPiece::BlackPawn => black_pawn = BitBoardConst::set_pos(black_pawn, pos, true),
             };
         }
 
@@ -462,6 +463,93 @@ impl Board {
                 pawn: black_pawn,
             }
         }
+    }
+    pub const fn as_bit_boards_const(&self) -> FullColorPieceBitBoard {
+        let mut fcpbb = FullColorPieceBitBoard {
+            white: FullPieceBitBoard {
+                king: BitBoardConst::new(),
+                queen: BitBoardConst::new(),
+                rook: BitBoardConst::new(),
+                bishop: BitBoardConst::new(),
+                knight: BitBoardConst::new(),
+                pawn: BitBoardConst::new(),
+            },
+            black: FullPieceBitBoard {
+                king: BitBoardConst::new(),
+                queen: BitBoardConst::new(),
+                rook: BitBoardConst::new(),
+                bishop: BitBoardConst::new(),
+                knight: BitBoardConst::new(),
+                pawn: BitBoardConst::new(),
+            }
+        };
+
+        fcpbb = fcpbb.update(position::A1, &self.a1);
+        fcpbb = fcpbb.update(position::A2, &self.a2);
+        fcpbb = fcpbb.update(position::A3, &self.a3);
+        fcpbb = fcpbb.update(position::A4, &self.a4);
+        fcpbb = fcpbb.update(position::A5, &self.a5);
+        fcpbb = fcpbb.update(position::A6, &self.a6);
+        fcpbb = fcpbb.update(position::A7, &self.a7);
+        fcpbb = fcpbb.update(position::A8, &self.a8);
+        fcpbb = fcpbb.update(position::B1, &self.b1);
+        fcpbb = fcpbb.update(position::B2, &self.b2);
+        fcpbb = fcpbb.update(position::B3, &self.b3);
+        fcpbb = fcpbb.update(position::B4, &self.b4);
+        fcpbb = fcpbb.update(position::B5, &self.b5);
+        fcpbb = fcpbb.update(position::B6, &self.b6);
+        fcpbb = fcpbb.update(position::B7, &self.b7);
+        fcpbb = fcpbb.update(position::B8, &self.b8);
+        fcpbb = fcpbb.update(position::C1, &self.c1);
+        fcpbb = fcpbb.update(position::C2, &self.c2);
+        fcpbb = fcpbb.update(position::C3, &self.c3);
+        fcpbb = fcpbb.update(position::C4, &self.c4);
+        fcpbb = fcpbb.update(position::C5, &self.c5);
+        fcpbb = fcpbb.update(position::C6, &self.c6);
+        fcpbb = fcpbb.update(position::C7, &self.c7);
+        fcpbb = fcpbb.update(position::C8, &self.c8);
+        fcpbb = fcpbb.update(position::D1, &self.d1);
+        fcpbb = fcpbb.update(position::D2, &self.d2);
+        fcpbb = fcpbb.update(position::D3, &self.d3);
+        fcpbb = fcpbb.update(position::D4, &self.d4);
+        fcpbb = fcpbb.update(position::D5, &self.d5);
+        fcpbb = fcpbb.update(position::D6, &self.d6);
+        fcpbb = fcpbb.update(position::D7, &self.d7);
+        fcpbb = fcpbb.update(position::D8, &self.d8);
+        fcpbb = fcpbb.update(position::E1, &self.e1);
+        fcpbb = fcpbb.update(position::E2, &self.e2);
+        fcpbb = fcpbb.update(position::E3, &self.e3);
+        fcpbb = fcpbb.update(position::E4, &self.e4);
+        fcpbb = fcpbb.update(position::E5, &self.e5);
+        fcpbb = fcpbb.update(position::E6, &self.e6);
+        fcpbb = fcpbb.update(position::E7, &self.e7);
+        fcpbb = fcpbb.update(position::E8, &self.e8);
+        fcpbb = fcpbb.update(position::F1, &self.f1);
+        fcpbb = fcpbb.update(position::F2, &self.f2);
+        fcpbb = fcpbb.update(position::F3, &self.f3);
+        fcpbb = fcpbb.update(position::F4, &self.f4);
+        fcpbb = fcpbb.update(position::F5, &self.f5);
+        fcpbb = fcpbb.update(position::F6, &self.f6);
+        fcpbb = fcpbb.update(position::F7, &self.f7);
+        fcpbb = fcpbb.update(position::F8, &self.f8);
+        fcpbb = fcpbb.update(position::H1, &self.h1);
+        fcpbb = fcpbb.update(position::H2, &self.h2);
+        fcpbb = fcpbb.update(position::H3, &self.h3);
+        fcpbb = fcpbb.update(position::H4, &self.h4);
+        fcpbb = fcpbb.update(position::H5, &self.h5);
+        fcpbb = fcpbb.update(position::H6, &self.h6);
+        fcpbb = fcpbb.update(position::H7, &self.h7);
+        fcpbb = fcpbb.update(position::H8, &self.h8);
+        fcpbb = fcpbb.update(position::G1, &self.g1);
+        fcpbb = fcpbb.update(position::G2, &self.g2);
+        fcpbb = fcpbb.update(position::G3, &self.g3);
+        fcpbb = fcpbb.update(position::G4, &self.g4);
+        fcpbb = fcpbb.update(position::G5, &self.g5);
+        fcpbb = fcpbb.update(position::G6, &self.g6);
+        fcpbb = fcpbb.update(position::G7, &self.g7);
+        fcpbb = fcpbb.update(position::G8, &self.g8);
+
+        fcpbb
     }
 }
 

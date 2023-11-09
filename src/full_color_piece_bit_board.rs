@@ -1,7 +1,11 @@
+use crate::bit_board_const::BitBoardConst;
+use crate::board_position::BoardPosition;
+use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::full_piece_bit_board::FullPieceBitBoard;
 use crate::utils::{CustomStructIterator, CustomStructIteratorMut};
 
+#[derive(Clone)]
 pub struct FullColorPieceBitBoard {
     pub white: FullPieceBitBoard,
     pub black: FullPieceBitBoard,
@@ -13,6 +17,27 @@ impl FullColorPieceBitBoard {
             data: self,
             index: 0,
         }
+    }
+
+    pub const fn update(mut self, board_position: BoardPosition, maybe_chess_piece: &Option<ChessPiece>) -> Self {
+        let Some(chess_piece) = maybe_chess_piece else {
+            return self;
+        };
+        match chess_piece {
+            ChessPiece::WhiteKing => self.white.king = BitBoardConst::set_pos(self.white.king, board_position, true),
+            ChessPiece::WhiteQueen => self.white.queen = BitBoardConst::set_pos(self.white.queen, board_position, true),
+            ChessPiece::WhiteRook => self.white.rook = BitBoardConst::set_pos(self.white.rook, board_position, true),
+            ChessPiece::WhiteBishop => self.white.bishop = BitBoardConst::set_pos(self.white.bishop, board_position, true),
+            ChessPiece::WhiteKnight => self.white.knight = BitBoardConst::set_pos(self.white.knight, board_position, true),
+            ChessPiece::WhitePawn => self.white.pawn = BitBoardConst::set_pos(self.white.pawn, board_position, true),
+            ChessPiece::BlackKing => self.black.king = BitBoardConst::set_pos(self.black.king, board_position, true),
+            ChessPiece::BlackQueen => self.black.queen = BitBoardConst::set_pos(self.black.queen, board_position, true),
+            ChessPiece::BlackRook => self.black.rook = BitBoardConst::set_pos(self.black.rook, board_position, true),
+            ChessPiece::BlackBishop => self.black.bishop = BitBoardConst::set_pos(self.black.bishop, board_position, true),
+            ChessPiece::BlackKnight => self.black.knight = BitBoardConst::set_pos(self.black.knight, board_position, true),
+            ChessPiece::BlackPawn => self.black.pawn = BitBoardConst::set_pos(self.black.pawn, board_position, true),
+        };
+        self
     }
 }
 
