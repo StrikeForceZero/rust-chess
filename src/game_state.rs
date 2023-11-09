@@ -20,11 +20,23 @@ pub struct GameState {
 impl GameState {
     pub const fn empty() -> Self {
         Self {
+            board: Board::empty(),
+            history: History::empty(),
+            move_clock: MoveClock::new(),
+            en_passant_target_pos: None,
+            castle_rights: ColorCastleRights::empty(),
+            active_color: Color::White,
+            game_status: GameStatus::New,
+        }
+    }
+
+    pub const fn new() -> Self {
+        Self {
             board: Board::new(),
             history: History::new(),
             move_clock: MoveClock::new(),
             en_passant_target_pos: None,
-            castle_rights: ColorCastleRights::empty(),
+            castle_rights: ColorCastleRights::new(),
             active_color: Color::White,
             game_status: GameStatus::New,
         }

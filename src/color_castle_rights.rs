@@ -14,6 +14,12 @@ impl ColorCastleRights {
             black: None,
         }
     }
+    pub const fn new() -> Self {
+        Self {
+            white: Some(CastleRights::Both),
+            black: Some(CastleRights::Both),
+        }
+    }
     const fn to_tuple(&self) -> (&Option<CastleRights>, &Option<CastleRights>) {
         (&self.white, &self.black)
     }

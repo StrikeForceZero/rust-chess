@@ -10,9 +10,12 @@ use crate::color::Color;
 use crate::color_castle_rights::ColorCastleRights;
 use crate::game_state::GameState;
 
+pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
+
 #[repr(transparent)]
 #[derive(Clone)]
-pub struct Fen(String);
+pub struct Fen(pub String);
 
 #[derive(Error, Debug, Clone)]
 pub enum FenParsingError {

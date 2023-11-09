@@ -1,4 +1,4 @@
-use crate::fen::Fen;
+use crate::fen::{Fen, FEN_STARTING_POS};
 use crate::pgn::Pgn;
 
 #[derive(Clone)]
@@ -8,9 +8,15 @@ pub struct History {
 }
 
 impl History {
-    pub const fn new() -> Self {
+    pub const fn empty() -> Self {
         Self {
             fen: Vec::new(),
+            pgn: Vec::new(),
+        }
+    }
+    pub const fn new() -> Self {
+        Self {
+            fen: vec![Fen(String::from(FEN_STARTING_POS))],
             pgn: Vec::new(),
         }
     }

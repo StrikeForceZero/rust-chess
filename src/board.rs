@@ -1,6 +1,7 @@
 use crate::bit_board::{BitBoard, BitBoardData};
 use crate::board_position::BoardPosition;
 use crate::chess_piece::ChessPiece;
+use crate::chess_piece::ChessPiece::{BlackBishop, BlackKing, BlackKnight, BlackPawn, BlackQueen, BlackRook, WhiteBishop, WhiteKing, WhiteKnight, WhitePawn, WhiteQueen, WhiteRook};
 use crate::full_color_piece_bit_board::FullColorPieceBitBoard;
 use crate::full_piece_bit_board::FullPieceBitBoard;
 use crate::piece::Piece;
@@ -83,7 +84,7 @@ pub struct Board {
 }
 
 impl Board {
-    pub const fn new() -> Board {
+    pub const fn empty() -> Board {
         Board {
             a1: None,
             a2: None,
@@ -149,6 +150,81 @@ impl Board {
             g6: None,
             g7: None,
             g8: None,
+        }
+    }
+    pub const fn new() -> Board {
+        Board {
+            a1: Some(WhiteRook),
+            b1: Some(WhiteKnight),
+            c1: Some(WhiteBishop),
+            d1: Some(WhiteQueen),
+            e1: Some(WhiteKing),
+            f1: Some(WhiteBishop),
+            h1: Some(WhiteKnight),
+            g1: Some(WhiteRook),
+
+            a2: Some(WhitePawn),
+            b2: Some(WhitePawn),
+            c2: Some(WhitePawn),
+            d2: Some(WhitePawn),
+            e2: Some(WhitePawn),
+            f2: Some(WhitePawn),
+            h2: Some(WhitePawn),
+            g2: Some(WhitePawn),
+
+            a3: None,
+            b3: None,
+            c3: None,
+            d3: None,
+            e3: None,
+            f3: None,
+            h3: None,
+            g3: None,
+
+            a4: None,
+            b4: None,
+            c4: None,
+            d4: None,
+            e4: None,
+            f4: None,
+            h4: None,
+            g4: None,
+
+            a5: None,
+            b5: None,
+            c5: None,
+            e5: None,
+            d5: None,
+            f5: None,
+            h5: None,
+            g5: None,
+
+            a6: None,
+            b6: None,
+            c6: None,
+            d6: None,
+            e6: None,
+            f6: None,
+            h6: None,
+            g6: None,
+
+            a7: Some(BlackPawn),
+            b7: Some(BlackPawn),
+            c7: Some(BlackPawn),
+            d7: Some(BlackPawn),
+            e7: Some(BlackPawn),
+            f7: Some(BlackPawn),
+            h7: Some(BlackPawn),
+            g7: Some(BlackPawn),
+
+            a8: Some(BlackRook),
+            b8: Some(BlackKnight),
+            c8: Some(BlackBishop),
+            d8: Some(BlackQueen),
+            e8: Some(BlackKing),
+            f8: Some(BlackBishop),
+            h8: Some(BlackKnight),
+            g8: Some(BlackRook),
         }
     }
     pub const fn all(&self) -> [&Option<ChessPiece>; 64] {
@@ -323,7 +399,7 @@ impl Board {
         removed_piece
     }
     pub fn from_bit_boards(full_color_piece_bit_board: FullColorPieceBitBoard) -> Self {
-        let mut board = Board::new();
+        let mut board = Board::empty();
         for (color, piece_bit_board) in full_color_piece_bit_board.as_iter() {
             for (piece, bit_Board) in piece_bit_board.as_iter() {
                 for (pos, value) in bit_Board.as_iter() {
