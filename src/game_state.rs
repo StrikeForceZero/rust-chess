@@ -18,7 +18,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub const fn new() -> Self {
+    pub const fn empty() -> Self {
         Self {
             board: Board::new(),
             history: History::new(),

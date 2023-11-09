@@ -54,7 +54,7 @@ const fn get_en_passant_pos_from_str(en_passant_str: &str) -> Result<Option<Boar
 
 const BOARD_TERMINATOR: &str = "/";
 pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
-    let mut game_state = GameState::new();
+    let mut game_state = GameState::empty();
     let parts = fen_str.split_whitespace().collect::<Vec<_>>();
     let (squares_str, active_color_str, castle_rights_str, en_passant_str, half_move_clock_str, full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     game_state.active_color = match get_active_color_from_str(active_color_str) {
@@ -224,4 +224,10 @@ pub const fn serialize_without_clock_and_active_color(game_state: GameState) -> 
     let mut parts = serialized.split_whitespace().collect::<Vec<_>>();
     let (squares_str, _active_color_str, castle_rights_str, en_passant_str, _half_move_clock_str, _full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     [squares_str, castle_rights_str, en_passant_str].join(SPACE.to_string().as_str())
+}
+
+#[cfg(test)]
+mod tests {
+    pub fn serialize() {
+    }
 }
