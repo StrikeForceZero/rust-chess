@@ -243,7 +243,7 @@ impl Board {
             position::G8 => &self.g8,
         }
     }
-    pub const fn get_mut(&mut self, board_position: BoardPosition) -> &mut Option<ChessPiece> {
+    pub fn get_mut(&mut self, board_position: BoardPosition) -> &mut Option<ChessPiece> {
         match board_position {
             position::A1 => &mut self.a1,
             position::A2 => &mut self.a2,
@@ -314,10 +314,10 @@ impl Board {
     pub const fn as_iter(&self) -> CustomStructIterator<Board> {
         CustomStructIterator::from(self)
     }
-    pub const fn set(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) {
+    pub fn set(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) {
         *self.get_mut(board_position) = chess_piece;
     }
-    pub const fn replace(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) -> Option<ChessPiece> {
+    pub fn replace(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) -> Option<ChessPiece> {
         let removed_piece = self.get(board_position).clone();
         self.set(board_position, chess_piece);
         removed_piece

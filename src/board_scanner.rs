@@ -10,8 +10,8 @@ pub struct BoardScanner<'a> {
     pub direction: Direction,
 }
 
-impl BoardScanner<'_> {
-    pub const fn from_pos(board: &Board, starting_pos: BoardPosition, direction: Direction) -> Self {
+impl<'a> BoardScanner<'a> {
+    pub const fn from_pos(board: &'a Board, starting_pos: BoardPosition, direction: Direction) -> Self {
         BoardScanner {
             board,
             starting_pos,

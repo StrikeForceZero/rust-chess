@@ -29,17 +29,3 @@ impl<'a> Iterator for CustomStructIterator<'a, FullColorPieceBitBoard> {
         res
     }
 }
-
-impl<'a> Iterator for CustomStructIteratorMut<'a, FullColorPieceBitBoard> {
-    type Item = (Color, &'a mut FullPieceBitBoard);
-
-    fn next(&mut self) -> Option<Self::Item> {
-        let res = Some(match self.index {
-            0 => (Color::White, &mut self.data.white),
-            1 => (Color::Black, &mut self.data.black),
-            _ => return None,
-        });
-        self.index += 1;
-        res
-    }
-}
