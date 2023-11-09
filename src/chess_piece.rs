@@ -1,9 +1,16 @@
+use thiserror::Error;
 use crate::{bit_board, chess_piece_move_rulesets};
 use crate::bit_board::BitBoard;
 use crate::board_rank::{BLACK_BACK_RANK, BLACK_PAWNN_RANK, WHITE_BACK_RANK, WHITE_PAWNN_RANK};
 use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
 use crate::color::Color;
 use crate::piece::Piece;
+
+#[derive(Error, Debug, Clone, Copy)]
+pub enum ChessPieceParseError {
+    #[error("Invalid character for ChessPiece: {0}")]
+    InvalidChar(char),
+}
 
 #[derive(Copy, Clone)]
 pub enum ChessPiece {
@@ -97,6 +104,24 @@ impl ChessPiece {
             Self::BlackQueen => BitBoard::from_value(bit_board::QUEEN_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
             Self::BlackKing => BitBoard::from_value(bit_board::KING_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
         }
+    }
+
+    pub fn from_char(c: char) -> Result<ChessPiece, ChessPieceParseError> {
+        Ok(match c {
+            'K' => Self::WhiteKing,
+            'Q' => Self::WhiteQueen,
+            'R' => Self::WhiteRook,
+            'B' => Self::WhiteBishop,
+            'N' => Self::WhiteKnight,
+            'P' => Self::WhitePawn,
+            'k' => Self::BlackKing,
+            'q' => Self::BlackQueen,
+            'r' => Self::BlackRook,
+            'b' => Self::BlackBishop,
+            'n' => Self::BlackKnight,
+            'p' => Self::BlackPawn,
+            _ => return Err(ChessPieceParseError::InvalidChar(c)),
+        })
     }
 
     const fn as_move_set_10(&self) -> Option<ChessPieceMoveRuleset<10>> {

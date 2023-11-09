@@ -16,3 +16,17 @@ pub struct GameState {
     pub active_color: Color,
     pub game_status: GameStatus,
 }
+
+impl GameState {
+    pub const fn new() -> Self {
+        Self {
+            board: Board::new(),
+            history: History::new(),
+            move_clock: MoveClock::new(),
+            en_passant_target_pos: None,
+            castle_rights: ColorCastleRights::empty(),
+            active_color: Color::White,
+            game_status: GameStatus::New,
+        }
+    }
+}

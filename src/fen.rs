@@ -1,13 +1,17 @@
 use thiserror::Error;
 use crate::board::Board;
 use crate::board_position::{BoardPosition, BoardPositionStrParseError};
-use crate::board_rank::BoardRank;
+use crate::board_rank::{BoardRank, BoardRankError};
 use itertools::Itertools;
+use crate::board_file::{BoardFile, BoardFileError};
+use crate::castle_rights::CastleRightsStringParseError;
 use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::color_castle_rights::ColorCastleRights;
+use crate::game_state::GameState;
 
 #[repr(transparent)]
+#[derive(Clone)]
 pub struct Fen(String);
 
 #[derive(Error, Debug, Clone)]
@@ -16,10 +20,20 @@ pub enum FenParsingError {
     InvalidActiveColorString(String),
     #[error("Invalid active color for Fen, active color expects to be W | B, received: {0}")]
     InvalidActiveColorChar(char),
+    #[error("Invalid castle rights: {0}")]
+    InvalidCastleRights(CastleRightsStringParseError),
+    #[error("Invalid en passant: {0}")]
+    InvalidEnPassant(BoardPositionStrParseError),
+    #[error("Invalid board string: {0}")]
+    InvalidBoardString(String),
+    #[error("Invalid board string: {0}")]
+    InvalidBoardStringBoardFileParseError(BoardFileError),
+    #[error("Invalid board string: {0}")]
+    InvalidBoardStringBoardRankParseError(BoardRankError),
 }
 
 
-fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenParsingError> {
+const fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenParsingError> {
     if active_color_str.len() != 1 {
         return Err(FenParsingError::InvalidActiveColorString(active_color_str.to_string()));
     }
@@ -28,65 +42,77 @@ fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenP
     ActiveColor::from_char(active_color_char)
 }
 
-fn get_en_passant_pos_from_str(en_passant_str: &str) -> Result<Option<BoardPosition>, BoardPositionStrParseError> {
+const fn get_en_passant_pos_from_str(en_passant_str: &str) -> Result<Option<BoardPosition>, BoardPositionStrParseError> {
     if en_passant_str.len() == 0 || en_passant_str == "-" {
         return Ok(None);
     }
-    Ok(Some(BoardPosition::from_str(en_passant_str)?))
-}
-
-#[derive(Error, Debug, Copy, Clone)]
-enum ApplyError {
-
+    Ok(Some(match BoardPosition::from_str(en_passant_str) {
+        Ok(pos) => pos,
+        Err(err) => return Err(err),
+    }))
 }
 
 const BOARD_TERMINATOR: &str = "/";
-pub fn apply(board: &mut Board, fen_str: &str) -> Result<(), ApplyError> {
+pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
+    let mut game_state = GameState::new();
     let parts = fen_str.split_whitespace().collect::<Vec<_>>();
-    let mut board_state = board.get_state_mut();
-    // TODO: implement remaining
     let (squares_str, active_color_str, castle_rights_str, en_passant_str, half_move_clock_str, full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
-    board_state.color_to_move = get_active_color_from_str(active_color_str)?.as_color();
-    let castle_rights = ColorCastleRights::from_str(castle_rights_str);
-    board_state.white_castling_rights = castle_rights.white;
-    board_state.black_castling_rights = castle_rights.black;
-    board_state.half_move_clock = half_move_clock_str.parse::<u16>().expect("invalid half_move_clock_str");
-    board_state.full_move_clock = full_move_clock_str.parse::<u16>().expect("invalid full_move_clock_str");
-    board_state.en_passant = get_en_passant_pos_from_str(en_passant_str);
+    game_state.active_color = match get_active_color_from_str(active_color_str) {
+        Ok(color) => color.as_color(),
+        Err(e) => return Err(e),
+    };
+    game_state.castle_rights = match ColorCastleRights::from_str(castle_rights_str) {
+        Ok(castle_rights) => castle_rights,
+        Err(e) => return Err(FenParsingError::InvalidCastleRights(e)),
+    };
+    game_state.move_clock.half_move = half_move_clock_str.parse::<u16>().expect("invalid half_move_clock_str");
+    game_state.move_clock.full_move = full_move_clock_str.parse::<u16>().expect("invalid full_move_clock_str");
+    game_state.en_passant_target_pos = match get_en_passant_pos_from_str(en_passant_str) {
+        Ok(pos) => pos,
+        Err(e) => return Err(FenParsingError::InvalidEnPassant(e))
+    };
     let rows = squares_str.split_terminator(BOARD_TERMINATOR).collect::<Vec<_>>();
     // flip so white is on bottom
     let rows = rows.iter().rev();
     for (row_ix, row) in rows.enumerate() {
-        let rank_u8 = u8::try_from(row_ix).expect("row_ix overflow");
-        let rank = BoardRank::from_u8(rank_u8);
+        let rank_u8 = u8::try_from(row_ix + 1).expect("row_ix overflow");
+        let rank = match BoardRank::from_u8(rank_u8) {
+            Ok(rank) => rank,
+            Err(e) => return Err(FenParsingError::InvalidBoardStringBoardRankParseError(e)),
+        };
         let chars = row.chars();
         let mut offset: u8 = 0;
         for (char_ix, char) in chars.enumerate() {
-            let file_u8 = u8::try_from(char_ix).expect("char_ix overflow") + offset;
-            let mut file = BoardRank::from_u8(file_u8);
+            let file_u8 = u8::try_from(char_ix + 1).expect("char_ix overflow") + offset;
+            let mut file = match BoardFile::from_u8(file_u8) {
+                Ok(file) => file,
+                Err(e) => return Err(FenParsingError::InvalidBoardStringBoardFileParseError(e)),
+            };
 
             if let Ok(blanks) = format!("{char}").parse::<u8>() {
                 offset += blanks - 1;
                 let mut remaining = blanks;
                 while remaining > 0 {
                     let pos = BoardPosition(file, rank);
-                    board.set(pos, None);
+                    game_state.board.set(pos, None);
                     remaining -= 1;
                     if remaining > 0 {
-                        file = if let Some(next_file) = file.next() { next_file } else {
-                            panic!("invalid fen string - given: {blanks}, overflow: {remaining}");
+                        let Some(next_file) = file.next() else {
+                            return Err(FenParsingError::InvalidBoardString(format!("invalid fen string - given: {blanks}, overflow: {remaining}")));
                         };
+                        file = next_file;
                     }
                 }
                 continue;
             }
-            match ChessPiece::try_from_fen(&char) {
-                Ok(piece) => board.set(BoardPosition(file, rank), Some(piece)),
+            match ChessPiece::from_char(char) {
+                Ok(piece) => game_state.board.set(BoardPosition(file, rank), Some(piece)),
                 Err(err) => panic!("{err}"),
             }
         }
     }
-    Ok(())
+    game_state.history.fen.push(Fen(fen_str.to_string()));
+    Ok(game_state)
 }
 
 #[derive(Copy, Clone)]
@@ -164,7 +190,7 @@ impl FEN {
             board_str,
             self.active_color.as_char().to_string(),
             self.castle.as_str().to_string(),
-            if self.en_passant.is_some() { self.en_passant.unwrap().to_string() } else { DASH.to_string() },
+            if self.en_passant.is_some() { self.en_passant.unwrap().to_string().to_lowercase() } else { DASH.to_string() },
             self.half_move_clock.to_string(),
             self.full_move_clock.to_string(),
         ]
@@ -176,25 +202,16 @@ impl FEN {
     }
 }
 
-pub fn serialize(board: &Board) -> String {
-    let en_passant = board.get_state().en_passant;
-    let mut en_passant_string: Option<String> = None;
-    if let Some(pos) = en_passant {
-        en_passant_string = Some(pos.to_string().to_lowercase());
-    }
+pub fn serialize(game_state: GameState) -> String {
     let mut fen = FEN {
         squares: [[None; 8]; 8],
-        active_color: ActiveColor::from_color(board.get_state().color_to_move),
-        castle:  FenCastle {
-            white: board.get_state().white_castling_rights,
-            black: board.get_state().black_castling_rights,
-        },
-        // TODO: this is dumb
-        en_passant: en_passant_string,
-        half_move_clock: board.get_state().half_move_clock,
-        full_move_clock: board.get_state().full_move_clock,
+        active_color: ActiveColor::from_color(game_state.active_color),
+        castle:  game_state.castle_rights.clone(),
+        en_passant: game_state.en_passant_target_pos,
+        half_move_clock: game_state.move_clock.half_move,
+        full_move_clock: game_state.move_clock.full_move,
     };
-    for (row_ix, &row) in board.as_slice().iter().rev().enumerate() {
+    for (row_ix, &row) in game_state.board.as_slice().iter().rev().enumerate() {
         for (col_ix, &col) in row.iter().enumerate() {
             fen.squares[row_ix][col_ix] = *col;
         }
@@ -202,8 +219,8 @@ pub fn serialize(board: &Board) -> String {
     fen.to_string()
 }
 
-pub fn serialize_without_clock_and_active_color(board: &Board) -> String {
-    let serialized = serialize(board);
+pub const fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
+    let serialized = serialize(game_state);
     let mut parts = serialized.split_whitespace().collect::<Vec<_>>();
     let (squares_str, _active_color_str, castle_rights_str, en_passant_str, _half_move_clock_str, _full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     [squares_str, castle_rights_str, en_passant_str].join(SPACE.to_string().as_str())

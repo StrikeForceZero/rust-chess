@@ -8,7 +8,7 @@ pub struct ColorCastleRights {
 }
 
 impl ColorCastleRights {
-    const fn empty() -> Self {
+    pub const fn empty() -> Self {
         Self {
             white: None,
             black: None,

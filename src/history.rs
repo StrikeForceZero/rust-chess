@@ -6,3 +6,12 @@ pub struct History {
     pub fen: Vec<Fen>,
     pub pgn: Vec<Pgn>,
 }
+
+impl History {
+    pub const fn new() -> Self {
+        Self {
+            fen: Vec::new(),
+            pgn: Vec::new(),
+        }
+    }
+}

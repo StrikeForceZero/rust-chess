@@ -34,6 +34,19 @@ impl BoardRank {
             Self::Eight => 8,
         }
     }
+    pub const fn from_u8(num: u8) -> Result<Self, BoardRankError> {
+        Ok(match num {
+            1 => Self::One,
+            2 => Self::Two,
+            3 => Self::Three,
+            4 => Self::Four,
+            5 => Self::Five,
+            6 => Self::Six,
+            7 => Self::Seven,
+            8 => Self::Eight,
+            _ => return Err(BoardRankError::InvalidNumber(num))
+        })
+    }
     pub const fn from_char(char: char) -> Result<Self, BoardRankError> {
         Ok(match char {
             '1' => Self::One,

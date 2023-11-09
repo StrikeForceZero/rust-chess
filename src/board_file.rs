@@ -7,6 +7,8 @@ pub enum BoardFileError {
     InvalidChar(char),
     #[error("Invalid usize for BoardFile: {0}")]
     InvalidUsize(usize),
+    #[error("Invalid u8 for BoardFile: {0}")]
+    InvalidU8(u8),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
@@ -60,6 +62,20 @@ impl BoardFile {
     }
     pub const fn as_shift_offset(&self) -> usize {
         self.as_zero_based_index()
+    }
+
+    pub const fn from_u8(num: u8) -> Result<Self, BoardFileError> {
+        Ok(match num {
+            1 => Self::A,
+            2 => Self::B,
+            3 => Self::C,
+            4 => Self::D,
+            5 => Self::E,
+            6 => Self::F,
+            7 => Self::G,
+            8 => Self::H,
+            _ => return Err(BoardFileError::InvalidU8(num))
+        })
     }
     pub const fn from_char(char: char) -> Result<Self, BoardFileError> {
         Ok(match char {
