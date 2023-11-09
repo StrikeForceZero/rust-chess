@@ -1,4 +1,6 @@
 use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+use thiserror::Error;
 use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
 use crate::direction::Direction;
@@ -25,11 +27,44 @@ impl BoardPosition {
     pub const fn next_pos(self, direction: Direction) -> Option<Self> {
         direction.get_next_pos(self)
     }
+
+    pub const fn from_str(s: &str) -> Result<Self, BoardPositionStrParseError> {
+        let mut chars = s.chars();
+        if chars.count() != 2 {
+            return Err(BoardPositionStrParseError::InvalidNumberOfChars(s.to_string()))
+        }
+        let (file_char, rank_char) = (chars.next().unwrap(), chars.next().unwrap());
+        let Ok(file) = BoardFile::from_char(file_char) else {
+            return Err(BoardPositionStrParseError::InvalidFileOrRank(s.to_string()));
+        };
+        let Ok(rank) = BoardRank::from_char(file_char) else {
+            return Err(BoardPositionStrParseError::InvalidFileOrRank(s.to_string()));
+        };
+        Ok(BoardPosition(file, rank))
+    }
 }
 
 impl Display for BoardPosition {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let BoardPosition(file, rank) = self;
         write!(f, "{file}{rank}")
+    }
+}
+
+
+#[derive(Error, Debug, Clone)]
+pub enum BoardPositionStrParseError {
+    #[error("Invalid number of chars for BoardPosition: {0}")]
+    InvalidNumberOfChars(String),
+
+    #[error("Invalid file or rank for BoardPosition: {0}")]
+    InvalidFileOrRank(String),
+}
+
+impl FromStr for BoardPosition {
+    type Err = BoardPositionStrParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        BoardPosition::from_str(s)
     }
 }

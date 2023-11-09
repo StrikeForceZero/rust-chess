@@ -5,6 +5,8 @@ use thiserror::Error;
 pub enum BoardRankError {
     #[error("Invalid number for BoardRank: {0}")]
     InvalidNumber(usize),
+    #[error("Invalid char for BoardRank: {0}")]
+    InvalidChar(char),
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
@@ -31,6 +33,19 @@ impl BoardRank {
             Self::Seven => 7,
             Self::Eight => 8,
         }
+    }
+    pub const fn from_char(char: char) -> Result<Self, BoardRankError> {
+        Ok(match char {
+            '1' => Self::One,
+            '2' => Self::Two,
+            '3' => Self::Three,
+            '4' => Self::Four,
+            '5' => Self::Five,
+            '6' => Self::Six,
+            '7' => Self::Seven,
+            '8' => Self::Eight,
+            _ => return Err(BoardRankError::InvalidChar(char))
+        })
     }
     pub const fn as_char(&self) -> char {
         match self {

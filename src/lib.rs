@@ -29,6 +29,7 @@ mod move_clock;
 mod castle_rights;
 mod color_castle_rights;
 mod game_status;
+mod move_handler;
 
 #[cfg(test)]
 mod tests {
