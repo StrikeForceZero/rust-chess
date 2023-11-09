@@ -2,7 +2,7 @@ use thiserror::Error;
 use crate::board::Board;
 use crate::board_position::{BoardPosition, BoardPositionStrParseError};
 use crate::board_rank::BoardRank;
-use crate::castle_rights::CastleRights;
+use itertools::Itertools;
 use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::color_castle_rights::ColorCastleRights;
@@ -123,38 +123,11 @@ impl ActiveColor {
     }
 }
 
-#[derive(Clone)]
-pub struct FenCastle {
-    pub white: Option<CastleRights>,
-    pub black: Option<CastleRights>,
-}
-
-impl FenCastle {
-    pub fn serialize_option(option: &Option<CastleRights>) -> String {
-        if let Some(castle) = option {
-            castle.as_str().to_string()
-        } else {
-            String::from(EMPTY)
-        }
-    }
-    pub fn to_string(&self) -> String {
-        let serialized = [
-            FenCastle::serialize_option(&self.white),
-            FenCastle::serialize_option(&self.black),
-        ].join(EMPTY.to_string().as_str());
-        if serialized.len() == 0 {
-            String::from(DASH)
-        } else {
-            serialized
-        }
-    }
-}
-
 struct FEN {
     squares: [[Option<ChessPiece>; 8]; 8],
     active_color: ActiveColor,
-    castle: FenCastle,
-    en_passant: Option<String>,
+    castle: ColorCastleRights,
+    en_passant: Option<BoardPosition>,
     half_move_clock: u16,
     full_move_clock: u16,
 }
@@ -184,18 +157,19 @@ impl FEN {
                     }
                 }
                 chunks.join(EMPTY)
-            }).collect::<Vec<String>>().join(BOARD_TERMINATOR);
+            })
+            .collect::<Vec<String>>()
+            .join(BOARD_TERMINATOR);
         let str: String = [
             board_str,
             self.active_color.as_char().to_string(),
-            self.castle.to_string(),
-            self.en_passant.clone().unwrap_or(DASH.to_string()),
+            self.castle.as_str().to_string(),
+            if self.en_passant.is_some() { self.en_passant.unwrap().to_string() } else { DASH.to_string() },
             self.half_move_clock.to_string(),
             self.full_move_clock.to_string(),
         ]
             .iter()
             .filter(|x| !x.is_empty())
-            .clone()
             .join(SPACE.to_string().as_str());
 
         return str;
