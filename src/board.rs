@@ -65,15 +65,6 @@ pub struct Board {
     f7: Option<ChessPiece>,
     f8: Option<ChessPiece>,
 
-    h1: Option<ChessPiece>,
-    h2: Option<ChessPiece>,
-    h3: Option<ChessPiece>,
-    h4: Option<ChessPiece>,
-    h5: Option<ChessPiece>,
-    h6: Option<ChessPiece>,
-    h7: Option<ChessPiece>,
-    h8: Option<ChessPiece>,
-
     g1: Option<ChessPiece>,
     g2: Option<ChessPiece>,
     g3: Option<ChessPiece>,
@@ -82,6 +73,15 @@ pub struct Board {
     g6: Option<ChessPiece>,
     g7: Option<ChessPiece>,
     g8: Option<ChessPiece>,
+
+    h1: Option<ChessPiece>,
+    h2: Option<ChessPiece>,
+    h3: Option<ChessPiece>,
+    h4: Option<ChessPiece>,
+    h5: Option<ChessPiece>,
+    h6: Option<ChessPiece>,
+    h7: Option<ChessPiece>,
+    h8: Option<ChessPiece>,
 }
 
 impl Board {
@@ -135,14 +135,6 @@ impl Board {
             f6: None,
             f7: None,
             f8: None,
-            h1: None,
-            h2: None,
-            h3: None,
-            h4: None,
-            h5: None,
-            h6: None,
-            h7: None,
-            h8: None,
             g1: None,
             g2: None,
             g3: None,
@@ -151,6 +143,14 @@ impl Board {
             g6: None,
             g7: None,
             g8: None,
+            h1: None,
+            h2: None,
+            h3: None,
+            h4: None,
+            h5: None,
+            h6: None,
+            h7: None,
+            h8: None,
         }
     }
     pub const fn new() -> Board {
@@ -161,8 +161,8 @@ impl Board {
             d1: Some(WhiteQueen),
             e1: Some(WhiteKing),
             f1: Some(WhiteBishop),
-            h1: Some(WhiteKnight),
-            g1: Some(WhiteRook),
+            h1: Some(WhiteRook),
+            g1: Some(WhiteKnight),
 
             a2: Some(WhitePawn),
             b2: Some(WhitePawn),
@@ -170,8 +170,8 @@ impl Board {
             d2: Some(WhitePawn),
             e2: Some(WhitePawn),
             f2: Some(WhitePawn),
-            h2: Some(WhitePawn),
             g2: Some(WhitePawn),
+            h2: Some(WhitePawn),
 
             a3: None,
             b3: None,
@@ -179,8 +179,8 @@ impl Board {
             d3: None,
             e3: None,
             f3: None,
-            h3: None,
             g3: None,
+            h3: None,
 
             a4: None,
             b4: None,
@@ -188,8 +188,8 @@ impl Board {
             d4: None,
             e4: None,
             f4: None,
-            h4: None,
             g4: None,
+            h4: None,
 
             a5: None,
             b5: None,
@@ -197,8 +197,8 @@ impl Board {
             e5: None,
             d5: None,
             f5: None,
-            h5: None,
             g5: None,
+            h5: None,
 
             a6: None,
             b6: None,
@@ -206,8 +206,8 @@ impl Board {
             d6: None,
             e6: None,
             f6: None,
-            h6: None,
             g6: None,
+            h6: None,
 
             a7: Some(BlackPawn),
             b7: Some(BlackPawn),
@@ -215,8 +215,8 @@ impl Board {
             d7: Some(BlackPawn),
             e7: Some(BlackPawn),
             f7: Some(BlackPawn),
-            h7: Some(BlackPawn),
             g7: Some(BlackPawn),
+            h7: Some(BlackPawn),
 
             a8: Some(BlackRook),
             b8: Some(BlackKnight),
@@ -224,8 +224,8 @@ impl Board {
             d8: Some(BlackQueen),
             e8: Some(BlackKing),
             f8: Some(BlackBishop),
-            h8: Some(BlackKnight),
-            g8: Some(BlackRook),
+            g8: Some(BlackKnight),
+            h8: Some(BlackRook),
         }
     }
     pub const fn all(&self) -> [&Option<ChessPiece>; 64] {
@@ -302,14 +302,6 @@ impl Board {
             position::F6 => &self.f6,
             position::F7 => &self.f7,
             position::F8 => &self.f8,
-            position::H1 => &self.h1,
-            position::H2 => &self.h2,
-            position::H3 => &self.h3,
-            position::H4 => &self.h4,
-            position::H5 => &self.h5,
-            position::H6 => &self.h6,
-            position::H7 => &self.h7,
-            position::H8 => &self.h8,
             position::G1 => &self.g1,
             position::G2 => &self.g2,
             position::G3 => &self.g3,
@@ -318,6 +310,14 @@ impl Board {
             position::G6 => &self.g6,
             position::G7 => &self.g7,
             position::G8 => &self.g8,
+            position::H1 => &self.h1,
+            position::H2 => &self.h2,
+            position::H3 => &self.h3,
+            position::H4 => &self.h4,
+            position::H5 => &self.h5,
+            position::H6 => &self.h6,
+            position::H7 => &self.h7,
+            position::H8 => &self.h8,
         }
     }
     pub fn get_mut(&mut self, board_position: BoardPosition) -> &mut Option<ChessPiece> {
@@ -370,14 +370,6 @@ impl Board {
             position::F6 => &mut self.f6,
             position::F7 => &mut self.f7,
             position::F8 => &mut self.f8,
-            position::H1 => &mut self.h1,
-            position::H2 => &mut self.h2,
-            position::H3 => &mut self.h3,
-            position::H4 => &mut self.h4,
-            position::H5 => &mut self.h5,
-            position::H6 => &mut self.h6,
-            position::H7 => &mut self.h7,
-            position::H8 => &mut self.h8,
             position::G1 => &mut self.g1,
             position::G2 => &mut self.g2,
             position::G3 => &mut self.g3,
@@ -386,6 +378,14 @@ impl Board {
             position::G6 => &mut self.g6,
             position::G7 => &mut self.g7,
             position::G8 => &mut self.g8,
+            position::H1 => &mut self.h1,
+            position::H2 => &mut self.h2,
+            position::H3 => &mut self.h3,
+            position::H4 => &mut self.h4,
+            position::H5 => &mut self.h5,
+            position::H6 => &mut self.h6,
+            position::H7 => &mut self.h7,
+            position::H8 => &mut self.h8,
         }
     }
     pub const fn as_iter(&self) -> CustomStructIterator<Board> {
@@ -532,14 +532,6 @@ impl Board {
         fcpbb = fcpbb.update(position::F6, &self.f6);
         fcpbb = fcpbb.update(position::F7, &self.f7);
         fcpbb = fcpbb.update(position::F8, &self.f8);
-        fcpbb = fcpbb.update(position::H1, &self.h1);
-        fcpbb = fcpbb.update(position::H2, &self.h2);
-        fcpbb = fcpbb.update(position::H3, &self.h3);
-        fcpbb = fcpbb.update(position::H4, &self.h4);
-        fcpbb = fcpbb.update(position::H5, &self.h5);
-        fcpbb = fcpbb.update(position::H6, &self.h6);
-        fcpbb = fcpbb.update(position::H7, &self.h7);
-        fcpbb = fcpbb.update(position::H8, &self.h8);
         fcpbb = fcpbb.update(position::G1, &self.g1);
         fcpbb = fcpbb.update(position::G2, &self.g2);
         fcpbb = fcpbb.update(position::G3, &self.g3);
@@ -548,6 +540,14 @@ impl Board {
         fcpbb = fcpbb.update(position::G6, &self.g6);
         fcpbb = fcpbb.update(position::G7, &self.g7);
         fcpbb = fcpbb.update(position::G8, &self.g8);
+        fcpbb = fcpbb.update(position::H1, &self.h1);
+        fcpbb = fcpbb.update(position::H2, &self.h2);
+        fcpbb = fcpbb.update(position::H3, &self.h3);
+        fcpbb = fcpbb.update(position::H4, &self.h4);
+        fcpbb = fcpbb.update(position::H5, &self.h5);
+        fcpbb = fcpbb.update(position::H6, &self.h6);
+        fcpbb = fcpbb.update(position::H7, &self.h7);
+        fcpbb = fcpbb.update(position::H8, &self.h8);
 
         fcpbb
     }
@@ -606,22 +606,22 @@ impl Iterator for CustomStructIterator<'_, Board> {
             45 => (position::F6, self.data.f6),
             46 => (position::F7, self.data.f7),
             47 => (position::F8, self.data.f8),
-            48 => (position::H1, self.data.h1),
-            49 => (position::H2, self.data.h2),
-            50 => (position::H3, self.data.h3),
-            51 => (position::H4, self.data.h4),
-            52 => (position::H5, self.data.h5),
-            53 => (position::H6, self.data.h6),
-            54 => (position::H7, self.data.h7),
-            55 => (position::H8, self.data.h8),
-            56 => (position::G1, self.data.g1),
-            57 => (position::G2, self.data.g2),
-            58 => (position::G3, self.data.g3),
-            59 => (position::G4, self.data.g4),
-            60 => (position::G5, self.data.g5),
-            61 => (position::G6, self.data.g6),
-            62 => (position::G7, self.data.g7),
-            63 => (position::G8, self.data.g8),
+            48 => (position::G1, self.data.g1),
+            49 => (position::G2, self.data.g2),
+            50 => (position::G3, self.data.g3),
+            51 => (position::G4, self.data.g4),
+            52 => (position::G5, self.data.g5),
+            53 => (position::G6, self.data.g6),
+            54 => (position::G7, self.data.g7),
+            55 => (position::G8, self.data.g8),
+            56 => (position::H1, self.data.h1),
+            57 => (position::H2, self.data.h2),
+            58 => (position::H3, self.data.h3),
+            59 => (position::H4, self.data.h4),
+            60 => (position::H5, self.data.h5),
+            61 => (position::H6, self.data.h6),
+            62 => (position::H7, self.data.h7),
+            63 => (position::H8, self.data.h8),
             _ => return None,
         });
         self.index += 1;
