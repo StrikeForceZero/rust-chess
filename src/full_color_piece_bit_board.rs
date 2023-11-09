@@ -1,14 +1,36 @@
+use std::hash::{Hash, Hasher};
 use crate::bit_board_const::BitBoardConst;
 use crate::board_position::BoardPosition;
 use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::full_piece_bit_board::FullPieceBitBoard;
-use crate::utils::{CustomStructIterator, CustomStructIteratorMut};
+use crate::utils::{CustomStructIterator, CustomStructIteratorMut, hash_64bit_numbers};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct FullColorPieceBitBoard {
     pub white: FullPieceBitBoard,
     pub black: FullPieceBitBoard,
+}
+
+impl Hash for FullColorPieceBitBoard {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let hash = hash_64bit_numbers(&[
+            self.white.pawn.data(),
+            self.white.knight.data(),
+            self.white.bishop.data(),
+            self.white.rook.data(),
+            self.white.queen.data(),
+            self.white.king.data(),
+
+            self.black.pawn.data(),
+            self.black.knight.data(),
+            self.black.bishop.data(),
+            self.black.rook.data(),
+            self.black.queen.data(),
+            self.black.king.data(),
+        ]);
+        hash.hash(state)
+    }
 }
 
 impl FullColorPieceBitBoard {

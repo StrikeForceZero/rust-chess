@@ -32,6 +32,7 @@ mod game_status;
 mod move_handler;
 mod move_history_entry;
 mod bit_board_const;
+mod state_history;
 
 #[cfg(test)]
 mod tests {

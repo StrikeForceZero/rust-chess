@@ -4,7 +4,7 @@ use crate::utils::CustomStructIterator;
 
 pub type BitBoardConstData = u64;
 #[repr(transparent)]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct BitBoardConst {
     data: BitBoardConstData
 }
@@ -41,7 +41,7 @@ impl BitBoardConst {
         }
     }
     #[inline]
-    pub const fn get_pos(self, board_position: BoardPosition) -> bool {
+    pub const fn get_pos(&self, board_position: BoardPosition) -> bool {
         self.get(board_position.as_pos_index())
     }
     #[inline]
@@ -49,7 +49,7 @@ impl BitBoardConst {
         set(self, board_position.as_pos_index(), value)
     }
     #[inline]
-    pub const fn get(self, index: usize) -> bool {
+    pub const fn get(&self, index: usize) -> bool {
         self.data & (1 << index) != 0
     }
 

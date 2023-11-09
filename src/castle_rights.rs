@@ -28,6 +28,7 @@ impl CastleRights {
         match (self, with_castle_rights) {
             (Self::KingSideOnly, Self::QueenSideOnly) | (Self::QueenSideOnly, Self::KingSideOnly) => CastleRights::Both,
             (Self::Both, _ ) | (_, Self::Both) => CastleRights::Both,
+            (_, right) => right,
         }
     }
     pub const fn with_option(source: Option<CastleRights>, with_castle_rights: CastleRights) -> Option<Self> {
@@ -50,7 +51,7 @@ impl CastleRights {
             }
         }
     }
-    pub const fn from_str(s: &str) -> Result<Self, CastleRightsStringParseError> {
+    pub fn from_str(s: &str) -> Result<Self, CastleRightsStringParseError> {
         Ok(match s {
             "K" | "k" => Self::KingSideOnly,
             "Q" | "q" => Self::QueenSideOnly,

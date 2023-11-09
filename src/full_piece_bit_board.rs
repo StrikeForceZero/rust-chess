@@ -4,7 +4,7 @@ use crate::bit_board_const::BitBoardConst;
 use crate::piece::Piece;
 use crate::utils::{CustomStructIterator, CustomStructIteratorMut};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct FullPieceBitBoard {
     pub pawn: BitBoardConst,
     pub knight: BitBoardConst,

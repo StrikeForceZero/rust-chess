@@ -51,7 +51,7 @@ impl ColorCastleRights {
         }
     }
 
-    pub const fn from_str(s: &str) -> Result<Self, CastleRightsStringParseError> {
+    pub fn from_str(s: &str) -> Result<Self, CastleRightsStringParseError> {
         // TODO: being this explicit is probably not worth it
         Ok(Self::from_tuple(match s {
             "-" => return Ok(Self::empty()),
