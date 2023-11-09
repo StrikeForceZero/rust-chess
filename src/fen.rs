@@ -13,9 +13,11 @@ use crate::game_state::GameState;
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
 
-#[repr(transparent)]
 #[derive(Clone)]
-pub struct Fen(pub String);
+pub enum Fen {
+    Static(&'static str),
+    Owned(String),
+}
 
 #[derive(Error, Debug, Clone)]
 pub enum FenParsingError {
@@ -36,7 +38,7 @@ pub enum FenParsingError {
 }
 
 
-const fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenParsingError> {
+fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenParsingError> {
     if active_color_str.len() != 1 {
         return Err(FenParsingError::InvalidActiveColorString(active_color_str.to_string()));
     }
@@ -45,7 +47,7 @@ const fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor
     ActiveColor::from_char(active_color_char)
 }
 
-const fn get_en_passant_pos_from_str(en_passant_str: &str) -> Result<Option<BoardPosition>, BoardPositionStrParseError> {
+fn get_en_passant_pos_from_str(en_passant_str: &str) -> Result<Option<BoardPosition>, BoardPositionStrParseError> {
     if en_passant_str.len() == 0 || en_passant_str == "-" {
         return Ok(None);
     }
@@ -114,7 +116,7 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
             }
         }
     }
-    game_state.history.fen.push(Fen(fen_str.to_string()));
+    game_state.history.fen.push(Fen::Owned(fen_str.to_string()));
     Ok(game_state)
 }
 
@@ -222,7 +224,7 @@ pub fn serialize(game_state: GameState) -> String {
     fen.to_string()
 }
 
-pub const fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
+pub fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
     let serialized = serialize(game_state);
     let mut parts = serialized.split_whitespace().collect::<Vec<_>>();
     let (squares_str, _active_color_str, castle_rights_str, en_passant_str, _half_move_clock_str, _full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
@@ -231,6 +233,17 @@ pub const fn serialize_without_clock_and_active_color(game_state: GameState) -> 
 
 #[cfg(test)]
 mod tests {
-    pub fn serialize() {
+    use rstest::rstest;
+    use crate::fen::{serialize, FEN_STARTING_POS, FEN_EMPTY};
+    use crate::game_state::GameState;
+
+    #[rstest]
+    #[case(GameState::new(), FEN_STARTING_POS)]
+    #[case(GameState::empty(), FEN_EMPTY)]
+    pub fn fen_serialize(
+        #[case] game_state: GameState,
+        #[case] expected: &'static str
+    ) {
+        assert_eq!(expected, serialize(game_state))
     }
 }

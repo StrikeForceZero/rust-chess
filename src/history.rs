@@ -16,7 +16,7 @@ impl History {
     }
     pub const fn new() -> Self {
         Self {
-            fen: vec![Fen(String::from(FEN_STARTING_POS))],
+            fen: Vec::from([Fen::Static(FEN_STARTING_POS)]),
             pgn: Vec::new(),
         }
     }

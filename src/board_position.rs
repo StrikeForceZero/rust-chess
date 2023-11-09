@@ -28,16 +28,16 @@ impl BoardPosition {
         direction.get_next_pos(self)
     }
 
-    pub const fn from_str(s: &str) -> Result<Self, BoardPositionStrParseError> {
-        let mut chars = s.chars();
-        if chars.count() != 2 {
-            return Err(BoardPositionStrParseError::InvalidNumberOfChars(s.to_string()))
-        }
-        let (file_char, rank_char) = (chars.next().unwrap(), chars.next().unwrap());
+    pub fn from_str(s: &str) -> Result<Self, BoardPositionStrParseError> {
+        let chars = s.chars().collect::<Vec<_>>();
+        let (file_char, rank_char) = match chars.as_slice() {
+            [file, rank] => (*file, *rank),
+            _ => return Err(BoardPositionStrParseError::InvalidNumberOfChars(s.to_string()))
+        };
         let Ok(file) = BoardFile::from_char(file_char) else {
             return Err(BoardPositionStrParseError::InvalidFileOrRank(s.to_string()));
         };
-        let Ok(rank) = BoardRank::from_char(file_char) else {
+        let Ok(rank) = BoardRank::from_char(rank_char) else {
             return Err(BoardPositionStrParseError::InvalidFileOrRank(s.to_string()));
         };
         Ok(BoardPosition(file, rank))

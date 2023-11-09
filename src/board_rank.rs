@@ -3,8 +3,10 @@ use thiserror::Error;
 
 #[derive(Error, Debug, Clone, Copy)]
 pub enum BoardRankError {
-    #[error("Invalid number for BoardRank: {0}")]
-    InvalidNumber(usize),
+    #[error("Invalid usize for BoardRank: {0}")]
+    InvalidUsize(usize),
+    #[error("Invalid u8 for BoardRank: {0}")]
+    InvalidU8(u8),
     #[error("Invalid char for BoardRank: {0}")]
     InvalidChar(char),
 }
@@ -44,7 +46,7 @@ impl BoardRank {
             6 => Self::Six,
             7 => Self::Seven,
             8 => Self::Eight,
-            _ => return Err(BoardRankError::InvalidNumber(num))
+            _ => return Err(BoardRankError::InvalidU8(num))
         })
     }
     pub const fn from_char(char: char) -> Result<Self, BoardRankError> {
@@ -97,7 +99,7 @@ impl BoardRank {
             6 => Self::Six,
             7 => Self::Seven,
             8 => Self::Eight,
-            _ => return Err(BoardRankError::InvalidNumber(n))
+            _ => return Err(BoardRankError::InvalidUsize(n))
         })
     }
     pub const fn from_zero_based_index(n: usize) -> Result<Self, BoardRankError> {
@@ -110,7 +112,7 @@ impl BoardRank {
             5 => Self::Six,
             6 => Self::Seven,
             7 => Self::Eight,
-            _ => return Err(BoardRankError::InvalidNumber(n))
+            _ => return Err(BoardRankError::InvalidUsize(n))
         })
     }
     pub const fn next(&self) -> Option<Self> {
