@@ -15,7 +15,7 @@ impl<'a> Iterator for CustomStructIterator<'a, FullPieceBitBoard> {
     type Item = (Piece, &'a BitBoard);
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(match self.index {
+        let res = Some(match self.index {
             0 => (Piece::Pawn, &self.data.pawn),
             1 => (Piece::Knight, &self.data.knight),
             3 => (Piece::Bishop, &self.data.bishop),
@@ -23,7 +23,9 @@ impl<'a> Iterator for CustomStructIterator<'a, FullPieceBitBoard> {
             5 => (Piece::Queen, &self.data.queen),
             6 => (Piece::King, &self.data.king),
             _ => return None,
-        })
+        });
+        self.index += 1;
+        res
     }
 }
 
@@ -31,7 +33,7 @@ impl<'a> Iterator for CustomStructIteratorMut<'a, FullPieceBitBoard> {
     type Item = (Piece, &'a mut BitBoard);
 
     fn next(&mut self) -> Option<Self::Item> {
-        Some(match self.index {
+        let res = Some(match self.index {
             0 => (Piece::Pawn, &mut self.data.pawn),
             1 => (Piece::Knight, &mut self.data.knight),
             3 => (Piece::Bishop, &mut self.data.bishop),
@@ -39,6 +41,8 @@ impl<'a> Iterator for CustomStructIteratorMut<'a, FullPieceBitBoard> {
             5 => (Piece::Queen, &mut self.data.queen),
             6 => (Piece::King, &mut self.data.king),
             _ => return None,
-        })
+        });
+        self.index += 1;
+        res
     }
 }

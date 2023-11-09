@@ -21,6 +21,7 @@ mod board;
 mod full_piece_bit_board;
 mod full_color_piece_bit_board;
 mod utils;
+mod board_scanner;
 
 #[cfg(test)]
 mod tests {

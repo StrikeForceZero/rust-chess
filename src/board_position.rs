@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
+use crate::direction::Direction;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
@@ -15,10 +16,14 @@ impl BoardPosition {
     pub const fn from(board_file: BoardFile, board_rank: BoardRank) -> Self {
         Self(board_file, board_rank)
     }
-    pub fn as_pos_index(&self) -> usize {
+    pub const fn as_pos_index(&self) -> usize {
         let rank_index = self.rank().as_zero_based_index();
         let file_index = self.file().as_zero_based_index();
         rank_index * 8 + file_index
+    }
+
+    pub const fn next_pos(self, direction: Direction) -> Option<Self> {
+        direction.get_next_pos(self)
     }
 }
 
