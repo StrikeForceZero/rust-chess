@@ -22,6 +22,13 @@ mod full_piece_bit_board;
 mod full_color_piece_bit_board;
 mod utils;
 mod board_scanner;
+mod game_state;
+mod history;
+mod pgn;
+mod move_clock;
+mod castle_rights;
+mod color_castle_rights;
+mod game_status;
 
 #[cfg(test)]
 mod tests {

@@ -1,2 +1,2 @@
 #[repr(transparent)]
-pub struct Fen(str);
+pub struct Fen(String);
