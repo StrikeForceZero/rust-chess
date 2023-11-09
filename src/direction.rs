@@ -16,7 +16,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn reverse(&self) -> Direction {
+    pub const fn reverse(&self) -> Direction {
         match self {
             Self::North => Self::South,
             Self::NorthEast => Self::SouthWest,
@@ -28,7 +28,7 @@ impl Direction {
             Self::NorthWest => Self::SouthEast,
         }
     }
-    pub fn split(&self) -> (Self, Self) {
+    pub const fn split(&self) -> (Self, Self) {
         match self {
             Self::North => (Self::NorthWest, Self::NorthEast),
             Self::NorthEast => (Self::North, Self::East),
@@ -40,7 +40,7 @@ impl Direction {
             Self::NorthWest => (Self::West, Self::North),
         }
     }
-    pub fn get_next_pos(&self, from: BoardPosition) -> Option<BoardPosition> {
+    pub const fn get_next_pos(&self, from: BoardPosition) -> Option<BoardPosition> {
         let BoardPosition(file, rank) = from;
         let next_pos: (Option<BoardFile>, Option<BoardRank>) = match self {
             Self::North =>

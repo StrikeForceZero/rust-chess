@@ -318,15 +318,25 @@ impl Board {
         *self.get_mut(board_position) = chess_piece;
     }
     pub const fn replace(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) -> Option<ChessPiece> {
-        let &removed_piece = self.get(board_position).clone();
+        let removed_piece = self.get(board_position).clone();
         self.set(board_position, chess_piece);
         removed_piece
     }
-    pub const fn from_bit_boards() {
-
+    pub fn from_bit_boards(full_color_piece_bit_board: FullColorPieceBitBoard) -> Self {
+        let mut board = Board::new();
+        for (color, piece_bit_board) in full_color_piece_bit_board.as_iter() {
+            for (piece, bit_Board) in piece_bit_board.as_iter() {
+                for (pos, value) in bit_Board.as_iter() {
+                    if value {
+                        board.set(pos, Some(ChessPiece::from(color, piece)));
+                    }
+                }
+            }
+        }
+        board
     }
 
-    pub const fn as_bit_boards(&self) -> FullColorPieceBitBoard {
+    pub fn as_bit_boards(&self) -> FullColorPieceBitBoard {
         let mut white_king: BitBoard = BitBoard::from(BitBoardData::new());
         let mut white_queen: BitBoard = BitBoard::from(BitBoardData::new());
         let mut white_rook: BitBoard = BitBoard::from(BitBoardData::new());
@@ -355,7 +365,7 @@ impl Board {
                 ChessPiece::BlackBishop => black_bishop.set_pos(pos, true),
                 ChessPiece::BlackKnight => black_knight.set_pos(pos, true),
                 ChessPiece::BlackPawn => black_pawn.set_pos(pos, true),
-            }
+            };
         }
 
         FullColorPieceBitBoard {
@@ -379,77 +389,77 @@ impl Board {
     }
 }
 
-impl Iterator for CustomStructIterator<Board> {
+impl Iterator for CustomStructIterator<'_, Board> {
     type Item = (BoardPosition, Option<ChessPiece>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let res = Some(Self::Item(match self.index {
-            0 => (position::A1, &self.data.a1),
-            1 => (position::A2, &self.data.a2),
-            2 => (position::A3, &self.data.a3),
-            3 => (position::A4, &self.data.a4),
-            4 => (position::A5, &self.data.a5),
-            5 => (position::A6, &self.data.a6),
-            6 => (position::A7, &self.data.a7),
-            7 => (position::A8, &self.data.a8),
-            8 => (position::B1, &self.data.b1),
-            9 => (position::B2, &self.data.b2),
-            10 => (position::B3, &self.data.b3),
-            11 => (position::B4, &self.data.b4),
-            12 => (position::B5, &self.data.b5),
-            13 => (position::B6, &self.data.b6),
-            14 => (position::B7, &self.data.b7),
-            15 => (position::B8, &self.data.b8),
-            16 => (position::C1, &self.data.c1),
-            17 => (position::C2, &self.data.c2),
-            18 => (position::C3, &self.data.c3),
-            19 => (position::C4, &self.data.c4),
-            20 => (position::C5, &self.data.c5),
-            21 => (position::C6, &self.data.c6),
-            22 => (position::C7, &self.data.c7),
-            23 => (position::C8, &self.data.c8),
-            24 => (position::D1, &self.data.d1),
-            25 => (position::D2, &self.data.d2),
-            26 => (position::D3, &self.data.d3),
-            27 => (position::D4, &self.data.d4),
-            28 => (position::D5, &self.data.d5),
-            29 => (position::D6, &self.data.d6),
-            30 => (position::D7, &self.data.d7),
-            31 => (position::D8, &self.data.d8),
-            32 => (position::E1, &self.data.e1),
-            33 => (position::E2, &self.data.e2),
-            34 => (position::E3, &self.data.e3),
-            35 => (position::E4, &self.data.e4),
-            36 => (position::E5, &self.data.e5),
-            37 => (position::E6, &self.data.e6),
-            38 => (position::E7, &self.data.e7),
-            39 => (position::E8, &self.data.e8),
-            40 => (position::F1, &self.data.f1),
-            41 => (position::F2, &self.data.f2),
-            42 => (position::F3, &self.data.f3),
-            43 => (position::F4, &self.data.f4),
-            44 => (position::F5, &self.data.f5),
-            45 => (position::F6, &self.data.f6),
-            46 => (position::F7, &self.data.f7),
-            47 => (position::F8, &self.data.f8),
-            48 => (position::H1, &self.data.h1),
-            49 => (position::H2, &self.data.h2),
-            50 => (position::H3, &self.data.h3),
-            51 => (position::H4, &self.data.h4),
-            52 => (position::H5, &self.data.h5),
-            53 => (position::H6, &self.data.h6),
-            54 => (position::H7, &self.data.h7),
-            55 => (position::H8, &self.data.h8),
-            56 => (position::G1, &self.data.g1),
-            57 => (position::G2, &self.data.g2),
-            58 => (position::G3, &self.data.g3),
-            59 => (position::G4, &self.data.g4),
-            60 => (position::G5, &self.data.g5),
-            61 => (position::G6, &self.data.g6),
-            62 => (position::G7, &self.data.g7),
-            63 => (position::G8, &self.data.g8),
+        let res = Some(match self.index {
+            0 => (position::A1, self.data.a1),
+            1 => (position::A2, self.data.a2),
+            2 => (position::A3, self.data.a3),
+            3 => (position::A4, self.data.a4),
+            4 => (position::A5, self.data.a5),
+            5 => (position::A6, self.data.a6),
+            6 => (position::A7, self.data.a7),
+            7 => (position::A8, self.data.a8),
+            8 => (position::B1, self.data.b1),
+            9 => (position::B2, self.data.b2),
+            10 => (position::B3, self.data.b3),
+            11 => (position::B4, self.data.b4),
+            12 => (position::B5, self.data.b5),
+            13 => (position::B6, self.data.b6),
+            14 => (position::B7, self.data.b7),
+            15 => (position::B8, self.data.b8),
+            16 => (position::C1, self.data.c1),
+            17 => (position::C2, self.data.c2),
+            18 => (position::C3, self.data.c3),
+            19 => (position::C4, self.data.c4),
+            20 => (position::C5, self.data.c5),
+            21 => (position::C6, self.data.c6),
+            22 => (position::C7, self.data.c7),
+            23 => (position::C8, self.data.c8),
+            24 => (position::D1, self.data.d1),
+            25 => (position::D2, self.data.d2),
+            26 => (position::D3, self.data.d3),
+            27 => (position::D4, self.data.d4),
+            28 => (position::D5, self.data.d5),
+            29 => (position::D6, self.data.d6),
+            30 => (position::D7, self.data.d7),
+            31 => (position::D8, self.data.d8),
+            32 => (position::E1, self.data.e1),
+            33 => (position::E2, self.data.e2),
+            34 => (position::E3, self.data.e3),
+            35 => (position::E4, self.data.e4),
+            36 => (position::E5, self.data.e5),
+            37 => (position::E6, self.data.e6),
+            38 => (position::E7, self.data.e7),
+            39 => (position::E8, self.data.e8),
+            40 => (position::F1, self.data.f1),
+            41 => (position::F2, self.data.f2),
+            42 => (position::F3, self.data.f3),
+            43 => (position::F4, self.data.f4),
+            44 => (position::F5, self.data.f5),
+            45 => (position::F6, self.data.f6),
+            46 => (position::F7, self.data.f7),
+            47 => (position::F8, self.data.f8),
+            48 => (position::H1, self.data.h1),
+            49 => (position::H2, self.data.h2),
+            50 => (position::H3, self.data.h3),
+            51 => (position::H4, self.data.h4),
+            52 => (position::H5, self.data.h5),
+            53 => (position::H6, self.data.h6),
+            54 => (position::H7, self.data.h7),
+            55 => (position::H8, self.data.h8),
+            56 => (position::G1, self.data.g1),
+            57 => (position::G2, self.data.g2),
+            58 => (position::G3, self.data.g3),
+            59 => (position::G4, self.data.g4),
+            60 => (position::G5, self.data.g5),
+            61 => (position::G6, self.data.g6),
+            62 => (position::G7, self.data.g7),
+            63 => (position::G8, self.data.g8),
             _ => return None,
-        }));
+        });
         self.index += 1;
         res
     }

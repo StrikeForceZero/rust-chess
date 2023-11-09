@@ -4,7 +4,7 @@ pub struct CustomStructIterator<'a, T> {
 }
 
 impl<T> CustomStructIterator<'_, T> {
-    pub const fn from(data: &T) -> Self<T> {
+    pub const fn from(data: &T) -> CustomStructIterator<T> {
         Self {
             data,
             index: 0,
@@ -18,7 +18,7 @@ pub struct CustomStructIteratorMut<'a, T> {
 }
 
 impl<T> CustomStructIteratorMut<'_, T> {
-    pub const fn from(data: &mut T) -> Self<T> {
+    pub const fn from(data: &mut T) -> CustomStructIteratorMut<T> {
         Self {
             data,
             index: 0,

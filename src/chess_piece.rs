@@ -5,6 +5,7 @@ use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
 use crate::color::Color;
 use crate::piece::Piece;
 
+#[derive(Copy, Clone)]
 pub enum ChessPiece {
     WhiteKing,
     WhiteQueen,

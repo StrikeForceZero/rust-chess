@@ -10,7 +10,7 @@ pub struct BoardScanner<'a> {
     pub direction: Direction,
 }
 
-impl BoardScanner {
+impl BoardScanner<'_> {
     pub const fn from_pos(board: &Board, starting_pos: BoardPosition, direction: Direction) -> Self {
         BoardScanner {
             board,
@@ -32,6 +32,6 @@ impl<'a> Iterator for BoardScanner<'a> {
         let Some(next_pos) = self.last_pos else {
             return None;
         };
-        Some(Self::Item(self.last_pos, self.board.get(next_pos)))
+        Some((next_pos, self.board.get(next_pos)))
     }
 }

@@ -11,6 +11,15 @@ pub struct FullPieceBitBoard {
     pub king: BitBoard,
 }
 
+impl FullPieceBitBoard {
+    pub const fn as_iter(&self) -> CustomStructIterator<FullPieceBitBoard> {
+        CustomStructIterator {
+            data: self,
+            index: 0,
+        }
+    }
+}
+
 impl<'a> Iterator for CustomStructIterator<'a, FullPieceBitBoard> {
     type Item = (Piece, &'a BitBoard);
 
