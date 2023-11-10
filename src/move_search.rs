@@ -265,7 +265,7 @@ pub fn valid_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition
 }
 
 pub fn move_search(game_state: GameState) -> Vec<Move> {
-    let mut moves: Vec<Move> = Vec::new();
+    let mut valid_moves: Vec<Move> = Vec::new();
     for (pos, maybe_piece) in game_state.board.as_iter() {
         let Some(piece) = maybe_piece
             else { continue };
@@ -273,12 +273,13 @@ pub fn move_search(game_state: GameState) -> Vec<Move> {
         if piece.as_color() != game_state.active_color {
             continue;
         }
-        let valid_moves = match piece.as_move_set() {
+        let mut new_valid_moves = match piece.as_move_set() {
             ChessPieceMoveSet::Set10(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
             ChessPieceMoveSet::Set8(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
             ChessPieceMoveSet::Set6(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
             ChessPieceMoveSet::Set4(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
         };
+        valid_moves.append(&mut new_valid_moves)
     }
-    moves
+    valid_moves
 }
