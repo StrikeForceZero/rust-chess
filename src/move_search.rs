@@ -2,6 +2,7 @@ use crate::board_position::BoardPosition;
 use crate::board_scanner::BoardScanner;
 use crate::castle_rights::CastleRights;
 use crate::castle_side::CastleSide;
+use crate::chess_piece::ChessPiece;
 use crate::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::game_state::GameState;
 use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
@@ -264,22 +265,53 @@ pub fn valid_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition
     valid_moves
 }
 
-pub fn move_search(game_state: GameState) -> Vec<Move> {
+pub fn move_search(game_state: &GameState) -> Vec<Move> {
     let mut valid_moves: Vec<Move> = Vec::new();
     for (pos, maybe_piece) in game_state.board.as_iter() {
-        let Some(piece) = maybe_piece
-            else { continue };
-        // not this colors turn
-        if piece.as_color() != game_state.active_color {
-            continue;
-        }
-        let mut new_valid_moves = match piece.as_move_set() {
-            ChessPieceMoveSet::Set10(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-            ChessPieceMoveSet::Set8(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-            ChessPieceMoveSet::Set6(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-            ChessPieceMoveSet::Set4(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-        };
-        valid_moves.append(&mut new_valid_moves)
+        valid_moves.append(&mut move_search_from_pos(game_state, pos))
     }
     valid_moves
+}
+
+pub fn move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<Move> {
+    let maybe_piece = game_state.board.get(pos);
+    let Some(piece) = maybe_piece else {
+        return Vec::new();
+    };
+    // not this colors turn
+    if piece.as_color() != game_state.active_color {
+        return Vec::new();
+    }
+    match piece.as_move_set() {
+        ChessPieceMoveSet::Set10(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set8(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set6(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set4(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+    use crate::board_position::BoardPosition;
+    use crate::game_state::GameState;
+    use crate::r#move::Move;
+    use crate::position;
+    use crate::chess_piece::ChessPiece;
+    use crate::fen::{FEN_STARTING_POS, deserialize};
+    use super::*;
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, position::A2, vec![
+        Move::create_normal(ChessPiece::WhitePawn, position::A2, position::A3),
+        Move::create_normal(ChessPiece::WhitePawn, position::A2, position::A4),
+    ])]
+    fn test_move_search_from_pos(
+        #[case] fen_str: &'static str,
+        #[case] pos: BoardPosition,
+        #[case] expected: Vec<Move>,
+    ) {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        assert_eq!(expected, move_search_from_pos(&game_state, pos))
+    }
 }

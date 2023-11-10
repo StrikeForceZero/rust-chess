@@ -2,14 +2,14 @@ use crate::board_position::BoardPosition;
 use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MoveType {
     Normal,
     EnPassant(BoardPosition),
     Castle(CastleSide),
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Move {
     pub move_type: MoveType,
     pub piece: ChessPiece,

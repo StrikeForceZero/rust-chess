@@ -5,11 +5,11 @@ use crate::direction::{Direction, SimpleDirection};
 
 #[derive(Error, Debug, Copy, Clone)]
 pub enum CastleSideConversionError {
-    #[error("Invalid direction for CastleSide, expected: East | West, received: {0}")]
+    #[error("Invalid direction for CastleSide, expected: East | West, received: {0:?}")]
     InvalidCastleSideDirection(Direction)
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum CastleSide {
     King,
     Queen,
