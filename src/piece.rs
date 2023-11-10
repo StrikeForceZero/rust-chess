@@ -9,7 +9,7 @@ pub enum PieceError {
 }
 
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Piece {
     Pawn,
     Knight,

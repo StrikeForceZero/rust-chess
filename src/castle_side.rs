@@ -1,6 +1,13 @@
+use thiserror::Error;
 use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
-use crate::direction::SimpleDirection;
+use crate::direction::{Direction, SimpleDirection};
+
+#[derive(Error, Debug, Copy, Clone)]
+pub enum CastleSideConversionError {
+    #[error("Invalid direction for CastleSide, expected: East | West, received: {0}")]
+    InvalidCastleSideDirection(Direction)
+}
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum CastleSide {
@@ -9,6 +16,13 @@ pub enum CastleSide {
 }
 
 impl CastleSide {
+    pub const fn try_from_direction(direction: Direction) -> Result<Self, CastleSideConversionError> {
+        Ok(match direction {
+            Direction::East => Self::King,
+            Direction::West => Self::Queen,
+            _ => return Err(CastleSideConversionError::InvalidCastleSideDirection(direction)),
+        })
+    }
     pub const fn as_simple_direction(&self) -> SimpleDirection {
         match self {
             Self::King => SimpleDirection::East,

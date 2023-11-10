@@ -1,4 +1,5 @@
 use thiserror::Error;
+use crate::castle_side::CastleSide;
 use crate::color::Color;
 
 #[derive(Error, Debug, Clone)]
@@ -15,6 +16,20 @@ pub enum CastleRights {
 }
 
 impl CastleRights {
+    pub const fn from_castle_side(castle_side: CastleSide) -> Self {
+        match castle_side {
+            CastleSide::King => CastleRights::KingSideOnly,
+            CastleSide::Queen => CastleRights::QueenSideOnly,
+        }
+    }
+    pub const fn has(&self, check_castle_rights: CastleRights) -> bool {
+        match (self, check_castle_rights) {
+            (Self::Both, _) => true,
+            (Self::KingSideOnly, Self::KingSideOnly) => true,
+            (Self::QueenSideOnly, Self::QueenSideOnly) => true,
+            (_, _) => false,
+        }
+    }
     pub const fn without(&self, without_castle_rights: CastleRights) -> Option<Self> {
         Some(match (without_castle_rights, self) {
             (Self::KingSideOnly, Self::Both | Self::QueenSideOnly) => CastleRights::QueenSideOnly,

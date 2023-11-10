@@ -1,9 +1,12 @@
 use crate::board::Board;
 use crate::board_position::BoardPosition;
 use crate::board_scanner::BoardScanner;
+use crate::castle_rights::CastleRights;
+use crate::castle_side::CastleSide;
 use crate::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::game_state::GameState;
 use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
+use crate::piece::Piece;
 use crate::r#move::Move;
 
 
@@ -224,10 +227,53 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
 
 pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
     let mut valid_moves = Vec::new();
+    let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color)
         else { return valid_moves; };
-
-    todo!("not implemented")
+    let Some(directional_restriction) = ruleset.directional_restriction else {
+        todo!("not implemented or bad state?")
+    };
+    match directional_restriction {
+        DirectionRestriction::LMove(_, _) => todo!("not implemented or bad state?"),
+        DirectionRestriction::Limit(_) => todo!("not implemented or bad state?"),
+        DirectionRestriction::Amount(da) => {
+            let Ok(castle_side) = CastleSide::try_from_direction(da.direction()) else {
+                panic!("bad ruleset!")
+            };
+            let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color) else {
+                return valid_moves;
+            };
+            if !castle_rights.has(CastleRights::from_castle_side(castle_side)) {
+                return valid_moves;
+            }
+            let mut amount_remaining = da.amount();
+            let mut target_pos: Option<BoardPosition> = None;
+            for (pos, maybe_blocking_piece) in BoardScanner::from_pos(&game_state.board, from_pos, da.direction()) {
+                if amount_remaining == 0 {
+                    target_pos = Some(pos);
+                }
+                amount_remaining -= 1;
+                if let Some(blocking_piece) = maybe_blocking_piece {
+                    let Some(target_pos) = target_pos
+                        else { return valid_moves };
+                    if blocking_piece.as_color() != piece.as_color() || blocking_piece.as_piece() != Piece::Rook {
+                        return valid_moves;
+                    }
+                    // if starting pos requirement is set, check the rook as well
+                    if ruleset.only_from_starting_pos && game_state.board.is_pos_starting_pos(pos) {
+                        valid_moves.push(Move {
+                            piece,
+                            from: from_pos,
+                            to: target_pos,
+                            captured_piece: None,
+                        })
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    valid_moves
 }
 
 pub fn valid_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition, move_rulesets: &[MoveRuleset]) -> Vec<Move> {
