@@ -1,5 +1,3 @@
-use sha2::digest::typenum::op;
-use thiserror::Error;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 use crate::castle_rights::CastleRights;
@@ -163,6 +161,11 @@ mod tests {
     #[rstest]
     #[case(FEN_STARTING_POS, A2, A3, Ok(()))]
     #[case(FEN_STARTING_POS, A2, A4, Ok(()))]
+    #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", E1, E2, Err(InvalidMoveError::StillInCheck))]
+    #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D2, D3, Err(InvalidMoveError::StillInCheck))]
+    #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D1, E2, Ok(()))]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, F1, Ok(()))]
+    #[case("rnbqkbnr/pppppppp/5q2/8/8/8/PPPPP1PP/RNBQK2R w KQkq - 0 1", E1, F1, Err(InvalidMoveError::CastleOutOfCheck))]
     fn test_try_handle_move(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,
@@ -170,6 +173,7 @@ mod tests {
         #[case] expected: Result<(), InvalidMoveError>,
     ) -> Result<(), InvalidMoveError> {
         let game_state = deserialize(fen_str).expect("bad fen string!");
+        println!("{from} -> {to}");
         let matched_move = find_move(&game_state, from, to)?;
         match try_handle_move(&game_state, matched_move, None) {
             Ok(_) => assert_eq!(expected, Ok(())),
