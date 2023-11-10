@@ -371,14 +371,13 @@ mod tests {
 
     #[rstest]
     #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", E7, vec![
-        Move::create_normal(ChessPiece::BlackQueen, E7, D1),
+        Move::create_normal(ChessPiece::BlackQueen, E7, D8),
         Move::create_normal(ChessPiece::BlackQueen, E7, E6),
-        Move::create_normal(ChessPiece::BlackQueen, E7, F5),
-        Move::create_normal(ChessPiece::BlackQueen, E7, F3),
-        Move::create_normal(ChessPiece::BlackQueen, E7, C2),
+        Move::create_normal(ChessPiece::BlackQueen, E7, E5),
+        Move::create_normal(ChessPiece::BlackQueen, E7, E4),
+        Move::create_normal(ChessPiece::BlackQueen, E7, E3),
         Move::create_normal(ChessPiece::BlackQueen, E7, E2),
-        Move::create_normal(ChessPiece::BlackQueen, E7, B3),
-        Move::create_normal(ChessPiece::BlackQueen, E7, B5),
+        Move::create_normal_capture(ChessPiece::BlackQueen, E7, E1, ChessPiece::WhiteKing),
     ])]
     fn test_contains_unchecked_move_search_from_pos(
         #[case] fen_str: &'static str,
@@ -391,6 +390,12 @@ mod tests {
         if contains_expected != unchecked_moves {
             println!("expected:"); print_slice_elements_using_display(&contains_expected);
             println!("got:"); print_slice_elements_using_display(&unchecked_moves);
+        }
+        for expected_move in contains_expected.as_slice() {
+            if unchecked_moves.contains(expected_move) {
+                continue;
+            }
+            println!("missing: {expected_move}");
         }
         assert_eq!(contains_expected, unchecked_moves);
     }
