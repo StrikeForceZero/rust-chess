@@ -70,6 +70,7 @@ impl MoveRuleset {
     pub const fn full(direction: Direction) -> Self {
         Self {
             directional_restriction: Some(DirectionRestriction::Limit(DirectionAmount(direction, 7))),
+            can_capture: true,
             ..Self::default()
         }
     }
@@ -77,6 +78,7 @@ impl MoveRuleset {
         Self {
             is_jump: true,
             directional_restriction: Some(DirectionRestriction::LMove(first_direction_amount, second_direction_amount)),
+            can_capture: true,
             ..Self::default()
         }
     }
