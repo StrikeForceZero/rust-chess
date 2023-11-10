@@ -14,6 +14,7 @@ use crate::r#move::{Move, MoveType};
 
 fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosition) -> Option<ChessPiece> {
     let moving_piece = game_state.board.get_mut(from).take();
+    game_state.game_status = GameStatus::InProgress;
     game_state.board.replace(to, moving_piece)
 }
 
@@ -47,7 +48,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
     if moving_piece_color != active_color {
         return Err(InvalidMoveError::NotCurrentTurn(active_color));
     }
-    let is_in_check = game_state.game_status.is_check();
+    let is_in_check = is_check_for_color(game_state, moving_piece_color);
     let maybe_capture = match requested_move.move_type {
         MoveType::Castle(castle_side) => {
             if is_in_check {
