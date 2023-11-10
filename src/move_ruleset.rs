@@ -10,7 +10,7 @@ pub enum DirectionRestriction {
     Limit(DirectionAmount),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum CaptureOnlyType {
     Normal,
     EnPassant,

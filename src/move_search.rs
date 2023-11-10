@@ -1,4 +1,3 @@
-use crate::board::Board;
 use crate::board_position::BoardPosition;
 use crate::board_scanner::BoardScanner;
 use crate::castle_rights::CastleRights;
@@ -44,20 +43,10 @@ pub fn valid_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, r
             if !out_of_bound {
                 if let Some(blocking_piece) = game_state.board.get(last_pos) {
                     if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                        valid_moves.push(Move {
-                            piece,
-                            from: from_pos,
-                            to: last_pos,
-                            captured_piece: Some(*blocking_piece),
-                        })
+                        valid_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
                     }
                 } else {
-                    valid_moves.push(Move {
-                        piece,
-                        from: from_pos,
-                        to: last_pos,
-                        captured_piece: None,
-                    })
+                    valid_moves.push(Move::create_normal(piece, from_pos, last_pos))
                 }
             }
         }
@@ -71,23 +60,13 @@ pub fn valid_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, r
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if amount_left == 0 && ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move {
-                                piece,
-                                from: from_pos,
-                                to: pos,
-                                captured_piece: Some(*blocking_piece),
-                            })
+                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
                     None => {
                         if amount_left == 0 {
-                            valid_moves.push(Move {
-                                piece,
-                                from: from_pos,
-                                to: pos,
-                                captured_piece: None,
-                            });
+                            valid_moves.push(Move::create_normal(piece, from_pos, pos));
                             break;
                         }
                     },
@@ -104,22 +83,12 @@ pub fn valid_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, r
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move {
-                                piece,
-                                from: from_pos,
-                                to: pos,
-                                captured_piece: Some(*blocking_piece),
-                            })
+                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
                     None => {
-                        valid_moves.push(Move {
-                            piece,
-                            from: from_pos,
-                            to: pos,
-                            captured_piece: None,
-                        });
+                        valid_moves.push(Move::create_normal(piece, from_pos, pos));
                     },
                 }
             }
@@ -135,6 +104,9 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
     };
     if !ruleset.can_capture {
         panic!("bad config!")
+    }
+    if capture_only_type == CaptureOnlyType::EnPassant && game_state.en_passant_target_pos.is_none() {
+        return valid_moves;
     }
     let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     match directional_restriction {
@@ -165,12 +137,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
             if !out_of_bound {
                 if let Some(blocking_piece) = game_state.board.get(last_pos) {
                     if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                        valid_moves.push(Move {
-                            piece,
-                            from: from_pos,
-                            to: last_pos,
-                            captured_piece: Some(*blocking_piece),
-                        })
+                        valid_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
                     }
                 }
             }
@@ -185,16 +152,31 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if amount_left == 0 && ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move {
-                                piece,
-                                from: from_pos,
-                                to: pos,
-                                captured_piece: Some(*blocking_piece),
-                            })
+                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
-                    None => {},
+                    None => {
+                        if capture_only_type == CaptureOnlyType::EnPassant {
+                            if amount_left != 0 {
+                                continue;
+                            }
+                            let Some(en_passant_target_pos) = game_state.en_passant_target_pos else {
+                                // should be impossible as we checked earlier
+                                panic!("bad en passant state: en_passant_target_pos was expected");
+                            };
+                            if pos != en_passant_target_pos {
+                                continue;
+                            }
+                            let Some(en_passant_capture_pos) = en_passant_target_pos.next_pos(piece.as_facing_direction().as_simple_direction().as_direction().reverse()) else {
+                                panic!("bad en passant state: position not within board!");
+                            };
+                            let Some(capture_piece) = game_state.board.get(en_passant_capture_pos) else {
+                                panic!("bad en passant state: no capture piece at {en_passant_capture_pos}");
+                            };
+                            valid_moves.push(Move::create_en_passant(piece, from_pos, pos, en_passant_target_pos, *capture_piece))
+                        }
+                    },
                 }
             }
         }
@@ -208,12 +190,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move {
-                                piece,
-                                from: from_pos,
-                                to: pos,
-                                captured_piece: Some(*blocking_piece),
-                            })
+                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece));
                         }
                         break;
                     },
@@ -261,12 +238,7 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
                     }
                     // if starting pos requirement is set, check the rook as well
                     if ruleset.only_from_starting_pos && game_state.board.is_pos_starting_pos(pos) {
-                        valid_moves.push(Move {
-                            piece,
-                            from: from_pos,
-                            to: target_pos,
-                            captured_piece: None,
-                        })
+                        valid_moves.push(Move::create_castle(piece, from_pos, target_pos, castle_side));
                     }
                     break;
                 }

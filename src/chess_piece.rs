@@ -5,6 +5,7 @@ use crate::bit_board_const::BitBoardConst;
 use crate::board_rank::{BLACK_BACK_RANK, BLACK_PAWNN_RANK, WHITE_BACK_RANK, WHITE_PAWNN_RANK};
 use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
 use crate::color::Color;
+use crate::facing_direction::FacingDirection;
 use crate::piece::Piece;
 
 #[derive(Error, Debug, Clone, Copy)]
@@ -68,6 +69,22 @@ impl ChessPiece {
             Self::BlackBishop => Piece::Bishop,
             Self::BlackKnight => Piece::Knight,
             Self::BlackPawn => Piece::Pawn,
+        }
+    }
+    pub const fn as_facing_direction(&self) -> FacingDirection {
+        match self {
+            Self::WhiteKing => FacingDirection::North,
+            Self::WhiteQueen => FacingDirection::North,
+            Self::WhiteRook => FacingDirection::North,
+            Self::WhiteBishop => FacingDirection::North,
+            Self::WhiteKnight => FacingDirection::North,
+            Self::WhitePawn => FacingDirection::North,
+            Self::BlackKing => FacingDirection::South,
+            Self::BlackQueen => FacingDirection::South,
+            Self::BlackRook => FacingDirection::South,
+            Self::BlackBishop => FacingDirection::South,
+            Self::BlackKnight => FacingDirection::South,
+            Self::BlackPawn => FacingDirection::South,
         }
     }
     pub const fn from(color: Color, piece: Piece) -> Self {
