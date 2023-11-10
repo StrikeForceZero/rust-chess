@@ -123,9 +123,9 @@ impl MoveRuleset {
     pub const fn any_full_straight() -> [Self; 4] {
         [
             Self::full(Direction::North),
+            Self::full(Direction::East),
             Self::full(Direction::South),
-            Self::full(Direction::South),
-            Self::full(Direction::North),
+            Self::full(Direction::West),
         ]
     }
     pub const fn any_full_diagonal() -> [Self; 4] {

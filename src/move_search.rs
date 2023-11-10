@@ -313,6 +313,10 @@ mod tests {
         Move::create_castle(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_KING_SIDE_KING_CASTLE_SQUARE, CastleSide::King),
         Move::create_castle(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_QUEEN_SIDE_KING_CASTLE_SQUARE, CastleSide::Queen),
     ])]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1", WHITE_KING_SIDE_ROOK_SQUARE, vec![
+        Move::create_normal(ChessPiece::WhiteRook, WHITE_KING_SIDE_ROOK_SQUARE, WHITE_KING_SIDE_KNIGHT_SQUARE),
+        Move::create_normal(ChessPiece::WhiteRook, WHITE_KING_SIDE_ROOK_SQUARE, WHITE_KING_SIDE_BISHOP_SQUARE),
+    ])]
     fn test_move_search_from_pos(
         #[case] fen_str: &'static str,
         #[case] pos: BoardPosition,
