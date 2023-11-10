@@ -11,7 +11,7 @@ use crate::piece::Piece;
 use crate::r#move::Move;
 
 
-pub fn valid_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
+pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
     let mut valid_moves = Vec::new();
     let Some(directional_restriction) = ruleset.directional_restriction else {
         todo!("not implemented or bad state?")
@@ -99,7 +99,7 @@ pub fn valid_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, r
     valid_moves
 }
 
-pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset, capture_only_type: CaptureOnlyType) -> Vec<Move> {
+pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset, capture_only_type: CaptureOnlyType) -> Vec<Move> {
     let mut valid_moves = Vec::new();
     let Some(directional_restriction) = ruleset.directional_restriction else {
         todo!("not implemented or bad state?")
@@ -208,7 +208,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
     valid_moves
 }
 
-pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
+pub fn provisional_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
     let mut valid_moves = Vec::new();
     let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color)
@@ -252,31 +252,31 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
     valid_moves
 }
 
-pub fn valid_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition, move_rulesets: &[MoveRuleset]) -> Vec<Move> {
+pub fn provisional_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition, move_rulesets: &[MoveRuleset]) -> Vec<Move> {
     let mut valid_moves = Vec::new();
     for ruleset in move_rulesets {
         if ruleset.only_from_starting_pos && !game_state.board.is_pos_starting_pos(from_pos) {
             continue;
         }
         let mut new_valid_moves = match ruleset.move_type {
-            MoveType::Normal => valid_moves_for_normal(game_state, from_pos, ruleset),
-            MoveType::WhenCapturingOnly(capture_only_type) => valid_moves_for_capture_only(game_state, from_pos, ruleset, capture_only_type),
-            MoveType::Castle => valid_moves_for_castle(game_state, from_pos, ruleset),
+            MoveType::Normal => provisional_moves_for_normal(game_state, from_pos, ruleset),
+            MoveType::WhenCapturingOnly(capture_only_type) => provisional_moves_for_capture_only(game_state, from_pos, ruleset, capture_only_type),
+            MoveType::Castle => provisional_moves_for_castle(game_state, from_pos, ruleset),
         };
         valid_moves.append(&mut new_valid_moves);
     }
     valid_moves
 }
 
-pub fn move_search(game_state: &GameState) -> Vec<Move> {
+pub fn unchecked_move_search(game_state: &GameState) -> Vec<Move> {
     let mut valid_moves: Vec<Move> = Vec::new();
     for (pos, maybe_piece) in game_state.board.as_iter() {
-        valid_moves.append(&mut move_search_from_pos(game_state, pos))
+        valid_moves.append(&mut unchecked_move_search_from_pos(game_state, pos))
     }
     valid_moves
 }
 
-pub fn move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<Move> {
+pub fn unchecked_move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<Move> {
     let maybe_piece = game_state.board.get(pos);
     let Some(piece) = maybe_piece else {
         return Vec::new();
@@ -286,10 +286,10 @@ pub fn move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<M
         return Vec::new();
     }
     match piece.as_move_set() {
-        ChessPieceMoveSet::Set10(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-        ChessPieceMoveSet::Set8(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-        ChessPieceMoveSet::Set6(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
-        ChessPieceMoveSet::Set4(ms) => valid_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set10(ms) => provisional_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set8(ms) => provisional_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set6(ms) => provisional_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
+        ChessPieceMoveSet::Set4(ms) => provisional_moves_from_rulesets(&game_state, pos, ms.move_rulesets.as_slice()),
     }
 }
 
@@ -297,7 +297,6 @@ pub fn move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<M
 mod tests {
     use rstest::rstest;
     use crate::board_position::BoardPosition;
-    use crate::game_state::GameState;
     use crate::r#move::Move;
     use crate::position::*;
     use crate::chess_piece::ChessPiece;
@@ -336,13 +335,13 @@ mod tests {
         Move::create_normal(ChessPiece::WhiteKnight, D4, B3),
         Move::create_normal(ChessPiece::WhiteKnight, D4, B5),
     ])]
-    fn test_move_search_from_pos(
+    fn test_unchecked_move_search_from_pos(
         #[case] fen_str: &'static str,
         #[case] pos: BoardPosition,
         #[case] expected: Vec<Move>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let valid_moves = move_search_from_pos(&game_state, pos);
+        let valid_moves = unchecked_move_search_from_pos(&game_state, pos);
         if expected != valid_moves {
             println!("expected:"); print_slice_elements_using_display(&expected);
             println!("got:"); print_slice_elements_using_display(&valid_moves);
