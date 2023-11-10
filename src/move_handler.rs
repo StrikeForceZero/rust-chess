@@ -143,3 +143,14 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move) ->
 
     Ok(())
 }
+
+pub fn try_handle_move(game_state: &GameState, requested_move: Move) -> Result<GameState, InvalidMoveError> {
+    let mut game_state_copy = game_state.clone();
+    default_move_handler(&mut game_state_copy, requested_move)?;
+    Ok(game_state_copy)
+}
+
+pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: Move) -> Result<(), InvalidMoveError> {
+    *game_state = try_handle_move(&game_state, requested_move)?;
+    Ok(())
+}
