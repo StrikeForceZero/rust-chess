@@ -11,7 +11,7 @@ use crate::move_history_entry::MoveHistoryEntry;
 use crate::piece::Piece;
 use crate::r#move::{Move, MoveType};
 
-#[derive(Error, Debug, Clone, Copy)]
+#[derive(Error, Debug, Clone, Copy, PartialEq)]
 pub enum  InvalidMoveError {
     #[error("Game is over")]
     GameOver,
@@ -27,6 +27,8 @@ pub enum  InvalidMoveError {
     MoveIntoCheck,
     #[error("Invalid Move: still in check")]
     StillInCheck,
+    #[error("Invalid Move: {0} -> {1}")]
+    InvalidMove(BoardPosition, BoardPosition),
 }
 
 fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosition) -> Option<ChessPiece> {

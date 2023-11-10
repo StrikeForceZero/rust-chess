@@ -6,6 +6,7 @@ use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
 use crate::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::game_state::GameState;
+use crate::move_handler::InvalidMoveError;
 use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
 use crate::piece::Piece;
 use crate::r#move::Move;
@@ -293,6 +294,14 @@ pub fn unchecked_move_search_from_pos(game_state: &GameState, pos: BoardPosition
     }
 }
 
+pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition) -> Result<Move, InvalidMoveError> {
+    let provisional_moves = unchecked_move_search_from_pos(game_state, from);
+    match provisional_moves.iter().find(|&m| m.from == from && m.to == to) {
+        None => Err(InvalidMoveError::InvalidMove(from, to)),
+        Some(matched_move) => Ok(matched_move.to_owned()),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use rstest::rstest;
@@ -347,5 +356,17 @@ mod tests {
             println!("got:"); print_slice_elements_using_display(&unchecked_moves);
         }
         assert_eq!(expected, unchecked_moves)
+    }
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, A2, A3, Ok(Move::create_normal(ChessPiece::WhitePawn, A2, A3)))]
+    fn test_find_move(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] expected: Result<Move, InvalidMoveError>,
+    ) {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        assert_eq!(expected, find_move(&game_state, from, to))
     }
 }
