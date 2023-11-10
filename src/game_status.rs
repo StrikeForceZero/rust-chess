@@ -1,6 +1,6 @@
 use crate::color::Color;
 use crate::game_state::GameState;
-use crate::move_handler::try_handle_move;
+use crate::move_handler::{MoveHandlerOptions, try_handle_move};
 use crate::move_search::unchecked_move_search_from_pos;
 use crate::piece::Piece;
 use crate::r#move::Move;
@@ -52,7 +52,11 @@ impl GameStatus {
 fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Move) -> bool {
     let mut game_state_copy = game_state.clone();
     game_state_copy.active_color = color;
-    if let Ok(new_game_state) = try_handle_move(&game_state_copy, move_to_test) {
+    let move_hanlder_options = MoveHandlerOptions {
+        skip_check_mate_check: true,
+        ..Default::default()
+    };
+    if let Ok(new_game_state) = try_handle_move(&game_state_copy, move_to_test, Some(move_hanlder_options)) {
         if !new_game_state.game_status.is_check_or_mate() {
             return true;
         }
@@ -124,7 +128,7 @@ pub fn is_check_mate(game_state: &GameState) -> bool {
             }
         }
     }
-    return true;
+    true
 }
 
 pub fn is_stalemate(game_state: &GameState) -> bool {

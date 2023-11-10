@@ -1,3 +1,4 @@
+use sha2::digest::typenum::op;
 use thiserror::Error;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
@@ -18,10 +19,18 @@ fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosi
     game_state.board.replace(to, moving_piece)
 }
 
-pub fn default_move_handler(game_state: &mut GameState, requested_move: Move) -> Result<(), InvalidMoveError> {
+#[derive(Copy, Clone, Default)]
+pub struct MoveHandlerOptions {
+    pub skip_updating_game_status: bool,
+    pub skip_check_mate_check: bool,
+}
+
+pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
     if game_state.game_status.is_game_over() {
         return Err(InvalidMoveError::GameOver);
     }
+
+    let options = options.unwrap_or_default();
 
     // Scoping the immutable borrow
     let moving_piece_color;
@@ -105,38 +114,40 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move) ->
 
     game_state.active_color = game_state.active_color.as_inverse();
 
-    if is_check(game_state) {
-        game_state.game_status = GameStatus::Check(moving_piece_color.as_inverse());
-        if is_check_mate(game_state) {
-            game_state.game_status = GameStatus::CheckMate(moving_piece_color.as_inverse());
+    if !options.skip_updating_game_status {
+        if is_check(game_state) {
+            game_state.game_status = GameStatus::Check(moving_piece_color.as_inverse());
+            if !options.skip_check_mate_check && is_check_mate(game_state) {
+                game_state.game_status = GameStatus::CheckMate(moving_piece_color.as_inverse());
+            }
         }
-    }
 
-    if is_stalemate(game_state) {
-        game_state.game_status = GameStatus::Stalemate;
-    }
+        if is_stalemate(game_state) {
+            game_state.game_status = GameStatus::Stalemate;
+        }
 
-    if !game_state.game_status.is_game_over() {
-        game_state.history.move_history.push(MoveHistoryEntry::from_move(requested_move));
-        let seen_state_count = game_state.history.state_history.as_mut().expect("missing state history").increment(game_state.board.as_bit_boards_const());
+        if !game_state.game_status.is_game_over() {
+            game_state.history.move_history.push(MoveHistoryEntry::from_move(requested_move));
+            let seen_state_count = game_state.history.state_history.as_mut().expect("missing state history").increment(game_state.board.as_bit_boards_const());
 
-        // 3 fold repetition
-        if seen_state_count >= 3 {
-            game_state.game_status = GameStatus::Draw;
+            // 3 fold repetition
+            if seen_state_count >= 3 {
+                game_state.game_status = GameStatus::Draw;
+            }
         }
     }
 
     Ok(())
 }
 
-pub fn try_handle_move(game_state: &GameState, requested_move: Move) -> Result<GameState, InvalidMoveError> {
+pub fn try_handle_move(game_state: &GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<GameState, InvalidMoveError> {
     let mut game_state_copy = game_state.clone();
-    default_move_handler(&mut game_state_copy, requested_move)?;
+    default_move_handler(&mut game_state_copy, requested_move, options)?;
     Ok(game_state_copy)
 }
 
-pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: Move) -> Result<(), InvalidMoveError> {
-    *game_state = try_handle_move(&game_state, requested_move)?;
+pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
+    *game_state = try_handle_move(&game_state, requested_move, options)?;
     Ok(())
 }
 
@@ -160,7 +171,7 @@ mod tests {
     ) -> Result<(), InvalidMoveError> {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to)?;
-        match try_handle_move(&game_state, matched_move) {
+        match try_handle_move(&game_state, matched_move, None) {
             Ok(_) => assert_eq!(expected, Ok(())),
             Err(err) => assert_eq!(expected, Err(err)),
         }
@@ -177,7 +188,7 @@ mod tests {
     ) -> Result<(), InvalidMoveError> {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to)?;
-        assert_eq!(expected, try_handle_move_and_apply(&mut game_state, matched_move));
+        assert_eq!(expected, try_handle_move_and_apply(&mut game_state, matched_move, None));
         Ok(())
     }
 }
