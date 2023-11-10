@@ -3,7 +3,7 @@ use crate::board_position::BoardPosition;
 use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub enum MoveType {
     Normal,
     EnPassant(BoardPosition),

@@ -5,7 +5,7 @@ use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
 use crate::direction::Direction;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd)]
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
 
 impl BoardPosition {

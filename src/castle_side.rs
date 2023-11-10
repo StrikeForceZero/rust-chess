@@ -9,7 +9,7 @@ pub enum CastleSideConversionError {
     InvalidCastleSideDirection(Direction)
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd)]
 pub enum CastleSide {
     King,
     Queen,

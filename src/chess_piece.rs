@@ -14,7 +14,7 @@ pub enum ChessPieceParseError {
     InvalidChar(char),
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub enum ChessPiece {
     WhiteKing,
     WhiteQueen,

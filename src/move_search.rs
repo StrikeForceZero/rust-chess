@@ -304,6 +304,8 @@ pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition)
 
 #[cfg(test)]
 mod tests {
+    use std::cmp::Ordering;
+    use itertools::Itertools;
     use rstest::rstest;
     use crate::board_position::BoardPosition;
     use crate::r#move::Move;
@@ -314,6 +316,13 @@ mod tests {
     use crate::fen::{FEN_STARTING_POS, deserialize};
     use crate::utils::print_slice_elements_using_display;
     use super::*;
+
+    fn sort_moves(a: &Move, b: &Move) -> Ordering {
+        a.piece.partial_cmp(&b.piece).unwrap_or(Ordering::Equal)
+            .then_with(|| a.from.partial_cmp(&b.from).unwrap_or(Ordering::Equal))
+            .then_with(|| a.to.partial_cmp(&b.to).unwrap_or(Ordering::Equal))
+            .then_with(|| a.move_type.partial_cmp(&b.move_type).unwrap_or(Ordering::Equal))
+    }
 
     #[rstest]
     #[case(FEN_STARTING_POS, A2, vec![
@@ -351,12 +360,39 @@ mod tests {
         #[case] expected: Vec<Move>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let unchecked_moves = unchecked_move_search_from_pos(&game_state, pos);
+        let expected = expected.into_iter().sorted_by(sort_moves).collect_vec();
+        let unchecked_moves = unchecked_move_search_from_pos(&game_state, pos).into_iter().map(|m| m.to_owned()).sorted_by(sort_moves).collect_vec();
         if expected != unchecked_moves {
             println!("expected:"); print_slice_elements_using_display(&expected);
             println!("got:"); print_slice_elements_using_display(&unchecked_moves);
         }
         assert_eq!(expected, unchecked_moves)
+    }
+
+    #[rstest]
+    #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1", E7, vec![
+        Move::create_normal(ChessPiece::BlackQueen, E7, D1),
+        Move::create_normal(ChessPiece::BlackQueen, E7, E6),
+        Move::create_normal(ChessPiece::BlackQueen, E7, F5),
+        Move::create_normal(ChessPiece::BlackQueen, E7, F3),
+        Move::create_normal(ChessPiece::BlackQueen, E7, C2),
+        Move::create_normal(ChessPiece::BlackQueen, E7, E2),
+        Move::create_normal(ChessPiece::BlackQueen, E7, B3),
+        Move::create_normal(ChessPiece::BlackQueen, E7, B5),
+    ])]
+    fn test_contains_unchecked_move_search_from_pos(
+        #[case] fen_str: &'static str,
+        #[case] pos: BoardPosition,
+        #[case] contains_expected: Vec<Move>,
+    ) {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        let contains_expected = contains_expected.into_iter().sorted_by(sort_moves).collect_vec();
+        let unchecked_moves = unchecked_move_search_from_pos(&game_state, pos).into_iter().filter(|m| contains_expected.contains(m)).sorted_by(sort_moves).collect_vec();
+        if contains_expected != unchecked_moves {
+            println!("expected:"); print_slice_elements_using_display(&contains_expected);
+            println!("got:"); print_slice_elements_using_display(&unchecked_moves);
+        }
+        assert_eq!(contains_expected, unchecked_moves);
     }
 
     #[rstest]
