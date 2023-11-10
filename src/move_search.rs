@@ -191,6 +191,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                         }
                         break;
                     },
+                    None => {},
                 }
             }
         }
@@ -213,6 +214,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                         }
                         break;
                     },
+                    None => {},
                 }
             }
         }
@@ -224,7 +226,7 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
     let mut valid_moves = Vec::new();
     let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color)
         else { return valid_moves; };
-    
+
     todo!("not implemented")
 }
 
