@@ -80,7 +80,7 @@ pub fn is_check(game_state: &GameState) -> bool {
     }
     for (pos, maybe_piece) in game_state.board.as_iter() {
         let Some(chess_piece) = maybe_piece else { continue };
-        if chess_piece.as_color() == game_state.active_color {
+        if chess_piece.as_color() != game_state.active_color {
             // only care about the color that last moved
             continue;
         }

@@ -9,6 +9,7 @@ use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::color_castle_rights::ColorCastleRights;
 use crate::game_state::GameState;
+use crate::game_status::{GameStatus, is_check, is_check_mate};
 use crate::state_history::StateHistoryContainer;
 
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -118,6 +119,12 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
         }
     }
     game_state.history.state_history = Some(StateHistoryContainer::New(game_state.board.as_bit_boards_const()));
+    if is_check(&game_state) {
+        game_state.game_status = GameStatus::Check(game_state.active_color);
+        if is_check_mate(&game_state) {
+            game_state.game_status = GameStatus::CheckMate(game_state.active_color);
+        }
+    }
     Ok(game_state)
 }
 
