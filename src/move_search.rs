@@ -12,7 +12,7 @@ use crate::r#move::Move;
 
 
 pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
-    let mut valid_moves = Vec::new();
+    let mut unchecked_moves = Vec::new();
     let Some(directional_restriction) = ruleset.directional_restriction else {
         todo!("not implemented or bad state?")
     };
@@ -45,10 +45,10 @@ pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosit
             if !out_of_bound {
                 if let Some(blocking_piece) = game_state.board.get(last_pos) {
                     if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                        valid_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
+                        unchecked_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
                     }
                 } else {
-                    valid_moves.push(Move::create_normal(piece, from_pos, last_pos))
+                    unchecked_moves.push(Move::create_normal(piece, from_pos, last_pos))
                 }
             }
         }
@@ -62,13 +62,13 @@ pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosit
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if amount_left == 0 && ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
+                            unchecked_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
                     None => {
                         if amount_left == 0 {
-                            valid_moves.push(Move::create_normal(piece, from_pos, pos));
+                            unchecked_moves.push(Move::create_normal(piece, from_pos, pos));
                             break;
                         }
                     },
@@ -85,22 +85,22 @@ pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosit
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
+                            unchecked_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
                     None => {
-                        valid_moves.push(Move::create_normal(piece, from_pos, pos));
+                        unchecked_moves.push(Move::create_normal(piece, from_pos, pos));
                     },
                 }
             }
         }
     }
-    valid_moves
+    unchecked_moves
 }
 
 pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset, capture_only_type: CaptureOnlyType) -> Vec<Move> {
-    let mut valid_moves = Vec::new();
+    let mut unchecked_moves = Vec::new();
     let Some(directional_restriction) = ruleset.directional_restriction else {
         todo!("not implemented or bad state?")
     };
@@ -108,7 +108,7 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
         panic!("bad config!")
     }
     if capture_only_type == CaptureOnlyType::EnPassant && game_state.en_passant_target_pos.is_none() {
-        return valid_moves;
+        return unchecked_moves;
     }
     let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     match directional_restriction {
@@ -139,7 +139,7 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
             if !out_of_bound {
                 if let Some(blocking_piece) = game_state.board.get(last_pos) {
                     if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                        valid_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
+                        unchecked_moves.push(Move::create_normal_capture(piece, from_pos, last_pos, *blocking_piece))
                     }
                 }
             }
@@ -158,7 +158,7 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
                                 // en passant square should be empty
                                 break;
                             }
-                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
+                            unchecked_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
                     },
@@ -180,7 +180,7 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
                             let Some(capture_piece) = game_state.board.get(en_passant_capture_pos) else {
                                 panic!("bad en passant state: no capture piece at {en_passant_capture_pos}");
                             };
-                            valid_moves.push(Move::create_en_passant(piece, from_pos, pos, en_passant_capture_pos, *capture_piece))
+                            unchecked_moves.push(Move::create_en_passant(piece, from_pos, pos, en_passant_capture_pos, *capture_piece))
                         }
                     },
                 }
@@ -196,7 +196,7 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
-                            valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece));
+                            unchecked_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece));
                         }
                         break;
                     },
@@ -205,14 +205,14 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
             }
         }
     }
-    valid_moves
+    unchecked_moves
 }
 
 pub fn provisional_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, ruleset: &MoveRuleset) -> Vec<Move> {
-    let mut valid_moves = Vec::new();
+    let mut unchecked_moves = Vec::new();
     let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color)
-        else { return valid_moves; };
+        else { return unchecked_moves; };
     let Some(directional_restriction) = ruleset.directional_restriction else {
         todo!("not implemented or bad state?")
     };
@@ -224,7 +224,7 @@ pub fn provisional_moves_for_castle(game_state: &GameState, from_pos: BoardPosit
                 panic!("bad ruleset!")
             };
             if !castle_rights.has(CastleRights::from_castle_side(castle_side)) {
-                return valid_moves;
+                return unchecked_moves;
             }
             let mut amount_remaining = da.amount();
             let mut target_pos: Option<BoardPosition> = None;
@@ -236,20 +236,20 @@ pub fn provisional_moves_for_castle(game_state: &GameState, from_pos: BoardPosit
                 }
                 if let Some(blocking_piece) = maybe_blocking_piece {
                     let Some(target_pos) = target_pos
-                        else { return valid_moves };
+                        else { return unchecked_moves };
                     if blocking_piece.as_color() != piece.as_color() || blocking_piece.as_piece() != Piece::Rook {
-                        return valid_moves;
+                        return unchecked_moves;
                     }
                     // if starting pos requirement is set, check the rook as well
                     if ruleset.only_from_starting_pos && game_state.board.is_pos_starting_pos(pos) {
-                        valid_moves.push(Move::create_castle(piece, from_pos, target_pos, castle_side));
+                        unchecked_moves.push(Move::create_castle(piece, from_pos, target_pos, castle_side));
                     }
                     break;
                 }
             }
         }
     }
-    valid_moves
+    unchecked_moves
 }
 
 pub fn provisional_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition, move_rulesets: &[MoveRuleset]) -> Vec<Move> {
@@ -269,11 +269,11 @@ pub fn provisional_moves_from_rulesets(game_state: &GameState, from_pos: BoardPo
 }
 
 pub fn unchecked_move_search(game_state: &GameState) -> Vec<Move> {
-    let mut valid_moves: Vec<Move> = Vec::new();
+    let mut unchecked_moves: Vec<Move> = Vec::new();
     for (pos, maybe_piece) in game_state.board.as_iter() {
-        valid_moves.append(&mut unchecked_move_search_from_pos(game_state, pos))
+        unchecked_moves.append(&mut unchecked_move_search_from_pos(game_state, pos))
     }
-    valid_moves
+    unchecked_moves
 }
 
 pub fn unchecked_move_search_from_pos(game_state: &GameState, pos: BoardPosition) -> Vec<Move> {
@@ -341,11 +341,11 @@ mod tests {
         #[case] expected: Vec<Move>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let valid_moves = unchecked_move_search_from_pos(&game_state, pos);
-        if expected != valid_moves {
+        let unchecked_moves = unchecked_move_search_from_pos(&game_state, pos);
+        if expected != unchecked_moves {
             println!("expected:"); print_slice_elements_using_display(&expected);
-            println!("got:"); print_slice_elements_using_display(&valid_moves);
+            println!("got:"); print_slice_elements_using_display(&unchecked_moves);
         }
-        assert_eq!(expected, valid_moves)
+        assert_eq!(expected, unchecked_moves)
     }
 }

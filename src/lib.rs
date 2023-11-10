@@ -35,6 +35,8 @@ mod bit_board_const;
 mod state_history;
 mod move_search;
 mod r#move;
+mod evaluate_game_state;
+mod evaluate_check;
 
 #[cfg(test)]
 mod tests {
