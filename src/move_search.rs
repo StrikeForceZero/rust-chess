@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use crate::board_position::BoardPosition;
 use crate::board_scanner::BoardScanner;
 use crate::castle_rights::CastleRights;
@@ -218,19 +219,17 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
             let Ok(castle_side) = CastleSide::try_from_direction(da.direction()) else {
                 panic!("bad ruleset!")
             };
-            let Some(castle_rights) = game_state.castle_rights.for_color(game_state.active_color) else {
-                return valid_moves;
-            };
             if !castle_rights.has(CastleRights::from_castle_side(castle_side)) {
                 return valid_moves;
             }
             let mut amount_remaining = da.amount();
             let mut target_pos: Option<BoardPosition> = None;
             for (pos, maybe_blocking_piece) in BoardScanner::from_pos(&game_state.board, from_pos, da.direction()) {
-                if amount_remaining == 0 {
+                if amount_remaining == 0 && target_pos.is_none() {
                     target_pos = Some(pos);
                 }
-                amount_remaining -= 1;
+                // prevent underflow since we go beyond the original amount to make sure a rook is present
+                amount_remaining = amount_remaining.saturating_sub(1);
                 if let Some(blocking_piece) = maybe_blocking_piece {
                     let Some(target_pos) = target_pos
                         else { return valid_moves };
@@ -296,15 +295,23 @@ mod tests {
     use crate::board_position::BoardPosition;
     use crate::game_state::GameState;
     use crate::r#move::Move;
-    use crate::position;
+    use crate::position::*;
     use crate::chess_piece::ChessPiece;
+    use crate::castle_side::CastleSide;
     use crate::fen::{FEN_STARTING_POS, deserialize};
+    use crate::utils::print_slice_elements_using_display;
     use super::*;
 
     #[rstest]
-    #[case(FEN_STARTING_POS, position::A2, vec![
-        Move::create_normal(ChessPiece::WhitePawn, position::A2, position::A3),
-        Move::create_normal(ChessPiece::WhitePawn, position::A2, position::A4),
+    #[case(FEN_STARTING_POS, A2, vec![
+        Move::create_normal(ChessPiece::WhitePawn, A2, A3),
+        Move::create_normal(ChessPiece::WhitePawn, A2, A4),
+    ])]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R2QK2R w KQkq - 0 1", WHITE_KING_SQUARE, vec![
+        Move::create_normal(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_KING_SIDE_BISHOP_SQUARE),
+        Move::create_normal(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_QUEEN_SQUARE),
+        Move::create_castle(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_KING_SIDE_KING_CASTLE_SQUARE, CastleSide::King),
+        Move::create_castle(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_QUEEN_SIDE_KING_CASTLE_SQUARE, CastleSide::Queen),
     ])]
     fn test_move_search_from_pos(
         #[case] fen_str: &'static str,
@@ -312,6 +319,11 @@ mod tests {
         #[case] expected: Vec<Move>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        assert_eq!(expected, move_search_from_pos(&game_state, pos))
+        let valid_moves = move_search_from_pos(&game_state, pos);
+        if expected != valid_moves {
+            println!("expected:"); print_slice_elements_using_display(&expected);
+            println!("got:"); print_slice_elements_using_display(&valid_moves);
+        }
+        assert_eq!(expected, valid_moves)
     }
 }

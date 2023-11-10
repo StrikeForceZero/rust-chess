@@ -1,3 +1,4 @@
+use std::fmt::Display;
 use sha2::{Sha256, Digest};
 
 pub struct CustomStructIterator<'a, T> {
@@ -28,7 +29,6 @@ impl<'a, T> CustomStructIteratorMut<'a, T> {
     }
 }
 
-
 pub fn hash_64bit_numbers(numbers: &[u64]) -> Vec<u8> {
     let mut hasher = Sha256::new();
 
@@ -38,4 +38,12 @@ pub fn hash_64bit_numbers(numbers: &[u64]) -> Vec<u8> {
     }
 
     hasher.finalize().to_vec() // Return the resulting hash as a byte vector
+}
+
+pub fn print_slice_elements_using_display<T: Display>(items: &[T]) -> () {
+    println!("[");
+    for (ix, item) in items.iter().enumerate() {
+        println!(" {ix}: {item}");
+    }
+    println!("]");
 }

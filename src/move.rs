@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::board_position::BoardPosition;
 use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
@@ -54,5 +55,11 @@ impl Move {
             to,
             captured_piece: None,
         }
+    }
+}
+
+impl Display for Move {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ move_type: {:?}, piece: {:?}, from: {}, to: {}, captured_piece: {:?} }}", self.move_type, self.piece, self.from, self.to, self.captured_piece)
     }
 }
