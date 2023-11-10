@@ -1,3 +1,4 @@
+use crate::board_file::BoardFile;
 use crate::board_position::BoardPosition;
 use crate::board_rank::BoardRank;
 use crate::castle_rights::CastleRights;
@@ -59,6 +60,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
             while last_pos != requested_move.to {
                 if let Some(next_pos) = last_pos.next_pos(castle_side.as_simple_direction().as_direction()) {
                     maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.from);
+                    // shouldn't have replaced any pieces a long the way
                     if maybe_capture != requested_move.captured_piece {
                         return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
                     }
@@ -70,6 +72,22 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
                         return Err(InvalidMoveError::MoveIntoCheck);
                     }
                 }
+            }
+            // handle moving the rook
+            let Some(rook_end_pos) = last_pos.next_pos(castle_side.as_simple_direction().as_direction().reverse()) else {
+                panic!("bad game state or requested move")
+            };
+            let Some(mut rook_start_pos) = last_pos.next_pos(castle_side.as_simple_direction().as_direction()) else {
+                panic!("bad game state or requested move");
+            };
+            // go west one square for queen side rook
+            if *rook_start_pos.file() == BoardFile::B {
+                rook_start_pos = BoardPosition(BoardFile::A, *rook_start_pos.rank());
+            }
+            maybe_capture = move_unchecked(game_state, rook_start_pos, rook_end_pos);
+            // shouldn't have replaced any pieces
+            if maybe_capture != requested_move.captured_piece {
+                return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
             }
             maybe_capture
         },
@@ -174,7 +192,8 @@ mod tests {
     #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D2, D3, Err(InvalidMoveError::StillInCheck))]
     #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D1, E2, Ok(()))]
     // #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, F1, Ok(()))]
-    #[case("rnbqkbnr/pppppppp/5q2/8/8/8/PPPPP1PP/RNBQK2R w KQkq - 0 1", E1, F1, Err(InvalidMoveError::CastleWhileInCheck))]
+    #[case("rnbqkbnr/pppppppp/4q3/8/8/8/PPPP2PP/RNBQK2R b kq - 1 1", E1, G1, Err(InvalidMoveError::CastleWhileInCheck))]
+    #[case("rnbqkbnr/pppppppp/5q2/8/8/8/PPPPP1PP/RNBQK2R w KQkq - 0 1", E1, G1, Err(InvalidMoveError::MoveIntoCheck))]
     fn test_try_handle_move(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,

@@ -11,6 +11,7 @@ use crate::invalid_move_error::InvalidMoveError;
 use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
 use crate::piece::Piece;
 use crate::r#move::Move;
+use crate::utils::print_slice_elements_using_display;
 
 #[derive(Debug, Default, Copy, Clone)]
 pub struct MoveSearchOptions {
@@ -310,6 +311,7 @@ pub fn unchecked_move_search_from_pos(game_state: &GameState, pos: BoardPosition
 
 pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition, options: Option<MoveSearchOptions>) -> Result<Move, InvalidMoveError> {
     let provisional_moves = unchecked_move_search_from_pos(game_state, from, options);
+    print_slice_elements_using_display(&provisional_moves);
     match provisional_moves.iter().find(|&m| m.from == from && m.to == to) {
         None => Err(InvalidMoveError::InvalidMove(from, to)),
         Some(matched_move) => Ok(matched_move.to_owned()),
