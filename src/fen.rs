@@ -9,6 +9,7 @@ use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::color_castle_rights::ColorCastleRights;
 use crate::game_state::GameState;
+use crate::state_history::StateHistoryContainer;
 
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
@@ -116,8 +117,7 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
             }
         }
     }
-    todo!("finish implementing");
-    // game_state.history.state_history.push();
+    game_state.history.state_history = Some(StateHistoryContainer::New(game_state.board.as_bit_boards_const()));
     Ok(game_state)
 }
 
