@@ -252,7 +252,7 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
 pub fn valid_moves_from_rulesets(game_state: &GameState, from_pos: BoardPosition, move_rulesets: &[MoveRuleset]) -> Vec<Move> {
     let mut valid_moves = Vec::new();
     for ruleset in move_rulesets {
-        if ruleset.only_from_starting_pos && game_state.board.is_pos_starting_pos(from_pos) {
+        if ruleset.only_from_starting_pos && !game_state.board.is_pos_starting_pos(from_pos) {
             continue;
         }
         let mut new_valid_moves = match ruleset.move_type {
