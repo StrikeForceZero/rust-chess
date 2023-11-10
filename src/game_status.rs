@@ -54,6 +54,7 @@ fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Mov
     game_state_copy.active_color = color;
     let move_hanlder_options = MoveHandlerOptions {
         skip_check_mate_check: true,
+        skip_stale_mate_check: true,
         ..Default::default()
     };
     if let Ok(new_game_state) = try_handle_move(&game_state_copy, move_to_test, Some(move_hanlder_options)) {
@@ -92,7 +93,7 @@ pub fn is_check(game_state: &GameState) -> bool {
             }
         }
     }
-    return false;
+    false
 }
 
 pub fn is_check_for_color(game_state: &GameState, for_color: Color) -> bool {
@@ -152,5 +153,5 @@ pub fn is_stalemate(game_state: &GameState) -> bool {
             }
         }
     }
-    return true;
+    true
 }

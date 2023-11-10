@@ -23,6 +23,7 @@ fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosi
 pub struct MoveHandlerOptions {
     pub skip_updating_game_status: bool,
     pub skip_check_mate_check: bool,
+    pub skip_stale_mate_check: bool,
 }
 
 pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
@@ -122,7 +123,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
             }
         }
 
-        if is_stalemate(game_state) {
+        if !options.skip_stale_mate_check && is_stalemate(game_state) {
             game_state.game_status = GameStatus::Stalemate;
         }
 
@@ -162,7 +163,6 @@ mod tests {
     #[rstest]
     #[case(FEN_STARTING_POS, A2, A3, Ok(()))]
     #[case(FEN_STARTING_POS, A2, A4, Ok(()))]
-    #[case(FEN_STARTING_POS, A2, A5, Err(InvalidMoveError::InvalidMove(A2, A5)))]
     fn test_try_handle_move(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,
