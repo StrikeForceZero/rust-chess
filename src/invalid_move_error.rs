@@ -13,8 +13,8 @@ pub enum  InvalidMoveError {
     NotCurrentTurn(Color),
     #[error("Invalid Move: Expected capture: {0:?} but got {1:?}")]
     UnexpectedCapture(Option<ChessPiece>, Option<ChessPiece>),
-    #[error("Invalid Move: can't castle out of check")]
-    CastleOutOfCheck,
+    #[error("Invalid Move: can't castle when in check")]
+    CastleWhileInCheck,
     #[error("Invalid Move: can't move into check")]
     MoveIntoCheck,
     #[error("Invalid Move: still in check")]

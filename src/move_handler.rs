@@ -49,7 +49,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
     let maybe_capture = match requested_move.move_type {
         MoveType::Castle(castle_side) => {
             if is_in_check {
-                return Err(InvalidMoveError::CastleOutOfCheck);
+                return Err(InvalidMoveError::CastleWhileInCheck);
             }
             let mut maybe_capture = None;
             let mut last_pos = requested_move.from;
