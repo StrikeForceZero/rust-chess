@@ -91,6 +91,25 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
             }
             maybe_capture
         },
+        MoveType::EnPassant(capture_pos) => {
+            let mut maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.to);
+            if maybe_capture.is_some() {
+                return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
+            }
+            maybe_capture = game_state.board.replace(capture_pos, None);
+            // clear en passant so future simulations won't fail trying to capture a piece that doesnt exist.
+            game_state.en_passant_target_pos.take();
+            if maybe_capture != requested_move.captured_piece {
+                return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
+            }
+            if is_check_for_color(game_state, moving_piece_color) {
+                if is_in_check {
+                    return Err(InvalidMoveError::StillInCheck);
+                }
+                return Err(InvalidMoveError::MoveIntoCheck);
+            }
+            maybe_capture
+        }
         _ => {
             let maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.to);
             if maybe_capture != requested_move.captured_piece {
@@ -194,6 +213,7 @@ mod tests {
     #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, F1, Ok(()))]
     #[case("rnbqkbnr/pppppppp/4q3/8/8/8/PPPP2PP/RNBQK2R w KQkq - 1 1", E1, G1, Err(InvalidMoveError::CastleWhileInCheck))]
     #[case("rnbqkbnr/pppppppp/5q2/8/8/8/PPPPP1PP/RNBQK2R w KQkq - 0 1", E1, G1, Err(InvalidMoveError::MoveIntoCheck))]
+    #[case("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1", E5, D6, Ok(()))]
     fn test_try_handle_move(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,

@@ -118,10 +118,12 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
     if !ruleset.can_capture {
         panic!("bad config!")
     }
-    if capture_only_type == CaptureOnlyType::EnPassant && game_state.en_passant_target_pos.is_none() {
+    let piece = game_state.board.get(from_pos).expect("expected piece at pos");
+    // return early if ruleset is for en passant and there is no en passant or we arent the active color
+    // purposefully ignoring override
+    if capture_only_type == CaptureOnlyType::EnPassant && (game_state.en_passant_target_pos.is_none() || game_state.active_color != piece.as_color()) {
         return unchecked_moves;
     }
-    let piece = game_state.board.get(from_pos).expect("expected piece at pos");
     match directional_restriction {
         DirectionRestriction::LMove(drx, dry) => {
             if !ruleset.is_jump {
