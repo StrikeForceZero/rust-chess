@@ -59,7 +59,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
             let mut last_pos = requested_move.from;
             while last_pos != requested_move.to {
                 if let Some(next_pos) = last_pos.next_pos(castle_side.as_simple_direction().as_direction()) {
-                    maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.from);
+                    maybe_capture = move_unchecked(game_state, last_pos, next_pos);
                     // shouldn't have replaced any pieces a long the way
                     if maybe_capture != requested_move.captured_piece {
                         return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
