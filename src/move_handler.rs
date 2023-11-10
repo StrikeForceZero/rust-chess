@@ -73,7 +73,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
             maybe_capture
         },
         _ => {
-            let maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.from);
+            let maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.to);
             if maybe_capture != requested_move.captured_piece {
                 return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
             }

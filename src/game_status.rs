@@ -51,7 +51,7 @@ impl GameStatus {
 
 fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Move) -> bool {
     let mut game_state_copy = game_state.clone();
-    game_state_copy.active_color = color;
+    game_state_copy.game_status = GameStatus::InProgress;
     let move_hanlder_options = MoveHandlerOptions {
         color_override: Some(color),
         skip_check_mate_check: true,

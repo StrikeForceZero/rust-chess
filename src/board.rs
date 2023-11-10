@@ -394,12 +394,14 @@ impl Board {
         CustomStructIterator::from(self)
     }
     pub fn set(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) {
-        *self.get_mut(board_position) = chess_piece;
+        self.replace(board_position, chess_piece);
     }
-    pub fn replace(&mut self, board_position: BoardPosition, chess_piece: Option<ChessPiece>) -> Option<ChessPiece> {
-        let removed_piece = self.get(board_position).clone();
-        self.set(board_position, chess_piece);
-        removed_piece
+    pub fn replace(&mut self, board_position: BoardPosition, chess_piece_option: Option<ChessPiece>) -> Option<ChessPiece> {
+        if let Some(chess_piece) = chess_piece_option {
+            self.get_mut(board_position).replace(chess_piece)
+        } else {
+            self.get_mut(board_position).take()
+        }
     }
     pub const fn is_pos_starting_pos(&self, board_position: BoardPosition) -> bool {
         match (self.get(board_position), STARTING_BOARD.get(board_position)) {
