@@ -30,7 +30,8 @@ pub enum  InvalidMoveError {
 }
 
 fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosition) -> Option<ChessPiece> {
-    game_state.board.replace(to, *game_state.board.get(from))
+    let moving_piece = game_state.board.get_mut(from).take();
+    game_state.board.replace(to, moving_piece)
 }
 
 pub fn default_move_handler(game_state: &mut GameState, requested_move: Move) -> Result<(), InvalidMoveError> {
