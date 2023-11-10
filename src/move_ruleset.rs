@@ -3,19 +3,20 @@ use crate::direction::{DiagonalDirection, Direction, SimpleDirection};
 use crate::direction_amount::DirectionAmount;
 use crate::facing_direction::FacingDirection;
 
-
+#[derive(Copy, Clone)]
 pub enum DirectionRestriction {
     LMove(DirectionAmount, DirectionAmount),
     Amount(DirectionAmount),
     Limit(DirectionAmount),
 }
 
+#[derive(Copy, Clone)]
 pub enum CaptureOnlyType {
     Normal,
     EnPassant,
 }
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 pub enum MoveType {
     #[default]
     Normal,

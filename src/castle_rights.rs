@@ -7,7 +7,7 @@ pub enum CastleRightsStringParseError {
     InvalidCastleRightsString(String),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum CastleRights {
     KingSideOnly,
     QueenSideOnly,

@@ -1,6 +1,7 @@
 use thiserror::Error;
 use crate::{bit_board, chess_piece_move_rulesets};
 use crate::bit_board::BitBoard;
+use crate::bit_board_const::BitBoardConst;
 use crate::board_rank::{BLACK_BACK_RANK, BLACK_PAWNN_RANK, WHITE_BACK_RANK, WHITE_PAWNN_RANK};
 use crate::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
 use crate::color::Color;
@@ -12,7 +13,7 @@ pub enum ChessPieceParseError {
     InvalidChar(char),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum ChessPiece {
     WhiteKing,
     WhiteQueen,
@@ -106,6 +107,23 @@ impl ChessPiece {
         }
     }
 
+    pub const fn as_starting_bitboard_const(&self) -> BitBoardConst {
+        match self {
+            Self::WhitePawn => BitBoardConst::from(bit_board::PAWN_STARTING_POS << WHITE_PAWNN_RANK.as_shift_offset()),
+            Self::WhiteRook => BitBoardConst::from(bit_board::ROOK_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteKnight => BitBoardConst::from(bit_board::KNIGHT_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteBishop => BitBoardConst::from(bit_board::BISHOP_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteQueen => BitBoardConst::from(bit_board::QUEEN_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::WhiteKing => BitBoardConst::from(bit_board::KING_STARTING_POS << WHITE_BACK_RANK.as_shift_offset()),
+            Self::BlackPawn => BitBoardConst::from(bit_board::PAWN_STARTING_POS << BLACK_PAWNN_RANK.as_shift_offset()),
+            Self::BlackRook => BitBoardConst::from(bit_board::ROOK_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackKnight => BitBoardConst::from(bit_board::KNIGHT_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackBishop => BitBoardConst::from(bit_board::BISHOP_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackQueen => BitBoardConst::from(bit_board::QUEEN_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+            Self::BlackKing => BitBoardConst::from(bit_board::KING_STARTING_POS << BLACK_BACK_RANK.as_shift_offset()),
+        }
+    }
+
     pub fn from_char(c: char) -> Result<ChessPiece, ChessPieceParseError> {
         Ok(match c {
             'K' => Self::WhiteKing,
@@ -161,7 +179,7 @@ impl ChessPiece {
         })
     }
 
-    const fn as_move_set(&self) -> ChessPieceMoveSet {
+    pub const fn as_move_set(&self) -> ChessPieceMoveSet {
         match self {
             Self::WhiteRook => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::WHITE_ROOK),
             Self::WhiteBishop => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::WHITE_BISHOP),

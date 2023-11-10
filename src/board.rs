@@ -9,6 +9,8 @@ use crate::piece::Piece;
 use crate::position;
 use crate::utils::CustomStructIterator;
 
+const STARTING_BOARD: Board = Board::new();
+
 #[derive(Default, Clone)]
 pub struct Board {
     a1: Option<ChessPiece>,
@@ -398,6 +400,24 @@ impl Board {
         let removed_piece = self.get(board_position).clone();
         self.set(board_position, chess_piece);
         removed_piece
+    }
+    pub const fn is_pos_starting_pos(&self, board_position: BoardPosition) -> bool {
+        match (self.get(board_position), STARTING_BOARD.get(board_position)) {
+            (None, None) => true,
+            (Some(WhiteKing), Some(WhiteKing)) => true,
+            (Some(WhiteQueen), Some(WhiteQueen)) => true,
+            (Some(WhiteRook), Some(WhiteRook)) => true,
+            (Some(WhiteBishop), Some(WhiteBishop)) => true,
+            (Some(WhiteKnight), Some(WhiteKnight)) => true,
+            (Some(WhitePawn), Some(WhitePawn)) => true,
+            (Some(BlackKing), Some(BlackKing)) => true,
+            (Some(BlackQueen), Some(BlackQueen)) => true,
+            (Some(BlackRook), Some(BlackRook)) => true,
+            (Some(BlackBishop), Some(BlackBishop)) => true,
+            (Some(BlackKnight), Some(BlackKnight)) => true,
+            (Some(BlackPawn), Some(BlackPawn)) => true,
+            _ => false
+        }
     }
     pub fn from_bit_boards(full_color_piece_bit_board: FullColorPieceBitBoard) -> Self {
         let mut board = Board::empty();

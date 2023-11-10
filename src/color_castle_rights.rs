@@ -20,6 +20,12 @@ impl ColorCastleRights {
             black: Some(CastleRights::Both),
         }
     }
+    pub const fn for_color(&self, color: Color) -> Option<CastleRights> {
+        match color {
+            Color::White => self.white,
+            Color::Black => self.black,
+        }
+    }
     const fn to_tuple(&self) -> (&Option<CastleRights>, &Option<CastleRights>) {
         (&self.white, &self.black)
     }
