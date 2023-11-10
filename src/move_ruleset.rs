@@ -164,8 +164,8 @@ impl MoveRuleset {
     }
     pub const fn any_castle() -> [Self; 2] {
         [
+            Self::castle(CastleSide::King),
             Self::castle(CastleSide::Queen),
-            Self::castle(CastleSide::King)
         ]
     }
 }

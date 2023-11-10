@@ -225,11 +225,11 @@ pub fn valid_moves_for_castle(game_state: &GameState, from_pos: BoardPosition, r
             let mut amount_remaining = da.amount();
             let mut target_pos: Option<BoardPosition> = None;
             for (pos, maybe_blocking_piece) in BoardScanner::from_pos(&game_state.board, from_pos, da.direction()) {
+                // prevent underflow since we go beyond the original amount to make sure a rook is present
+                amount_remaining = amount_remaining.saturating_sub(1);
                 if amount_remaining == 0 && target_pos.is_none() {
                     target_pos = Some(pos);
                 }
-                // prevent underflow since we go beyond the original amount to make sure a rook is present
-                amount_remaining = amount_remaining.saturating_sub(1);
                 if let Some(blocking_piece) = maybe_blocking_piece {
                     let Some(target_pos) = target_pos
                         else { return valid_moves };
@@ -307,7 +307,7 @@ mod tests {
         Move::create_normal(ChessPiece::WhitePawn, A2, A3),
         Move::create_normal(ChessPiece::WhitePawn, A2, A4),
     ])]
-    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R2QK2R w KQkq - 0 1", WHITE_KING_SQUARE, vec![
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1", WHITE_KING_SQUARE, vec![
         Move::create_normal(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_KING_SIDE_BISHOP_SQUARE),
         Move::create_normal(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_QUEEN_SQUARE),
         Move::create_castle(ChessPiece::WhiteKing, WHITE_KING_SQUARE, WHITE_KING_SIDE_KING_CASTLE_SQUARE, CastleSide::King),
