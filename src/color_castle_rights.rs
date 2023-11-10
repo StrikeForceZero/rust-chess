@@ -26,6 +26,12 @@ impl ColorCastleRights {
             Color::Black => self.black,
         }
     }
+    pub fn for_color_mut(&mut self, color: Color) -> &mut Option<CastleRights> {
+        match color {
+            Color::White => &mut self.white,
+            Color::Black => &mut self.black,
+        }
+    }
     const fn to_tuple(&self) -> (&Option<CastleRights>, &Option<CastleRights>) {
         (&self.white, &self.black)
     }
