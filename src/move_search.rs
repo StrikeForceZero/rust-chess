@@ -326,6 +326,16 @@ mod tests {
         Move::create_normal_capture(ChessPiece::WhitePawn, D5, C6, ChessPiece::BlackPawn),
         Move::create_en_passant(ChessPiece::WhitePawn, D5, E6, E5, ChessPiece::BlackPawn),
     ])]
+    #[case("8/8/8/8/3N4/8/8/8 w - - 0 1", D4, vec![
+        Move::create_normal(ChessPiece::WhiteKnight, D4, C6),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, E6),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, F5),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, F3),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, C2),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, E2),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, B3),
+        Move::create_normal(ChessPiece::WhiteKnight, D4, B5),
+    ])]
     fn test_move_search_from_pos(
         #[case] fen_str: &'static str,
         #[case] pos: BoardPosition,

@@ -97,7 +97,7 @@ impl SimpleDirection {
     }
     pub const fn as_perpendicular_simple_direction_tuple(&self) -> (SimpleDirection, SimpleDirection) {
         match self {
-            Self::North =>  (Self::West, Self::South),
+            Self::North =>  (Self::West, Self::East),
             Self::East =>   (Self::North, Self::South),
             Self::South =>  (Self::West, Self::East),
             Self::West =>   (Self::South, Self::North),
