@@ -2,11 +2,12 @@ use thiserror::Error;
 use crate::board_position::BoardPosition;
 use crate::chess_piece::ChessPiece;
 use crate::color::Color;
+use crate::game_status::GameStatus;
 
 #[derive(Error, Debug, Clone, Copy, PartialEq)]
 pub enum  InvalidMoveError {
-    #[error("Game is over")]
-    GameOver,
+    #[error("Game is over: {0:?}")]
+    GameOver(GameStatus),
     #[error("Invalid Move: No Piece at origin {0}")]
     NoPieceAtOrigin(BoardPosition),
     #[error("Invalid Move: {0:?}'s turn")]

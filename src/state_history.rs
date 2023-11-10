@@ -35,16 +35,14 @@ impl StateHistoryContainer {
             }
         }
     }
-    pub fn clear(&mut self, full_color_piece_bit_board: FullColorPieceBitBoard) {
+    pub fn clear(&mut self) {
         match self {
             StateHistoryContainer::New(_) => {
                 self.upgrade();
-                self.clear(full_color_piece_bit_board)
+                self.clear()
             }
             StateHistoryContainer::Hash(map) => {
                 map.clear();
-                let entry = map.entry(full_color_piece_bit_board).or_insert(0);
-                *entry += 1;
             }
         }
     }

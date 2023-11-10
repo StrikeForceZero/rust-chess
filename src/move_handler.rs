@@ -19,6 +19,7 @@ fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosi
 
 #[derive(Copy, Clone, Default)]
 pub struct MoveHandlerOptions {
+    pub color_override: Option<Color>,
     pub skip_updating_game_status: bool,
     pub skip_check_mate_check: bool,
     pub skip_stale_mate_check: bool,
@@ -26,10 +27,11 @@ pub struct MoveHandlerOptions {
 
 pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
     if game_state.game_status.is_game_over() {
-        return Err(InvalidMoveError::GameOver);
+        return Err(InvalidMoveError::GameOver(game_state.game_status));
     }
 
     let options = options.unwrap_or_default();
+    let active_color = options.color_override.unwrap_or(game_state.active_color);
 
     // Scoping the immutable borrow
     let moving_piece_color;
@@ -42,8 +44,8 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
         moving_piece_type = moving_piece.as_piece();
         moving_piece_facing_direction = moving_piece.as_facing_direction();
     }
-    if moving_piece_color != game_state.active_color {
-        return Err(InvalidMoveError::NotCurrentTurn(game_state.active_color));
+    if moving_piece_color != active_color {
+        return Err(InvalidMoveError::NotCurrentTurn(active_color));
     }
     let is_in_check = game_state.game_status.is_check();
     let maybe_capture = match requested_move.move_type {
@@ -92,30 +94,32 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
         if game_state.board.is_pos_starting_pos(requested_move.from) && (*requested_move.to.rank() == BoardRank::Four || *requested_move.to.rank() == BoardRank::Five) {
             game_state.en_passant_target_pos = requested_move.to.next_pos(moving_piece_facing_direction.as_simple_direction().as_direction().reverse());
         }
+        // reset since its impossible to revisit any states in the past after a pawn move
+        game_state.history.state_history.as_mut().expect("missing state history").clear();
         game_state.move_clock.half_move = 0;
     }
     else {
         game_state.move_clock.half_move += 1;
     }
 
-    if game_state.active_color == Color::Black {
+    if active_color == Color::Black {
         game_state.move_clock.full_move += 1;
     }
 
     if moving_piece_type == Piece::King && game_state.board.is_pos_starting_pos(requested_move.from) {
         // remove castle rights when the king moves
-        game_state.castle_rights.for_color_mut(game_state.active_color).take();
+        game_state.castle_rights.for_color_mut(active_color).take();
     }
 
     if moving_piece_type == Piece::Rook && game_state.board.is_pos_starting_pos(requested_move.from) {
         // empty out the castle rights
-        if let Some(castle_rights) = game_state.castle_rights.for_color_mut(game_state.active_color).take() {
+        if let Some(castle_rights) = game_state.castle_rights.for_color_mut(active_color).take() {
             // re apply new rights, if any
-            *game_state.castle_rights.for_color_mut(game_state.active_color) = castle_rights.without(CastleRights::from_castle_side(CastleSide::from_pos(requested_move.from)));
+            *game_state.castle_rights.for_color_mut(active_color) = castle_rights.without(CastleRights::from_castle_side(CastleSide::from_pos(requested_move.from)));
         }
     }
 
-    game_state.active_color = game_state.active_color.as_inverse();
+    game_state.active_color = active_color.as_inverse();
 
     if !options.skip_updating_game_status {
         if is_check(game_state) {
@@ -167,7 +171,7 @@ mod tests {
     // #[case(FEN_STARTING_POS, A2, A4, Ok(()))]
     #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", E1, E2, Err(InvalidMoveError::StillInCheck))]
     #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D2, D3, Err(InvalidMoveError::StillInCheck))]
-    // #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D1, E2, Ok(()))]
+    #[case("rnb1kbnr/ppppqppp/8/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", D1, E2, Ok(()))]
     // #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, F1, Ok(()))]
     #[case("rnbqkbnr/pppppppp/5q2/8/8/8/PPPPP1PP/RNBQK2R w KQkq - 0 1", E1, F1, Err(InvalidMoveError::CastleWhileInCheck))]
     fn test_try_handle_move(

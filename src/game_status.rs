@@ -53,6 +53,7 @@ fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Mov
     let mut game_state_copy = game_state.clone();
     game_state_copy.active_color = color;
     let move_hanlder_options = MoveHandlerOptions {
+        color_override: Some(color),
         skip_check_mate_check: true,
         skip_stale_mate_check: true,
         ..Default::default()
@@ -103,7 +104,7 @@ pub fn is_check(game_state: &GameState) -> bool {
 pub fn is_check_for_color(game_state: &GameState, for_color: Color) -> bool {
     let mut game_state = game_state.clone();
     // only care about the color that last moved / attacking
-    game_state.active_color = for_color.as_inverse();
+    game_state.active_color = for_color;
     is_check(&game_state)
 }
 
@@ -128,7 +129,7 @@ pub fn is_check_mate(game_state: &GameState) -> bool {
         }
         let moves = unchecked_move_search_from_pos(game_state, pos, None);
         for provisional_move in moves {
-            if will_move_clear_check(&game_state, game_state.active_color.as_inverse(), provisional_move) {
+            if will_move_clear_check(&game_state, game_state.active_color, provisional_move) {
                 return false
             }
         }
