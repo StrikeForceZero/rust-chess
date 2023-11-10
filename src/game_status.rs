@@ -1,7 +1,7 @@
 use crate::color::Color;
 use crate::game_state::GameState;
 use crate::move_handler::{MoveHandlerOptions, try_handle_move};
-use crate::move_search::unchecked_move_search_from_pos;
+use crate::move_search::{MoveSearchOptions, unchecked_move_search_from_pos};
 use crate::piece::Piece;
 use crate::r#move::Move;
 
@@ -80,11 +80,15 @@ pub fn is_check(game_state: &GameState) -> bool {
     }
     for (pos, maybe_piece) in game_state.board.as_iter() {
         let Some(chess_piece) = maybe_piece else { continue };
-        if chess_piece.as_color() != game_state.active_color {
+        if chess_piece.as_color() == game_state.active_color {
             // only care about the color that last moved
             continue;
         }
-        let moves = unchecked_move_search_from_pos(game_state, pos);
+        let move_search_options = MoveSearchOptions {
+            active_color_override: Some(game_state.active_color.as_inverse()),
+            ..Default::default()
+        };
+        let moves = unchecked_move_search_from_pos(game_state, pos, Some(move_search_options));
         for provisional_move in moves {
             if let Some(captured_piece) = provisional_move.captured_piece {
                 if captured_piece.as_piece() == Piece::King {
@@ -122,7 +126,7 @@ pub fn is_check_mate(game_state: &GameState) -> bool {
             // only care about the color that is in check
             continue;
         }
-        let moves = unchecked_move_search_from_pos(game_state, pos);
+        let moves = unchecked_move_search_from_pos(game_state, pos, None);
         for provisional_move in moves {
             if will_move_clear_check(&game_state, game_state.active_color.as_inverse(), provisional_move) {
                 return false
@@ -146,7 +150,7 @@ pub fn is_stalemate(game_state: &GameState) -> bool {
             // only care about the color to move
             continue;
         }
-        let moves = unchecked_move_search_from_pos(game_state, pos);
+        let moves = unchecked_move_search_from_pos(game_state, pos, None);
         for provisional_move in moves {
             if will_move_clear_check(&game_state, game_state.active_color, provisional_move) {
                 return false
