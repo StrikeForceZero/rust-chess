@@ -154,6 +154,10 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                 match maybe_blocking_piece {
                     Some(blocking_piece) => {
                         if amount_left == 0 && ruleset.can_capture && blocking_piece.as_color() != piece.as_color() {
+                            if capture_only_type == CaptureOnlyType::EnPassant {
+                                // en passant square should be empty
+                                break;
+                            }
                             valid_moves.push(Move::create_normal_capture(piece, from_pos, pos, *blocking_piece))
                         }
                         break;
@@ -176,7 +180,7 @@ pub fn valid_moves_for_capture_only(game_state: &GameState, from_pos: BoardPosit
                             let Some(capture_piece) = game_state.board.get(en_passant_capture_pos) else {
                                 panic!("bad en passant state: no capture piece at {en_passant_capture_pos}");
                             };
-                            valid_moves.push(Move::create_en_passant(piece, from_pos, pos, en_passant_target_pos, *capture_piece))
+                            valid_moves.push(Move::create_en_passant(piece, from_pos, pos, en_passant_capture_pos, *capture_piece))
                         }
                     },
                 }
@@ -316,6 +320,11 @@ mod tests {
     #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/R3Kn1R w KQkq - 0 1", WHITE_KING_SIDE_ROOK_SQUARE, vec![
         Move::create_normal(ChessPiece::WhiteRook, WHITE_KING_SIDE_ROOK_SQUARE, WHITE_KING_SIDE_KNIGHT_SQUARE),
         Move::create_normal_capture(ChessPiece::WhiteRook, WHITE_KING_SIDE_ROOK_SQUARE, WHITE_KING_SIDE_BISHOP_SQUARE, ChessPiece::BlackKnight),
+    ])]
+    #[case("3k4/8/2p5/3Pp3/8/8/8/3K4 w - e6 0 1", D5, vec![
+        Move::create_normal(ChessPiece::WhitePawn, D5, D6),
+        Move::create_normal_capture(ChessPiece::WhitePawn, D5, C6, ChessPiece::BlackPawn),
+        Move::create_en_passant(ChessPiece::WhitePawn, D5, E6, E5, ChessPiece::BlackPawn),
     ])]
     fn test_move_search_from_pos(
         #[case] fen_str: &'static str,
