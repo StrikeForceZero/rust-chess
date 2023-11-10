@@ -6,7 +6,7 @@ use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
 use crate::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::game_state::GameState;
-use crate::move_handler::InvalidMoveError;
+use crate::invalid_move_error::InvalidMoveError;
 use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
 use crate::piece::Piece;
 use crate::r#move::Move;
@@ -310,6 +310,7 @@ mod tests {
     use crate::position::*;
     use crate::chess_piece::ChessPiece;
     use crate::castle_side::CastleSide;
+    use crate::invalid_move_error::InvalidMoveError;
     use crate::fen::{FEN_STARTING_POS, deserialize};
     use crate::utils::print_slice_elements_using_display;
     use super::*;
@@ -368,5 +369,19 @@ mod tests {
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         assert_eq!(expected, find_move(&game_state, from, to))
+    }
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, A2, A5, InvalidMoveError::InvalidMove(A2, A5))]
+    fn test_find_move_fail(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] expected: InvalidMoveError,
+    ) {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        let matched_move = find_move(&game_state, from, to);
+        assert!(matched_move.is_err());
+        assert_eq!(expected, matched_move.err().expect("expected error!"));
     }
 }

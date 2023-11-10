@@ -7,29 +7,11 @@ use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::game_state::GameState;
 use crate::game_status::{GameStatus, is_check, is_check_for_color, is_check_mate, is_stalemate};
+use crate::invalid_move_error::InvalidMoveError;
 use crate::move_history_entry::MoveHistoryEntry;
 use crate::piece::Piece;
 use crate::r#move::{Move, MoveType};
 
-#[derive(Error, Debug, Clone, Copy, PartialEq)]
-pub enum  InvalidMoveError {
-    #[error("Game is over")]
-    GameOver,
-    #[error("Invalid Move: No Piece at origin {0}")]
-    NoPieceAtOrigin(BoardPosition),
-    #[error("Invalid Move: {0:?}'s turn")]
-    NotCurrentTurn(Color),
-    #[error("Invalid Move: Expected capture: {0:?} but got {1:?}")]
-    UnexpectedCapture(Option<ChessPiece>, Option<ChessPiece>),
-    #[error("Invalid Move: can't castle out of check")]
-    CastleOutOfCheck,
-    #[error("Invalid Move: can't move into check")]
-    MoveIntoCheck,
-    #[error("Invalid Move: still in check")]
-    StillInCheck,
-    #[error("Invalid Move: {0} -> {1}")]
-    InvalidMove(BoardPosition, BoardPosition),
-}
 
 fn move_unchecked(game_state: &mut GameState, from: BoardPosition, to: BoardPosition) -> Option<ChessPiece> {
     let moving_piece = game_state.board.get_mut(from).take();
@@ -156,4 +138,46 @@ pub fn try_handle_move(game_state: &GameState, requested_move: Move) -> Result<G
 pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: Move) -> Result<(), InvalidMoveError> {
     *game_state = try_handle_move(&game_state, requested_move)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+    use crate::move_search::find_move;
+    use super::*;
+    use crate::position::*;
+    use crate::fen::{FEN_STARTING_POS, deserialize};
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, A2, A3, Ok(()))]
+    #[case(FEN_STARTING_POS, A2, A4, Ok(()))]
+    #[case(FEN_STARTING_POS, A2, A5, Err(InvalidMoveError::InvalidMove(A2, A5)))]
+    fn test_try_handle_move(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] expected: Result<(), InvalidMoveError>,
+    ) -> Result<(), InvalidMoveError> {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        let matched_move = find_move(&game_state, from, to)?;
+        match try_handle_move(&game_state, matched_move) {
+            Ok(_) => assert_eq!(expected, Ok(())),
+            Err(err) => assert_eq!(expected, Err(err)),
+        }
+        Ok(())
+    }
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, A2, A3, Ok(()))]
+    fn test_try_handle_move_and_apply(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] expected: Result<(), InvalidMoveError>,
+    ) -> Result<(), InvalidMoveError> {
+        let mut game_state = deserialize(fen_str).expect("bad fen string!");
+        let matched_move = find_move(&game_state, from, to)?;
+        assert_eq!(expected, try_handle_move_and_apply(&mut game_state, matched_move));
+        Ok(())
+    }
 }

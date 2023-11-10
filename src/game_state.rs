@@ -6,7 +6,7 @@ use crate::game_status::GameStatus;
 use crate::history::History;
 use crate::move_clock::MoveClock;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GameState {
     pub board: Board,
     pub history: History,

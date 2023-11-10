@@ -1,4 +1,4 @@
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MoveClock {
     pub half_move: u16,
     pub full_move: u16,

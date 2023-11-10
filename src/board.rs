@@ -11,7 +11,7 @@ use crate::utils::CustomStructIterator;
 
 const STARTING_BOARD: Board = Board::new();
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Board {
     a1: Option<ChessPiece>,
     a2: Option<ChessPiece>,

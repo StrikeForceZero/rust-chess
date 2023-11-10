@@ -2,7 +2,7 @@ use crate::board_position::BoardPosition;
 use crate::chess_piece::ChessPiece;
 use crate::r#move::{Move, MoveType};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MoveHistoryEntry {
     pub move_type: MoveType,
     pub piece: ChessPiece,

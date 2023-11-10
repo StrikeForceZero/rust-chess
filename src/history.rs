@@ -3,7 +3,7 @@ use crate::board::Board;
 use crate::move_history_entry::MoveHistoryEntry;
 use crate::state_history::StateHistoryContainer;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct History {
     pub move_history: Vec<MoveHistoryEntry>,
     // most moves in history 269

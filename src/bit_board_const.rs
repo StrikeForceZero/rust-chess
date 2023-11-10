@@ -4,7 +4,7 @@ use crate::utils::CustomStructIterator;
 
 pub type BitBoardConstData = u64;
 #[repr(transparent)]
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct BitBoardConst {
     data: BitBoardConstData
 }

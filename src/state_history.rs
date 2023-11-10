@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::full_color_piece_bit_board::FullColorPieceBitBoard;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum StateHistoryContainer {
     New(FullColorPieceBitBoard),
     Hash(HashMap<FullColorPieceBitBoard, u8>)

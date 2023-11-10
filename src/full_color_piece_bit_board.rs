@@ -6,7 +6,7 @@ use crate::color::Color;
 use crate::full_piece_bit_board::FullPieceBitBoard;
 use crate::utils::{CustomStructIterator, CustomStructIteratorMut, hash_64bit_numbers};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct FullColorPieceBitBoard {
     pub white: FullPieceBitBoard,
     pub black: FullPieceBitBoard,

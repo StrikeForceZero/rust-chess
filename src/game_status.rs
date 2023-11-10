@@ -5,7 +5,7 @@ use crate::move_search::unchecked_move_search_from_pos;
 use crate::piece::Piece;
 use crate::r#move::Move;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum GameStatus {
     New,
     InProgress,

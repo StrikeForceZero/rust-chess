@@ -1,7 +1,7 @@
 use crate::castle_rights::{CastleRights, CastleRightsStringParseError};
 use crate::color::Color;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ColorCastleRights {
     pub white: Option<CastleRights>,
     pub black: Option<CastleRights>,
