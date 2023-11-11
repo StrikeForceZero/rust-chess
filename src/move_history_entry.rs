@@ -12,7 +12,7 @@ pub struct MoveHistoryEntry {
 }
 
 impl MoveHistoryEntry {
-    pub const fn from_move(some_move: Move) -> Self {
+    pub const fn from_move(some_move: &Move) -> Self {
         Self {
             piece: some_move.piece,
             from: some_move.from,

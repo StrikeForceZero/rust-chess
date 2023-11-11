@@ -27,7 +27,7 @@ pub struct MoveHandlerOptions {
     pub skip_stale_mate_check: bool,
 }
 
-pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
+pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
     if game_state.game_status.is_game_over() {
         return Err(InvalidMoveError::GameOver(game_state.game_status));
     }
@@ -185,13 +185,13 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: Move, op
     Ok(())
 }
 
-pub fn try_handle_move(game_state: &GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<GameState, InvalidMoveError> {
+pub fn try_handle_move(game_state: &GameState, requested_move: &Move, options: Option<MoveHandlerOptions>) -> Result<GameState, InvalidMoveError> {
     let mut game_state_copy = game_state.clone();
     default_move_handler(&mut game_state_copy, requested_move, options)?;
     Ok(game_state_copy)
 }
 
-pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
+pub fn try_handle_move_and_apply(game_state: &mut GameState, requested_move: &Move, options: Option<MoveHandlerOptions>) -> Result<(), InvalidMoveError> {
     *game_state = try_handle_move(&game_state, requested_move, options)?;
     Ok(())
 }
@@ -223,7 +223,7 @@ mod tests {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         println!("{from} -> {to}");
         let matched_move = find_move(&game_state, from, to, None)?;
-        match try_handle_move(&game_state, matched_move, None) {
+        match try_handle_move(&game_state, &matched_move, None) {
             Ok(gs) => {
                 println!("{}", serialize(gs));
                 assert_eq!(expected, Ok(()))
@@ -243,7 +243,7 @@ mod tests {
     ) -> Result<(), InvalidMoveError> {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None)?;
-        assert_eq!(expected, try_handle_move_and_apply(&mut game_state, matched_move, None));
+        assert_eq!(expected, try_handle_move_and_apply(&mut game_state, &matched_move, None));
         Ok(())
     }
 

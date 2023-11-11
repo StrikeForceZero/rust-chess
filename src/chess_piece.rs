@@ -159,10 +159,6 @@ impl ChessPiece {
         })
     }
 
-    pub const fn as_score(&self) -> i32 {
-        self.as_piece().as_score() * self.as_color().as_score()
-    }
-
     const fn as_move_set_10(&self) -> Option<ChessPieceMoveRuleset<10>> {
         Some(match self {
             Self::WhiteKing => chess_piece_move_rulesets::WHITE_KING,

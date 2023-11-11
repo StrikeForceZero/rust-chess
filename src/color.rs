@@ -19,11 +19,10 @@ impl Color {
             Self::Black => FacingDirection::South,
         }
     }
-
-    pub const fn as_score(&self) -> i32 {
-        match self {
-            Color::White => 1,
-            Color::Black => -1,
+    pub const fn as_score(&self, maximizing_color: Color) -> i32 {
+        match (self, maximizing_color) {
+            (Self::White, Self::White) | (Self::Black, Self::Black) => 1,
+            _ => -1,
         }
     }
 }
