@@ -93,6 +93,7 @@ mod tests {
 
     #[rstest]
     #[case(FEN_STARTING_POS, A2, A3)] // this should probably be E2 -> E4
+    #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4)]
     fn test__find_best_move__first_move(
         #[case] fen_str: &'static str,
         #[case] expected_from: BoardPosition,
