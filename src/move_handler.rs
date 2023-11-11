@@ -130,7 +130,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
         return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
     }
     if moving_piece_type == Piece::Pawn || maybe_capture.is_some() {
-        if moving_piece_type == Piece::Pawn && game_state.board.is_pos_starting_pos(requested_move.from) && (*requested_move.to.rank() == BoardRank::Four || *requested_move.to.rank() == BoardRank::Five) {
+        if moving_piece_type == Piece::Pawn && was_at_starting_pos && (*requested_move.to.rank() == BoardRank::Four || *requested_move.to.rank() == BoardRank::Five) {
             game_state.en_passant_target_pos = requested_move.to.next_pos(moving_piece_facing_direction.as_simple_direction().as_direction().reverse());
         }
         // reset since its impossible to revisit any states in the past after a pawn move / capture
@@ -251,7 +251,7 @@ mod tests {
     #[rstest]
     #[case("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1", E5, D6, "rnbqkbnr/ppp1pppp/3P4/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")]
     #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, G1, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1RK1 b kq - 1 1")]
-    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, G1, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1RK1 b kq - 1 1")]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1", A7, A5, "rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq a6 0 2")]
     fn test_state_change(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,
