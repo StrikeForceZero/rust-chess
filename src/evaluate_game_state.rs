@@ -23,11 +23,11 @@ pub fn evaluate_game_state(game_state: &GameState, maximizing_color: Color) -> i
         GameStatus::Stalemate | GameStatus::Draw => -score + score.signum(),
     });
     // force to at least pick one legal move no matter what
-    if score == i32::MAX {
+    /*if score == i32::MAX {
         score -= 1;
     } else if score == i32::MIN {
         score += 1
-    }
+    }*/
     // println!("#{} {:?} - score: {score} {:?}", game_state.history.move_history.len(), game_state.history.move_history.last(), game_state.game_status);
     score
 }
@@ -86,9 +86,13 @@ pub fn find_best_move(game_state: &GameState, depth: u8) -> Result<Move, &'stati
         if let Ok(_) = move_result {
             let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, i32::MIN, i32::MAX, maximizing_player_color);
 
+
             if eval > best_eval {
                 best_eval = eval;
                 best_move = Some(move_);
+            } else {
+                // force to pick at least one legal move
+                best_move = best_move.or(Some(move_));
             }
            /* if game_state.history.move_history.len() >= 132 {
                 println!("ok - {best_eval}");

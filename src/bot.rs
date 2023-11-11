@@ -11,9 +11,6 @@ mod tests {
         while !game_state.game_status.is_game_over() {
             println!("#{} {:?} {:?} - last move: {:?}", game_state.history.move_history.len(), game_state.game_status, game_state.active_color, game_state.history.move_history.last());
             println!("fen: {}", serialize(&game_state));
-            if game_state.history.move_history.len() == 132 {
-                println!("debugger");
-            }
             let best_move = match find_best_move(&game_state, 2) {
                 Ok(best_move) => best_move,
                 Err(message) => {
