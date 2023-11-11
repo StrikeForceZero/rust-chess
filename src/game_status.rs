@@ -49,7 +49,7 @@ impl GameStatus {
     }
 }
 
-fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Move) -> bool {
+fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: &Move) -> bool {
     let mut game_state_copy = game_state.clone();
     game_state_copy.game_status = GameStatus::InProgress;
     let move_hanlder_options = MoveHandlerOptions {
@@ -58,7 +58,7 @@ fn will_move_clear_check(game_state: &GameState, color: Color, move_to_test: Mov
         skip_stale_mate_check: true,
         ..Default::default()
     };
-    if let Ok(new_game_state) = try_handle_move(&game_state_copy, move_to_test, Some(move_hanlder_options)) {
+    if let Ok(new_game_state) = try_handle_move(&game_state_copy, &move_to_test, Some(move_hanlder_options)) {
         if !new_game_state.game_status.is_check_or_mate() {
             return true;
         }
@@ -129,7 +129,7 @@ pub fn is_check_mate(game_state: &GameState) -> bool {
         }
         let moves = unchecked_move_search_from_pos(game_state, pos, None);
         for provisional_move in moves {
-            if will_move_clear_check(&game_state, game_state.active_color, provisional_move) {
+            if will_move_clear_check(&game_state, game_state.active_color, &provisional_move) {
                 return false
             }
         }
@@ -153,7 +153,7 @@ pub fn is_stalemate(game_state: &GameState) -> bool {
         }
         let moves = unchecked_move_search_from_pos(game_state, pos, None);
         for provisional_move in moves {
-            if will_move_clear_check(&game_state, game_state.active_color, provisional_move) {
+            if will_move_clear_check(&game_state, game_state.active_color, &provisional_move) {
                 return false
             }
         }

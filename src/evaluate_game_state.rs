@@ -36,8 +36,8 @@ fn minimax_with_alpha_beta(
         let mut max_eval = i32::MIN;
         for move_ in unchecked_move_search(game_state, None) {
             let mut new_game_state = game_state.clone();
-            if let Ok(_) = try_handle_move_and_apply(&mut new_game_state, move_, None) {
-                let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, alpha, beta, false);
+            if let Ok(_) = try_handle_move_and_apply(&mut new_game_state, &move_, None) {
+                let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, alpha, beta, maximizing_color);
                 max_eval = max_eval.max(eval);
 
                 if max_eval >= beta {
@@ -51,7 +51,7 @@ fn minimax_with_alpha_beta(
         for move_ in unchecked_move_search(game_state, None) {
             let mut new_game_state = game_state.clone();
             if let Ok(_) = try_handle_move_and_apply(&mut new_game_state, &move_, None) {
-                let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, alpha, beta, true);
+                let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, alpha, beta, maximizing_color);
                 min_eval = min_eval.max(eval);
 
                 if min_eval <= alpha {
@@ -81,4 +81,27 @@ fn find_best_move(game_state: &GameState, depth: u8) -> Move {
     }
 
     best_move.expect("No legal moves available")
+}
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+    use crate::board_position::BoardPosition;
+    use super::*;
+    use crate::position::*;
+    use crate::fen::{FEN_STARTING_POS, deserialize};
+
+    #[rstest]
+    #[case(FEN_STARTING_POS, E2, E4)]
+    fn test__find_best_move__first_move(
+        #[case] fen_str: &'static str,
+        #[case] expected_from: BoardPosition,
+        #[case] expected_to: BoardPosition,
+    ) {
+        let game_state = deserialize(fen_str).expect("bad fen string!");
+        let best_move = find_best_move(&game_state, 1);
+        println!("{best_move}");
+        assert_eq!(expected_from, best_move.from);
+        assert_eq!(expected_to, best_move.to);
+    }
 }
