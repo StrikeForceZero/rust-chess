@@ -41,6 +41,16 @@ impl Piece {
             _ => return Err(PieceError::InvalidChar(char))
         })
     }
+    pub const fn as_score(&self) -> i32 {
+        match self {
+            Piece::Pawn => 1,
+            Piece::Knight => 3,
+            Piece::Bishop => 3,
+            Piece::Rook => 4,
+            Piece::Queen => 10,
+            Piece::King => 100,
+        }
+    }
     pub const fn as_chess_piece(self, color: Color) -> ChessPiece {
         ChessPiece::from(color, self)
     }

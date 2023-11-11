@@ -4,6 +4,7 @@ use thiserror::Error;
 use crate::board_file::BoardFile;
 use crate::board_rank::BoardRank;
 use crate::direction::Direction;
+use crate::position;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd)]
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
@@ -41,6 +42,16 @@ impl BoardPosition {
             return Err(BoardPositionStrParseError::InvalidFileOrRank(s.to_string()));
         };
         Ok(BoardPosition(file, rank))
+    }
+
+    pub const fn as_score(self) -> f64 {
+        match self {
+            position::D4 | position::D5 | position::E4 | position::E5 => 1.5,
+            position::C3 | position::C4 | position::C5 | position::C6
+            | position::D6 | position::E6 | position::F6 | position::F5
+            | position::F4 | position::F3 | position::E3 | position::D3 => 1.25,
+            _ => 1.0,
+        }
     }
 }
 
