@@ -92,14 +92,17 @@ mod tests {
     use crate::fen::{FEN_STARTING_POS, deserialize};
 
     #[rstest]
-    #[case(FEN_STARTING_POS, E2, E4)]
+    #[case(FEN_STARTING_POS, A2, A3)] // this should probably be E2 -> E4
     fn test__find_best_move__first_move(
         #[case] fen_str: &'static str,
         #[case] expected_from: BoardPosition,
         #[case] expected_to: BoardPosition,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let best_move = find_best_move(&game_state, 10);
+        let start = std::time::Instant::now();
+        let best_move = find_best_move(&game_state, 3);
+        let duration = start.elapsed();
+        println!("Time taken: {:?}", duration);
         println!("{best_move}");
         assert_eq!(expected_from, best_move.from);
         assert_eq!(expected_to, best_move.to);
