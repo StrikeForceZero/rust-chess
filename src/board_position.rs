@@ -44,13 +44,13 @@ impl BoardPosition {
         Ok(BoardPosition(file, rank))
     }
 
-    pub const fn as_score(self) -> f64 {
+    pub const fn as_score(self) -> i32 {
         match self {
-            position::D4 | position::D5 | position::E4 | position::E5 => 1.5,
+            position::D4 | position::D5 | position::E4 | position::E5 => 3,
             position::C3 | position::C4 | position::C5 | position::C6
             | position::D6 | position::E6 | position::F6 | position::F5
-            | position::F4 | position::F3 | position::E3 | position::D3 => 1.25,
-            _ => 1.0,
+            | position::F4 | position::F3 | position::E3 | position::D3 => 1,
+            _ => 0,
         }
     }
 }
