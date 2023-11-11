@@ -1,5 +1,6 @@
 use crate::piece::Piece;
 
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub enum PromotionPiece {
     Queen,
     Rook,

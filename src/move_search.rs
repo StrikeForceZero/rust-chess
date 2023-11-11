@@ -9,9 +9,10 @@ use crate::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::color::Color;
 use crate::game_state::GameState;
 use crate::invalid_move_error::InvalidMoveError;
-use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveType};
+use crate::move_ruleset::{CaptureOnlyType, DirectionRestriction, MoveRuleset, MoveDefType};
 use crate::piece::Piece;
-use crate::r#move::Move;
+use crate::promotion_piece::PromotionPiece;
+use crate::r#move::{Move, MoveType};
 use crate::utils::print_slice_elements_using_display;
 
 #[derive(Debug, Default, Copy, Clone)]
@@ -28,6 +29,11 @@ pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosit
         todo!("not implemented or bad state?")
     };
     let piece = game_state.board.get(from_pos).expect("expected piece at pos");
+    if let Some(required_rank) = ruleset.requires_rank {
+        if required_rank != *from_pos.rank() {
+            return Vec::new();
+        }
+    }
     match directional_restriction {
         DirectionRestriction::LMove(drx, dry) => {
             if !ruleset.is_jump {
@@ -79,7 +85,11 @@ pub fn provisional_moves_for_normal(game_state: &GameState, from_pos: BoardPosit
                     },
                     None => {
                         if amount_left == 0 {
-                            unchecked_moves.push(Move::create_normal(piece, from_pos, pos));
+                            if let Some(promote_to) = ruleset.promote_to {
+                                unchecked_moves.push(Move::create_promotion(piece, from_pos, pos, promote_to));
+                            } else {
+                                unchecked_moves.push(Move::create_normal(piece, from_pos, pos));
+                            }
                             break;
                         }
                     },
@@ -282,9 +292,9 @@ pub fn provisional_moves_from_rulesets(game_state: &GameState, from_pos: BoardPo
             continue;
         }
         let mut new_valid_moves = match ruleset.move_type {
-            MoveType::Normal => provisional_moves_for_normal(game_state, from_pos, ruleset, Some(options)),
-            MoveType::WhenCapturingOnly(capture_only_type) => provisional_moves_for_capture_only(game_state, from_pos, ruleset, capture_only_type, Some(options)),
-            MoveType::Castle => provisional_moves_for_castle(game_state, from_pos, ruleset, Some(options)),
+            MoveDefType::Normal => provisional_moves_for_normal(game_state, from_pos, ruleset, Some(options)),
+            MoveDefType::WhenCapturingOnly(capture_only_type) => provisional_moves_for_capture_only(game_state, from_pos, ruleset, capture_only_type, Some(options)),
+            MoveDefType::Castle => provisional_moves_for_castle(game_state, from_pos, ruleset, Some(options)),
         };
         valid_moves.append(&mut new_valid_moves);
     }
@@ -318,9 +328,17 @@ pub fn unchecked_move_search_from_pos(game_state: &GameState, pos: BoardPosition
     }
 }
 
-pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition, options: Option<MoveSearchOptions>) -> Result<Move, InvalidMoveError> {
+pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition, options: Option<MoveSearchOptions>, promotion_piece: Option<PromotionPiece>) -> Result<Move, InvalidMoveError> {
     let provisional_moves = unchecked_move_search_from_pos(game_state, from, options);
-    match provisional_moves.iter().find(|&m| m.from == from && m.to == to) {
+    match provisional_moves.iter().find(|&m| {
+        if m.from != from || m.to != to {
+            return false;
+        }
+        match m.move_type {
+            MoveType::Promotion(promotion) => promotion_piece.is_some() && promotion_piece.unwrap() == promotion,
+            _ => !promotion_piece.is_some(),
+        }
+    }) {
         None => Err(InvalidMoveError::InvalidMove(from, to)),
         Some(matched_move) => Ok(matched_move.to_owned()),
     }
@@ -425,15 +443,17 @@ mod tests {
     }
 
     #[rstest]
-    #[case(FEN_STARTING_POS, A2, A3, Ok(Move::create_normal(ChessPiece::WhitePawn, A2, A3)))]
+    #[case(FEN_STARTING_POS, A2, A3, None, Ok(Move::create_normal(ChessPiece::WhitePawn, A2, A3)))]
+    #[case("7k/P7/8/8/8/8/8/7K w - - 0 1", A7, A8, Some(PromotionPiece::Queen), Ok(Move::create_promotion(ChessPiece::WhitePawn, A7, A8, PromotionPiece::Queen)))]
     fn test_find_move(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,
         #[case] to: BoardPosition,
+        #[case] promotion_piece: Option<PromotionPiece>,
         #[case] expected: Result<Move, InvalidMoveError>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        assert_eq!(expected, find_move(&game_state, from, to, None))
+        assert_eq!(expected, find_move(&game_state, from, to, None, promotion_piece))
     }
 
     #[rstest]
@@ -445,7 +465,7 @@ mod tests {
         #[case] expected: InvalidMoveError,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let matched_move = find_move(&game_state, from, to, None);
+        let matched_move = find_move(&game_state, from, to, None, None);
         assert!(matched_move.is_err());
         assert_eq!(expected, matched_move.err().expect("expected error!"));
     }

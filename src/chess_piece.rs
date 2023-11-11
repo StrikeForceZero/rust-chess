@@ -163,6 +163,8 @@ impl ChessPiece {
         Some(match self {
             Self::WhiteKing => chess_piece_move_rulesets::WHITE_KING,
             Self::BlackKing => chess_piece_move_rulesets::BLACK_KING,
+            Self::WhitePawn => chess_piece_move_rulesets::WHITE_PAWN,
+            Self::BlackPawn => chess_piece_move_rulesets::BLACK_PAWN,
             _ => return None,
         })
     }
@@ -173,15 +175,6 @@ impl ChessPiece {
             Self::WhiteQueen => chess_piece_move_rulesets::WHITE_QUEEN,
             Self::BlackKnight => chess_piece_move_rulesets::BLACK_KNIGHT,
             Self::BlackQueen => chess_piece_move_rulesets::BLACK_QUEEN,
-            _ => return None,
-        })
-    }
-
-
-    const fn as_move_set_6(&self) -> Option<ChessPieceMoveRuleset<6>> {
-        Some(match self {
-            Self::WhitePawn => chess_piece_move_rulesets::WHITE_PAWN,
-            Self::BlackPawn => chess_piece_move_rulesets::BLACK_PAWN,
             _ => return None,
         })
     }
@@ -202,8 +195,8 @@ impl ChessPiece {
             Self::WhiteBishop => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::WHITE_BISHOP),
             Self::BlackRook => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::BLACK_ROOK),
             Self::BlackBishop => ChessPieceMoveSet::Set4(chess_piece_move_rulesets::BLACK_BISHOP),
-            Self::WhitePawn => ChessPieceMoveSet::Set6(chess_piece_move_rulesets::WHITE_PAWN),
-            Self::BlackPawn => ChessPieceMoveSet::Set6(chess_piece_move_rulesets::BLACK_PAWN),
+            Self::WhitePawn => ChessPieceMoveSet::Set10(chess_piece_move_rulesets::WHITE_PAWN),
+            Self::BlackPawn => ChessPieceMoveSet::Set10(chess_piece_move_rulesets::BLACK_PAWN),
             Self::WhiteKnight => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::WHITE_KNIGHT),
             Self::WhiteQueen => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::WHITE_QUEEN),
             Self::BlackKnight => ChessPieceMoveSet::Set8(chess_piece_move_rulesets::BLACK_KNIGHT),

@@ -1,37 +1,42 @@
+use crate::board_rank::BoardRank;
 use crate::castle_side::CastleSide;
 use crate::direction::{DiagonalDirection, Direction, SimpleDirection};
 use crate::direction_amount::DirectionAmount;
 use crate::facing_direction::FacingDirection;
+use crate::piece::Piece;
+use crate::promotion_piece::PromotionPiece;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum DirectionRestriction {
     LMove(DirectionAmount, DirectionAmount),
     Amount(DirectionAmount),
     Limit(DirectionAmount),
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CaptureOnlyType {
     Normal,
     EnPassant,
 }
 
-#[derive(Default, Copy, Clone)]
-pub enum MoveType {
+#[derive(Default, Copy, Clone, Debug)]
+pub enum MoveDefType {
     #[default]
     Normal,
     WhenCapturingOnly(CaptureOnlyType),
     Castle,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct MoveRuleset {
     pub can_capture: bool,
     pub is_jump: bool,
     pub only_from_starting_pos: bool,
-    pub move_type: MoveType,
+    pub move_type: MoveDefType,
     pub directional_restriction: Option<DirectionRestriction>,
     pub capture_offset: Option<DirectionAmount>,
+    pub promote_to: Option<PromotionPiece>,
+    pub requires_rank: Option<BoardRank>,
 }
 
 impl MoveRuleset {
@@ -40,9 +45,11 @@ impl MoveRuleset {
             can_capture: false,
             is_jump: false,
             only_from_starting_pos: false,
-            move_type: MoveType::Normal,
+            move_type: MoveDefType::Normal,
             directional_restriction: None,
             capture_offset: None,
+            promote_to: None,
+            requires_rank: None,
         }
     }
     pub const fn single(direction: Direction, can_capture: bool) -> Self {
@@ -55,7 +62,7 @@ impl MoveRuleset {
     pub const fn capture_only_move(direction: Direction, capture_only_type: CaptureOnlyType) -> Self {
         Self {
             can_capture: true,
-            move_type: MoveType::WhenCapturingOnly(capture_only_type),
+            move_type: MoveDefType::WhenCapturingOnly(capture_only_type),
             directional_restriction: Some(DirectionRestriction::Amount(DirectionAmount(direction, 1))),
             ..Self::default()
         }
@@ -91,15 +98,26 @@ impl MoveRuleset {
     }
     pub const fn en_passant(diagonal_direction: DiagonalDirection) -> Self {
         let mut move_ruleset = Self::single(diagonal_direction.as_direction(), true);
-        move_ruleset.move_type = MoveType::WhenCapturingOnly(CaptureOnlyType::EnPassant);
+        move_ruleset.move_type = MoveDefType::WhenCapturingOnly(CaptureOnlyType::EnPassant);
         move_ruleset.capture_offset = Some(DirectionAmount(diagonal_direction.as_facing_direction().as_simple_direction().as_direction(), 1));
         move_ruleset
     }
     pub const fn castle(castle_side: CastleSide) -> Self {
         let mut move_ruleset = Self::double(castle_side.as_simple_direction().as_direction());
-        move_ruleset.move_type = MoveType::Castle;
+        move_ruleset.move_type = MoveDefType::Castle;
         move_ruleset
     }
+
+    pub const fn promotion(facing_direction: FacingDirection, piece: PromotionPiece) -> Self {
+        let mut ruleset = Self::forward(facing_direction);
+        ruleset.promote_to = Some(piece);
+        ruleset.requires_rank = Some(match facing_direction {
+            FacingDirection::North => BoardRank::Seven,
+            FacingDirection::South => BoardRank::Two,
+        });
+        ruleset
+    }
+
     pub const fn forward(facing_direction: FacingDirection) -> Self {
         Self::single(facing_direction.as_simple_direction().as_direction(), false)
     }

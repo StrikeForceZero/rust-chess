@@ -1,5 +1,6 @@
 use crate::direction::{DiagonalDirection, Direction, SimpleDirection};
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum FacingDirection {
     North,
     South,

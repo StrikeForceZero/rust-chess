@@ -2,7 +2,7 @@ use crate::direction::Direction;
 
 type Amount = u8;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct DirectionAmount(pub Direction, pub Amount);
 
 impl DirectionAmount {

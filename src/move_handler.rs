@@ -223,7 +223,7 @@ mod tests {
     ) -> Result<(), InvalidMoveError> {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         println!("{from} -> {to}");
-        let matched_move = find_move(&game_state, from, to, None)?;
+        let matched_move = find_move(&game_state, from, to, None, None)?;
         match try_handle_move(&game_state, &matched_move, None) {
             Ok(gs) => {
                 println!("{}", serialize(gs));
@@ -243,7 +243,7 @@ mod tests {
         #[case] expected: Result<(), InvalidMoveError>,
     ) -> Result<(), InvalidMoveError> {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
-        let matched_move = find_move(&game_state, from, to, None)?;
+        let matched_move = find_move(&game_state, from, to, None, None)?;
         assert_eq!(expected, try_handle_move_and_apply(&mut game_state, &matched_move, None));
         Ok(())
     }
@@ -259,7 +259,7 @@ mod tests {
         #[case] expected: &'static str,
     ) -> Result<(), InvalidMoveError> {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
-        let matched_move = find_move(&game_state, from, to, None)?;
+        let matched_move = find_move(&game_state, from, to, None, None)?;
         try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
         assert_eq!(expected, serialize(game_state));
         Ok(())

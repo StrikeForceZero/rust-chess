@@ -2,12 +2,14 @@ use std::fmt::{Display, Formatter};
 use crate::board_position::BoardPosition;
 use crate::castle_side::CastleSide;
 use crate::chess_piece::ChessPiece;
+use crate::promotion_piece::PromotionPiece;
 
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub enum MoveType {
     Normal,
     EnPassant(BoardPosition),
     Castle(CastleSide),
+    Promotion(PromotionPiece),
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -50,6 +52,16 @@ impl Move {
     pub const fn create_castle(piece: ChessPiece, from: BoardPosition, to: BoardPosition, castle_side: CastleSide) -> Self {
         Self {
             move_type: MoveType::Castle(castle_side),
+            piece,
+            from,
+            to,
+            captured_piece: None,
+        }
+    }
+
+    pub const fn create_promotion(piece: ChessPiece, from: BoardPosition, to: BoardPosition, promotion_piece: PromotionPiece) -> Self {
+        Self {
+            move_type: MoveType::Promotion(promotion_piece),
             piece,
             from,
             to,

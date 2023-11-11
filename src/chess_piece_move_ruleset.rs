@@ -2,6 +2,7 @@ use crate::chess_piece::ChessPiece;
 use crate::color::Color;
 use crate::move_ruleset::MoveRuleset;
 use crate::piece::Piece;
+use crate::promotion_piece::PromotionPiece;
 
 pub enum ChessPieceMoveSet {
     Set10(ChessPieceMoveRuleset<TEN>),
@@ -22,7 +23,7 @@ const SIX: usize = 6;
 const EIGHT: usize = 8;
 const TEN: usize = 10;
 
-pub const PAWN_SIZE: usize = SIX;
+pub const PAWN_SIZE: usize = TEN;
 pub const KNIGHT_SIZE: usize = EIGHT;
 pub const BISHOP_SIZE: usize = FOUR;
 pub const ROOK_SIZE: usize = FOUR;
@@ -44,13 +45,17 @@ impl ChessPieceMoveRuleset<FOUR> {
     }
 }
 
-impl ChessPieceMoveRuleset<SIX> {
+impl ChessPieceMoveRuleset<TEN> {
     pub const fn pawn(color: Color) -> Self {
         let [left_diagonal_attack, right_diagonal_attack] = MoveRuleset::any_facing_diagonal_capture(color.as_facing_direction());
         let [left_en_passant, right_en_passant] = MoveRuleset::any_en_passant(color.as_facing_direction());
         Self {
             chess_piece: ChessPiece::from(color, Piece::Pawn),
             move_rulesets: [
+                MoveRuleset::promotion(color.as_facing_direction(), PromotionPiece::Queen),
+                MoveRuleset::promotion(color.as_facing_direction(), PromotionPiece::Rook),
+                MoveRuleset::promotion(color.as_facing_direction(), PromotionPiece::Knight),
+                MoveRuleset::promotion(color.as_facing_direction(), PromotionPiece::Rook),
                 MoveRuleset::forward(color.as_facing_direction()),
                 MoveRuleset::double(color.as_facing_direction().as_simple_direction().as_direction()),
                 left_diagonal_attack,
