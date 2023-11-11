@@ -49,6 +49,7 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
     if moving_piece_color != active_color {
         return Err(InvalidMoveError::NotCurrentTurn(active_color));
     }
+    let was_at_starting_pos = game_state.board.is_pos_starting_pos(requested_move.from);
     let is_in_check = is_check_for_color(game_state, moving_piece_color);
     let maybe_capture = match requested_move.move_type {
         MoveType::Castle(castle_side) => {
@@ -97,8 +98,6 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
                 return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
             }
             maybe_capture = game_state.board.replace(capture_pos, None);
-            // clear en passant so future simulations won't fail trying to capture a piece that doesnt exist.
-            game_state.en_passant_target_pos.take();
             if maybe_capture != requested_move.captured_piece {
                 return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
             }
@@ -124,15 +123,17 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
             maybe_capture
         },
     };
+    // clear en passant so future simulations won't fail trying to capture a piece that doesnt exist.
+    game_state.en_passant_target_pos.take();
     // TODO: technically redundant
     if maybe_capture != requested_move.captured_piece {
         return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
     }
-    if moving_piece_type == Piece::Pawn {
-        if game_state.board.is_pos_starting_pos(requested_move.from) && (*requested_move.to.rank() == BoardRank::Four || *requested_move.to.rank() == BoardRank::Five) {
+    if moving_piece_type == Piece::Pawn || maybe_capture.is_some() {
+        if moving_piece_type == Piece::Pawn && game_state.board.is_pos_starting_pos(requested_move.from) && (*requested_move.to.rank() == BoardRank::Four || *requested_move.to.rank() == BoardRank::Five) {
             game_state.en_passant_target_pos = requested_move.to.next_pos(moving_piece_facing_direction.as_simple_direction().as_direction().reverse());
         }
-        // reset since its impossible to revisit any states in the past after a pawn move
+        // reset since its impossible to revisit any states in the past after a pawn move / capture
         game_state.history.state_history.as_mut().expect("missing state history").clear();
         game_state.move_clock.half_move = 0;
     }
@@ -144,12 +145,12 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
         game_state.move_clock.full_move += 1;
     }
 
-    if moving_piece_type == Piece::King && game_state.board.is_pos_starting_pos(requested_move.from) {
+    if moving_piece_type == Piece::King && was_at_starting_pos {
         // remove castle rights when the king moves
         game_state.castle_rights.for_color_mut(active_color).take();
     }
 
-    if moving_piece_type == Piece::Rook && game_state.board.is_pos_starting_pos(requested_move.from) {
+    if moving_piece_type == Piece::Rook && was_at_starting_pos {
         // empty out the castle rights
         if let Some(castle_rights) = game_state.castle_rights.for_color_mut(active_color).take() {
             // re apply new rights, if any
@@ -244,6 +245,23 @@ mod tests {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None)?;
         assert_eq!(expected, try_handle_move_and_apply(&mut game_state, &matched_move, None));
+        Ok(())
+    }
+
+    #[rstest]
+    #[case("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1", E5, D6, "rnbqkbnr/ppp1pppp/3P4/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, G1, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1RK1 b kq - 1 1")]
+    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, G1, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1RK1 b kq - 1 1")]
+    fn test_state_change(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] expected: &'static str,
+    ) -> Result<(), InvalidMoveError> {
+        let mut game_state = deserialize(fen_str).expect("bad fen string!");
+        let matched_move = find_move(&game_state, from, to, None)?;
+        try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
+        assert_eq!(expected, serialize(game_state));
         Ok(())
     }
 

@@ -99,7 +99,7 @@ mod tests {
         #[case] expected_to: BoardPosition,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
-        let best_move = find_best_move(&game_state, 1);
+        let best_move = find_best_move(&game_state, 10);
         println!("{best_move}");
         assert_eq!(expected_from, best_move.from);
         assert_eq!(expected_to, best_move.to);

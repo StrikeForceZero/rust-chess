@@ -1,5 +1,6 @@
 use std::fmt::Display;
 use crate::board_position::BoardPosition;
+use crate::board_rank::BoardRank;
 use crate::board_scanner::BoardScanner;
 use crate::castle_rights::CastleRights;
 use crate::castle_side::CastleSide;
@@ -184,6 +185,12 @@ pub fn provisional_moves_for_capture_only(game_state: &GameState, from_pos: Boar
                                 // should be impossible as we checked earlier
                                 panic!("bad en passant state: en_passant_target_pos was expected");
                             };
+                            if *en_passant_target_pos.rank() == BoardRank::Six && game_state.active_color == Color::Black
+                                || *en_passant_target_pos.rank() == BoardRank::Three && game_state.active_color == Color::White
+                            {
+                                // TODO: how are we getting here?
+                                continue;
+                            }
                             if pos != en_passant_target_pos {
                                 continue;
                             }
