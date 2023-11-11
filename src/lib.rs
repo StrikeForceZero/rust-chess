@@ -37,6 +37,7 @@ mod move_search;
 mod r#move;
 mod evaluate_game_state;
 mod invalid_move_error;
+mod bot;
 
 #[cfg(test)]
 mod tests {

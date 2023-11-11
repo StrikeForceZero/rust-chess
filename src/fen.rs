@@ -215,7 +215,7 @@ impl FEN {
     }
 }
 
-pub fn serialize(game_state: GameState) -> String {
+pub fn serialize(game_state: &GameState) -> String {
     let mut fen = FEN {
         squares: [[None; 8]; 8],
         active_color: ActiveColor::from_color(game_state.active_color),
@@ -233,7 +233,7 @@ pub fn serialize(game_state: GameState) -> String {
 }
 
 pub fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
-    let serialized = serialize(game_state);
+    let serialized = serialize(&game_state);
     let mut parts = serialized.split_whitespace().collect::<Vec<_>>();
     let (squares_str, _active_color_str, castle_rights_str, en_passant_str, _half_move_clock_str, _full_move_clock_str) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     [squares_str, castle_rights_str, en_passant_str].join(SPACE.to_string().as_str())
@@ -252,6 +252,6 @@ mod tests {
         #[case] game_state: GameState,
         #[case] expected: &'static str
     ) {
-        assert_eq!(expected, serialize(game_state))
+        assert_eq!(expected, serialize(&game_state))
     }
 }

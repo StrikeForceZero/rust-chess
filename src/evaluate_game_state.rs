@@ -66,24 +66,39 @@ fn minimax_with_alpha_beta(
     }
 }
 
-fn find_best_move(game_state: &GameState, depth: u8) -> Move {
+pub fn find_best_move(game_state: &GameState, depth: u8) -> Result<Move, &'static str> {
     let mut best_move = None;
     let mut best_eval = i32::MIN;
 
     let maximizing_player_color = game_state.active_color;
     for move_ in unchecked_move_search(game_state, None) {
+        if game_state.history.move_history.len() >= 132 {
+            println!("{:?}", move_);
+        }
         let mut new_game_state = game_state.clone();
-        if let Ok(_) = try_handle_move_and_apply(&mut new_game_state, &move_, None) {
+        let move_result = try_handle_move_and_apply(&mut new_game_state, &move_, None);
+        if let Ok(_) = move_result {
             let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, i32::MIN, i32::MAX, maximizing_player_color);
 
             if eval > best_eval {
                 best_eval = eval;
                 best_move = Some(move_);
             }
+            if game_state.history.move_history.len() >= 132 {
+                println!("ok - {best_eval}");
+            }
+        } else if let Err(err) = move_result {
+            if game_state.history.move_history.len() >= 132 {
+                println!("err - {best_eval} - {err:?}");
+            }
         }
     }
 
-    best_move.expect("No legal moves available")
+    let Some(best_move) = best_move else {
+        return Err("No legal moves available");
+    };
+
+    Ok(best_move)
 }
 
 #[cfg(test)]
@@ -106,10 +121,10 @@ mod tests {
         #[case] expected_from: BoardPosition,
         #[case] expected_to: BoardPosition,
         #[case] expected_promotion: Option<PromotionPiece>,
-    ) {
+    ) -> Result<(), &'static str> {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         let start = std::time::Instant::now();
-        let best_move = find_best_move(&game_state, 2);
+        let best_move = find_best_move(&game_state, 2)?;
         let duration = start.elapsed();
         println!("Time taken: {:?}", duration);
         println!("{best_move}");
@@ -121,5 +136,6 @@ mod tests {
             },
             _ => assert_eq!(expected_promotion, None),
         }
+        Ok(())
     }
 }

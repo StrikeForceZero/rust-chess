@@ -241,7 +241,7 @@ mod tests {
         let matched_move = find_move(&game_state, from, to, None, None)?;
         match try_handle_move(&game_state, &matched_move, None) {
             Ok(gs) => {
-                println!("{}", serialize(gs));
+                println!("{}", serialize(&gs));
                 assert_eq!(expected, Ok(()))
             },
             Err(err) => assert_eq!(expected, Err(err)),
@@ -275,7 +275,7 @@ mod tests {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None, None)?;
         try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
-        assert_eq!(expected, serialize(game_state));
+        assert_eq!(expected, serialize(&game_state));
         Ok(())
     }
 
@@ -291,7 +291,7 @@ mod tests {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None, Some(promotion_piece))?;
         try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
-        assert_eq!(expected, serialize(game_state));
+        assert_eq!(expected, serialize(&game_state));
         Ok(())
     }
 
