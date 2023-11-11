@@ -90,20 +90,20 @@ impl ChessPiece {
     pub const fn from(color: Color, piece: Piece) -> Self {
         match color {
             Color::White => match piece {
-                Piece::Pawn => Self::WhiteKing,
-                Piece::Knight => Self::WhiteQueen,
-                Piece::Bishop => Self::WhiteRook,
-                Piece::Rook => Self::WhiteBishop,
-                Piece::Queen => Self::WhiteKnight,
-                Piece::King => Self::WhitePawn,
+                Piece::Pawn => Self::WhitePawn,
+                Piece::Knight => Self::WhiteKnight,
+                Piece::Bishop => Self::WhiteBishop,
+                Piece::Rook => Self::WhiteRook,
+                Piece::Queen => Self::WhiteQueen,
+                Piece::King => Self::WhiteKing,
             },
             Color::Black => match piece {
-                Piece::Pawn => Self::BlackKing,
-                Piece::Knight => Self::BlackQueen,
-                Piece::Bishop => Self::BlackRook,
-                Piece::Rook => Self::BlackBishop,
-                Piece::Queen => Self::BlackKnight,
-                Piece::King => Self::BlackPawn,
+                Piece::Pawn => Self::BlackPawn,
+                Piece::Knight => Self::BlackKnight,
+                Piece::Bishop => Self::BlackBishop,
+                Piece::Rook => Self::BlackRook,
+                Piece::Queen => Self::BlackQueen,
+                Piece::King => Self::BlackKing,
             },
         }
     }

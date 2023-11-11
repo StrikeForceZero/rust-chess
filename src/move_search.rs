@@ -332,11 +332,12 @@ pub fn find_move(game_state: &GameState, from: BoardPosition, to: BoardPosition,
     let provisional_moves = unchecked_move_search_from_pos(game_state, from, options);
     match provisional_moves.iter().find(|&m| {
         if m.from != from || m.to != to {
-            return false;
-        }
-        match m.move_type {
-            MoveType::Promotion(promotion) => promotion_piece.is_some() && promotion_piece.unwrap() == promotion,
-            _ => !promotion_piece.is_some(),
+            false
+        } else {
+            match m.move_type {
+                MoveType::Promotion(promotion) => promotion_piece.is_some() && promotion_piece.unwrap() == promotion,
+                _ => promotion_piece.is_none(),
+            }
         }
     }) {
         None => Err(InvalidMoveError::InvalidMove(from, to)),

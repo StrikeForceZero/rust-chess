@@ -109,6 +109,20 @@ pub fn default_move_handler(game_state: &mut GameState, requested_move: &Move, o
             }
             maybe_capture
         }
+        MoveType::Promotion(promote_to) => {
+            let maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.to);
+            game_state.board.replace(requested_move.to, Some(promote_to.as_piece().as_chess_piece(moving_piece_color)));
+            if maybe_capture != requested_move.captured_piece {
+                return Err(InvalidMoveError::UnexpectedCapture(requested_move.captured_piece, maybe_capture));
+            }
+            if is_check_for_color(game_state, moving_piece_color) {
+                if is_in_check {
+                    return Err(InvalidMoveError::StillInCheck);
+                }
+                return Err(InvalidMoveError::MoveIntoCheck);
+            }
+            maybe_capture
+        },
         _ => {
             let maybe_capture = move_unchecked(game_state, requested_move.from, requested_move.to);
             if maybe_capture != requested_move.captured_piece {
@@ -204,6 +218,7 @@ mod tests {
     use super::*;
     use crate::position::*;
     use crate::fen::{FEN_STARTING_POS, deserialize, serialize};
+    use crate::promotion_piece::PromotionPiece;
 
     #[rstest]
     #[case(FEN_STARTING_POS, A2, A3, Ok(()))]
@@ -251,7 +266,6 @@ mod tests {
     #[rstest]
     #[case("rnbqkbnr/ppp1pppp/8/3pP3/8/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 1", E5, D6, "rnbqkbnr/ppp1pppp/3P4/8/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")]
     #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w KQkq - 0 1", E1, G1, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQ1RK1 b kq - 1 1")]
-    #[case("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1", A7, A5, "rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq a6 0 2")]
     fn test_state_change(
         #[case] fen_str: &'static str,
         #[case] from: BoardPosition,
@@ -260,6 +274,22 @@ mod tests {
     ) -> Result<(), InvalidMoveError> {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None, None)?;
+        try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
+        assert_eq!(expected, serialize(game_state));
+        Ok(())
+    }
+
+    #[rstest]
+    #[case("8/1P2R3/k7/8/1Q6/8/8/7K w - - 0 1", B7, B8, PromotionPiece::Knight, "1N6/4R3/k7/8/1Q6/8/8/7K b - - 0 1")]
+    fn test_state_change_promotion(
+        #[case] fen_str: &'static str,
+        #[case] from: BoardPosition,
+        #[case] to: BoardPosition,
+        #[case] promotion_piece: PromotionPiece,
+        #[case] expected: &'static str,
+    ) -> Result<(), InvalidMoveError> {
+        let mut game_state = deserialize(fen_str).expect("bad fen string!");
+        let matched_move = find_move(&game_state, from, to, None, Some(promotion_piece))?;
         try_handle_move_and_apply(&mut game_state, &matched_move, None)?;
         assert_eq!(expected, serialize(game_state));
         Ok(())

@@ -93,14 +93,18 @@ mod tests {
     use super::*;
     use crate::position::*;
     use crate::fen::{FEN_STARTING_POS, deserialize};
+    use crate::promotion_piece::PromotionPiece;
+    use crate::r#move::MoveType;
 
     #[rstest]
-    #[case(FEN_STARTING_POS, E2, E4)]
-    #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4)]
+    #[case(FEN_STARTING_POS, E2, E4, None)]
+    #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4, None)]
+    #[case("8/1P2R3/k7/8/1Q6/8/8/7K w - - 0 1", B7, B8, Some(PromotionPiece::Knight))]
     fn test__find_best_move__first_move(
         #[case] fen_str: &'static str,
         #[case] expected_from: BoardPosition,
         #[case] expected_to: BoardPosition,
+        #[case] expected_promotion: Option<PromotionPiece>,
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         let start = std::time::Instant::now();
@@ -110,5 +114,11 @@ mod tests {
         println!("{best_move}");
         assert_eq!(expected_from, best_move.from);
         assert_eq!(expected_to, best_move.to);
+        match best_move.move_type {
+            MoveType::Promotion(promotion) => {
+                assert_eq!(expected_promotion, Some(promotion))
+            },
+            _ => assert_eq!(expected_promotion, None),
+        }
     }
 }
