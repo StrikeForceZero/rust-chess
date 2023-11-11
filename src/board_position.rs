@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
 use thiserror::Error;
 use crate::board_file::BoardFile;
@@ -6,7 +6,7 @@ use crate::board_rank::BoardRank;
 use crate::direction::Direction;
 use crate::position;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd)]
 pub struct BoardPosition(pub BoardFile, pub BoardRank);
 
 impl BoardPosition {
@@ -62,6 +62,12 @@ impl Display for BoardPosition {
     }
 }
 
+impl Debug for BoardPosition {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let BoardPosition(file, rank) = self;
+        write!(f, "{file}{rank}")
+    }
+}
 
 #[derive(Error, Debug, Clone)]
 pub enum BoardPositionStrParseError {

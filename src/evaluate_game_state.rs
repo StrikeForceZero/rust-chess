@@ -12,16 +12,17 @@ pub fn evaluate_game_state(game_state: &GameState, maximizing_color: Color) -> i
     for (pos, maybe_piece) in game_state.board.as_iter() {
         let Some(piece) = maybe_piece else { continue };
         let piece_score = piece.as_piece().as_score() * piece.as_color().as_score(maximizing_color);
-        let piece_pos_score = piece_score * pos.as_score();
-        score += piece_pos_score * piece_pos_score;
+        let piece_pos_score = piece_score + pos.as_score();
+        score += piece_pos_score + piece_pos_score;
     }
-    score += match game_state.game_status {
+    score = score.saturating_add(match game_state.game_status {
         GameStatus::InProgress | GameStatus::New => 0,
-        GameStatus::Check(color) => 5 * -color.as_score(maximizing_color),
-        GameStatus::CheckMate(color) => 999 * -color.as_score(maximizing_color),
+        GameStatus::Check(color) => 99 * -color.as_score(maximizing_color),
+        GameStatus::CheckMate(color) => i32::MAX * -color.as_score(maximizing_color),
         // encourage losing bots to go for stalemate/draw
         GameStatus::Stalemate | GameStatus::Draw => -score + score.signum(),
-    };
+    });
+    // println!("#{} {:?} - score: {score} {:?}", game_state.history.move_history.len(), game_state.history.move_history.last(), game_state.game_status);
     score
 }
 
@@ -41,6 +42,7 @@ fn minimax_with_alpha_beta(
                 max_eval = max_eval.max(eval);
 
                 if max_eval >= beta {
+                    // println!("prune beta: {max_eval}>={beta}");
                     break; // Beta cutoff
                 }
             }
@@ -52,9 +54,10 @@ fn minimax_with_alpha_beta(
             let mut new_game_state = game_state.clone();
             if let Ok(_) = try_handle_move_and_apply(&mut new_game_state, &move_, None) {
                 let eval = minimax_with_alpha_beta(&new_game_state, depth - 1, alpha, beta, maximizing_color);
-                min_eval = min_eval.max(eval);
+                min_eval = min_eval.min(eval);
 
                 if min_eval <= alpha {
+                    // println!("prune alpha: {min_eval}>={alpha}");
                     break; // Alpha cutoff
                 }
             }
@@ -92,7 +95,7 @@ mod tests {
     use crate::fen::{FEN_STARTING_POS, deserialize};
 
     #[rstest]
-    #[case(FEN_STARTING_POS, A2, A3)] // this should probably be E2 -> E4
+    #[case(FEN_STARTING_POS, E2, E4)]
     #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4)]
     fn test__find_best_move__first_move(
         #[case] fen_str: &'static str,
@@ -101,7 +104,7 @@ mod tests {
     ) {
         let game_state = deserialize(fen_str).expect("bad fen string!");
         let start = std::time::Instant::now();
-        let best_move = find_best_move(&game_state, 3);
+        let best_move = find_best_move(&game_state, 4);
         let duration = start.elapsed();
         println!("Time taken: {:?}", duration);
         println!("{best_move}");
