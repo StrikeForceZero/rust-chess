@@ -22,6 +22,12 @@ pub fn evaluate_game_state(game_state: &GameState, maximizing_color: Color) -> i
         // encourage losing bots to go for stalemate/draw
         GameStatus::Stalemate | GameStatus::Draw => -score + score.signum(),
     });
+    // force to at least pick one legal move no matter what
+    if score == i32::MAX {
+        score -= 1;
+    } else if score == i32::MIN {
+        score += 1
+    }
     // println!("#{} {:?} - score: {score} {:?}", game_state.history.move_history.len(), game_state.history.move_history.last(), game_state.game_status);
     score
 }
@@ -72,9 +78,9 @@ pub fn find_best_move(game_state: &GameState, depth: u8) -> Result<Move, &'stati
 
     let maximizing_player_color = game_state.active_color;
     for move_ in unchecked_move_search(game_state, None) {
-        if game_state.history.move_history.len() >= 132 {
+        /*if game_state.history.move_history.len() >= 132 {
             println!("{:?}", move_);
-        }
+        }*/
         let mut new_game_state = game_state.clone();
         let move_result = try_handle_move_and_apply(&mut new_game_state, &move_, None);
         if let Ok(_) = move_result {
@@ -84,14 +90,14 @@ pub fn find_best_move(game_state: &GameState, depth: u8) -> Result<Move, &'stati
                 best_eval = eval;
                 best_move = Some(move_);
             }
-            if game_state.history.move_history.len() >= 132 {
+           /* if game_state.history.move_history.len() >= 132 {
                 println!("ok - {best_eval}");
-            }
-        } else if let Err(err) = move_result {
+            }*/
+        } /* else if let Err(err) = move_result {
             if game_state.history.move_history.len() >= 132 {
                 println!("err - {best_eval} - {err:?}");
             }
-        }
+        }*/
     }
 
     let Some(best_move) = best_move else {
