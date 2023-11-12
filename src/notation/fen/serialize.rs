@@ -97,3 +97,17 @@ pub fn serialize_without_clock_and_active_color(game_state: GameState) -> String
     ) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
     [squares_str, castle_rights_str, en_passant_str].join(SPACE.to_string().as_str())
 }
+
+#[cfg(test)]
+mod tests {
+    use rstest::rstest;
+    use crate::notation::fen::*;
+    use crate::state::game_state::GameState;
+
+    #[rstest]
+    #[case(GameState::new(), FEN_STARTING_POS)]
+    #[case(GameState::empty(), FEN_EMPTY)]
+    pub fn fen_serialize(#[case] game_state: GameState, #[case] expected: &'static str) {
+        assert_eq!(expected, serialize(&game_state).get_str())
+    }
+}

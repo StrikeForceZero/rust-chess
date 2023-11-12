@@ -48,17 +48,3 @@ impl Display for Fen {
         write!(f, "{}", self.get_str())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use rstest::rstest;
-    use super::*;
-    use crate::state::game_state::GameState;
-
-    #[rstest]
-    #[case(GameState::new(), FEN_STARTING_POS)]
-    #[case(GameState::empty(), FEN_EMPTY)]
-    pub fn fen_serialize(#[case] game_state: GameState, #[case] expected: &'static str) {
-        assert_eq!(expected, serialize::serialize(&game_state).get_str())
-    }
-}
