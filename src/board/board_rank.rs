@@ -89,7 +89,7 @@ impl BoardRank {
     pub const fn as_shift_offset(&self) -> usize {
         self.as_zero_based_index() * 8
     }
-    const fn from_usize(n: usize) -> Result<Self, BoardRankError> {
+    pub const fn from_usize(n: usize) -> Result<Self, BoardRankError> {
         Ok(match n {
             1 => Self::One,
             2 => Self::Two,
