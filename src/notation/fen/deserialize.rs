@@ -138,7 +138,7 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
             }
             match ChessPiece::from_char(char) {
                 Ok(piece) => game_state.board.set(BoardPosition(file, rank), Some(piece)),
-                Err(err) => panic!("{err}"),
+                Err(err) => return Err(FenParsingError::InvalidBoardString(format!("{} {err:?}", parts.squares_str))),
             }
         }
     }
