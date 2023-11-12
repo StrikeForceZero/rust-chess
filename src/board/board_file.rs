@@ -77,6 +77,19 @@ impl BoardFile {
             _ => return Err(BoardFileError::InvalidU8(num)),
         })
     }
+    pub const fn from_usize(n: usize) -> Result<Self, BoardFileError> {
+        Ok(match n {
+            1 => Self::A,
+            2 => Self::B,
+            3 => Self::C,
+            4 => Self::D,
+            5 => Self::E,
+            6 => Self::F,
+            7 => Self::G,
+            8 => Self::H,
+            _ => return Err(BoardFileError::InvalidUsize(n)),
+        })
+    }
     pub const fn from_char(char: char) -> Result<Self, BoardFileError> {
         Ok(match char {
             'A' | 'a' => Self::A,
