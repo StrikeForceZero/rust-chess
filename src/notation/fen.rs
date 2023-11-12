@@ -181,6 +181,10 @@ impl ActiveColor {
     }
 }
 
+const EMPTY: &str = "";
+const SPACE: char = ' ';
+const DASH: char = '-';
+
 struct FenData {
     squares: [[Option<ChessPiece>; 8]; 8],
     active_color: ActiveColor,
@@ -190,9 +194,6 @@ struct FenData {
     full_move_num: u16,
 }
 
-const EMPTY: &str = "";
-const SPACE: char = ' ';
-const DASH: char = '-';
 impl FenData {
     pub fn to_string(&self) -> String {
         let board_str = self
