@@ -68,7 +68,7 @@ pub fn default_chess_move_handler(
             if is_in_check {
                 return Err(InvalidChessMoveError::CastleWhileInCheck);
             }
-            let mut maybe_capture: Option<ChessPiece> = None;
+            let mut maybe_capture: Option<ChessPiece>;
             let mut last_pos = requested_chess_move.from;
             while last_pos != requested_chess_move.to {
                 if let Some(next_pos) =
