@@ -181,7 +181,7 @@ impl ActiveColor {
     }
 }
 
-struct FEN {
+struct FenData {
     squares: [[Option<ChessPiece>; 8]; 8],
     active_color: ActiveColor,
     castle: ColorCastleRights,
@@ -193,7 +193,7 @@ struct FEN {
 const EMPTY: &str = "";
 const SPACE: char = ' ';
 const DASH: char = '-';
-impl FEN {
+impl FenData {
     pub fn to_string(&self) -> String {
         let board_str = self
             .squares
@@ -241,7 +241,7 @@ impl FEN {
 }
 
 pub fn serialize(game_state: &GameState) -> String {
-    let mut fen = FEN {
+    let mut fen = FenData {
         squares: [[None; 8]; 8],
         active_color: ActiveColor::from_color(game_state.active_color),
         castle: game_state.castle_rights.clone(),
