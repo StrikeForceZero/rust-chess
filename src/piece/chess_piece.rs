@@ -6,7 +6,7 @@ use crate::board::board_rank::{
 };
 use crate::color::Color;
 use crate::direction::facing_direction::FacingDirection;
-use crate::piece::chess_piece_move_ruleset::{ChessPieceMoveRuleset, ChessPieceMoveSet};
+use crate::piece::chess_piece_move_ruleset::ChessPieceMoveSet;
 use crate::piece::chess_piece_move_rulesets;
 use crate::piece::piece::Piece;
 use thiserror::Error;
@@ -161,36 +161,6 @@ impl ChessPiece {
             'n' => Self::BlackKnight,
             'p' => Self::BlackPawn,
             _ => return Err(ChessPieceParseError::InvalidChar(c)),
-        })
-    }
-
-    const fn as_move_set_10(&self) -> Option<ChessPieceMoveRuleset<10>> {
-        Some(match self {
-            Self::WhiteKing => chess_piece_move_rulesets::WHITE_KING,
-            Self::BlackKing => chess_piece_move_rulesets::BLACK_KING,
-            Self::WhitePawn => chess_piece_move_rulesets::WHITE_PAWN,
-            Self::BlackPawn => chess_piece_move_rulesets::BLACK_PAWN,
-            _ => return None,
-        })
-    }
-
-    const fn as_move_set_8(&self) -> Option<ChessPieceMoveRuleset<8>> {
-        Some(match self {
-            Self::WhiteKnight => chess_piece_move_rulesets::WHITE_KNIGHT,
-            Self::WhiteQueen => chess_piece_move_rulesets::WHITE_QUEEN,
-            Self::BlackKnight => chess_piece_move_rulesets::BLACK_KNIGHT,
-            Self::BlackQueen => chess_piece_move_rulesets::BLACK_QUEEN,
-            _ => return None,
-        })
-    }
-
-    const fn as_move_set_4(&self) -> Option<ChessPieceMoveRuleset<4>> {
-        Some(match self {
-            Self::WhiteRook => chess_piece_move_rulesets::WHITE_ROOK,
-            Self::WhiteBishop => chess_piece_move_rulesets::WHITE_BISHOP,
-            Self::BlackRook => chess_piece_move_rulesets::BLACK_ROOK,
-            Self::BlackBishop => chess_piece_move_rulesets::BLACK_BISHOP,
-            _ => return None,
         })
     }
 
