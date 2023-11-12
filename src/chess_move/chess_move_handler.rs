@@ -393,7 +393,7 @@ mod tests {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None, None)?;
         try_handle_chess_move_and_apply(&mut game_state, &matched_move, None)?;
-        assert_eq!(expected, serialize(&game_state));
+        assert_eq!(expected, serialize(&game_state).get_str());
         Ok(())
     }
 
@@ -415,7 +415,7 @@ mod tests {
         let mut game_state = deserialize(fen_str).expect("bad fen string!");
         let matched_move = find_move(&game_state, from, to, None, Some(promotion_piece))?;
         try_handle_chess_move_and_apply(&mut game_state, &matched_move, None)?;
-        assert_eq!(expected, serialize(&game_state));
+        assert_eq!(expected, serialize(&game_state).get_str());
         Ok(())
     }
 }

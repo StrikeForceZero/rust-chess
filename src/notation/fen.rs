@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::board::board_file::{BoardFile, BoardFileError};
 use crate::board::board_position::{BoardPosition, BoardPositionStrParseError};
 use crate::board::board_rank::{BoardRank, BoardRankError};
@@ -14,10 +15,43 @@ use thiserror::Error;
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Fen {
     Static(&'static str),
     Owned(String),
+}
+
+impl Fen {
+    pub fn get_str(&self) -> &str {
+        match self {
+            Fen::Static(s) => s,
+            Fen::Owned(s) => s.as_ref(),
+        }
+    }
+}
+
+impl PartialEq<Fen> for Fen {
+    fn eq(&self, other: &Fen) -> bool {
+        self.get_str() == other.get_str()
+    }
+}
+
+impl PartialEq<String> for Fen {
+    fn eq(&self, other: &String) -> bool {
+        self.get_str() == other
+    }
+}
+
+impl PartialEq<str> for Fen {
+    fn eq(&self, other: &str) -> bool {
+        self.get_str() == other
+    }
+}
+
+impl Display for Fen {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.get_str())
+    }
 }
 
 #[derive(Error, Debug, Clone)]
@@ -195,7 +229,7 @@ struct FenData {
 }
 
 impl FenData {
-    pub fn to_string(&self) -> String {
+    pub fn to_string(&self) -> Fen {
         let board_str = self
             .squares
             .iter()
@@ -237,11 +271,11 @@ impl FenData {
         .filter(|x| !x.is_empty())
         .join(SPACE.to_string().as_str());
 
-        return str;
+        Fen::Owned(str)
     }
 }
 
-pub fn serialize(game_state: &GameState) -> String {
+pub fn serialize(game_state: &GameState) -> Fen {
     let mut fen = FenData {
         squares: [[None; 8]; 8],
         active_color: ActiveColor::from_color(game_state.active_color),
@@ -259,7 +293,8 @@ pub fn serialize(game_state: &GameState) -> String {
 }
 
 pub fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
-    let serialized = serialize(&game_state);
+    let fen = serialize(&game_state);
+    let serialized = fen.get_str();
     let parts = serialized.split_whitespace().collect::<Vec<_>>();
     let (
         squares_str,
@@ -282,6 +317,6 @@ mod tests {
     #[case(GameState::new(), FEN_STARTING_POS)]
     #[case(GameState::empty(), FEN_EMPTY)]
     pub fn fen_serialize(#[case] game_state: GameState, #[case] expected: &'static str) {
-        assert_eq!(expected, serialize(&game_state))
+        assert_eq!(expected, serialize(&game_state).get_str())
     }
 }
