@@ -85,17 +85,10 @@ pub fn serialize(game_state: &GameState) -> Fen {
 
 pub fn serialize_without_clock_and_active_color(game_state: GameState) -> String {
     let fen = serialize(&game_state);
-    let serialized = fen.get_str();
-    let parts = serialized.split_whitespace().collect::<Vec<_>>();
-    let (
-        squares_str,
-        _active_color_str,
-        castle_rights_str,
-        en_passant_str,
-        _half_move_clock_str,
-        _full_move_num_str,
-    ) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
-    [squares_str, castle_rights_str, en_passant_str].join(SPACE.to_string().as_str())
+    let Ok(parts) = fen.get_parts() else {
+        panic!("serialization failed!");
+    };
+    [parts.squares_str, parts.castle_rights_str, parts.en_passant_str].join(SPACE.to_string().as_str())
 }
 
 #[cfg(test)]

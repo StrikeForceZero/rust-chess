@@ -3,6 +3,7 @@ use crate::board::board_file::{BoardFile, BoardFileError};
 use crate::board::board_position::{BoardPosition, BoardPositionStrParseError};
 use crate::board::board_rank::{BoardRank, BoardRankError};
 use crate::notation::fen::{ActiveColor, BOARD_TERMINATOR};
+use crate::notation::fen::fen_parts::FenParts;
 use crate::piece::chess_piece::ChessPiece;
 use crate::state::castle_rights::CastleRightsStringParseError;
 use crate::state::color_castle_rights::ColorCastleRights;
@@ -26,6 +27,31 @@ pub enum FenParsingError {
     InvalidBoardStringBoardFileParseError(BoardFileError),
     #[error("Invalid board string: {0}")]
     InvalidBoardStringBoardRankParseError(BoardRankError),
+    #[error("Invalid fen string: {0}")]
+    InvalidFenString(String),
+}
+
+pub fn get_parts(fen_str: &str) -> Result<FenParts, FenParsingError> {
+    let parts = fen_str.split_whitespace().collect::<Vec<_>>();
+    if parts.len() != 6 {
+        return Err(FenParsingError::InvalidFenString(fen_str.to_string()))
+    }
+    let (
+        squares_str,
+        active_color_str,
+        castle_rights_str,
+        en_passant_str,
+        half_move_clock_str,
+        full_move_num_str,
+    ) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
+    Ok(FenParts {
+        squares_str,
+        active_color_str,
+        castle_rights_str,
+        en_passant_str,
+        half_move_clock_str,
+        full_move_num_str,
+    })
 }
 
 fn get_active_color_from_str(active_color_str: &str) -> Result<ActiveColor, FenParsingError> {
@@ -53,34 +79,26 @@ fn get_en_passant_pos_from_str(
 
 pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
     let mut game_state = GameState::empty();
-    let parts = fen_str.split_whitespace().collect::<Vec<_>>();
-    let (
-        squares_str,
-        active_color_str,
-        castle_rights_str,
-        en_passant_str,
-        half_move_clock_str,
-        full_move_num_str,
-    ) = (parts[0], parts[1], parts[2], parts[3], parts[4], parts[5]);
-    game_state.active_color = match get_active_color_from_str(active_color_str) {
+    let parts = get_parts(fen_str)?;
+    game_state.active_color = match get_active_color_from_str(parts.active_color_str) {
         Ok(color) => color.as_color(),
         Err(e) => return Err(e),
     };
-    game_state.castle_rights = match ColorCastleRights::from_str(castle_rights_str) {
+    game_state.castle_rights = match ColorCastleRights::from_str(parts.castle_rights_str) {
         Ok(castle_rights) => castle_rights,
         Err(e) => return Err(FenParsingError::InvalidCastleRights(e)),
     };
-    game_state.move_counter.half_move = half_move_clock_str
+    game_state.move_counter.half_move = parts.half_move_clock_str
         .parse::<u16>()
         .expect("invalid half_move_clock_str");
-    game_state.move_counter.full_move = full_move_num_str
+    game_state.move_counter.full_move = parts.full_move_num_str
         .parse::<u16>()
         .expect("invalid full_move_clock_str");
-    game_state.en_passant_target_pos = match get_en_passant_pos_from_str(en_passant_str) {
+    game_state.en_passant_target_pos = match get_en_passant_pos_from_str(parts.en_passant_str) {
         Ok(pos) => pos,
         Err(e) => return Err(FenParsingError::InvalidEnPassant(e)),
     };
-    let rows = squares_str
+    let rows = parts.squares_str
         .split_terminator(BOARD_TERMINATOR)
         .collect::<Vec<_>>();
     // flip so white is on bottom

@@ -1,11 +1,14 @@
 pub mod serialize;
 pub mod deserialize;
+mod fen_parts;
+
 pub use serialize::serialize;
 pub use deserialize::deserialize;
 
 use std::fmt::{Display, Formatter};
 use crate::color::Color;
-use crate::notation::fen::deserialize::FenParsingError;
+use crate::notation::fen::deserialize::{FenParsingError, get_parts};
+use crate::notation::fen::fen_parts::FenParts;
 
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
@@ -24,6 +27,10 @@ impl Fen {
             Fen::Static(s) => s,
             Fen::Owned(s) => s.as_ref(),
         }
+    }
+
+    pub fn get_parts(&self) -> Result<FenParts, FenParsingError> {
+        get_parts(self.get_str())
     }
 }
 
