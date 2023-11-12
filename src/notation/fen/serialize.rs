@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use crate::board::board_position::BoardPosition;
 use crate::notation::fen::{BOARD_TERMINATOR, Fen};
-use crate::notation::fen::deserialize::ActiveColor;
+use crate::notation::fen::ActiveColor;
 use crate::piece::chess_piece::ChessPiece;
 use crate::state::color_castle_rights::ColorCastleRights;
 use crate::state::game_state::GameState;

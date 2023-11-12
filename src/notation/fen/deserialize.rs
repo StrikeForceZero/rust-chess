@@ -2,8 +2,7 @@ use thiserror::Error;
 use crate::board::board_file::{BoardFile, BoardFileError};
 use crate::board::board_position::{BoardPosition, BoardPositionStrParseError};
 use crate::board::board_rank::{BoardRank, BoardRankError};
-use crate::color::Color;
-use crate::notation::fen::BOARD_TERMINATOR;
+use crate::notation::fen::{ActiveColor, BOARD_TERMINATOR};
 use crate::piece::chess_piece::ChessPiece;
 use crate::state::castle_rights::CastleRightsStringParseError;
 use crate::state::color_castle_rights::ColorCastleRights;
@@ -135,38 +134,4 @@ pub fn deserialize(fen_str: &str) -> Result<GameState, FenParsingError> {
         }
     }
     Ok(game_state)
-}
-
-#[derive(Copy, Clone)]
-pub enum ActiveColor {
-    White,
-    Black,
-}
-
-impl ActiveColor {
-    pub fn as_char(&self) -> char {
-        match self {
-            ActiveColor::White => 'w',
-            ActiveColor::Black => 'b',
-        }
-    }
-    pub fn from_char(c: char) -> Result<ActiveColor, FenParsingError> {
-        Ok(match c {
-            'w' => ActiveColor::White,
-            'b' => ActiveColor::Black,
-            _ => return Err(FenParsingError::InvalidActiveColorChar(c)),
-        })
-    }
-    pub fn from_color(color: Color) -> ActiveColor {
-        match color {
-            Color::White => ActiveColor::White,
-            Color::Black => ActiveColor::Black,
-        }
-    }
-    pub fn as_color(&self) -> Color {
-        match self {
-            ActiveColor::White => Color::White,
-            ActiveColor::Black => Color::Black,
-        }
-    }
 }

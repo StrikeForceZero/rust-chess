@@ -4,6 +4,8 @@ pub use serialize::serialize;
 pub use deserialize::deserialize;
 
 use std::fmt::{Display, Formatter};
+use crate::color::Color;
+use crate::notation::fen::deserialize::FenParsingError;
 
 pub const FEN_STARTING_POS: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 pub const FEN_EMPTY: &str = "8/8/8/8/8/8/8/8 w - - 0 1";
@@ -48,3 +50,38 @@ impl Display for Fen {
         write!(f, "{}", self.get_str())
     }
 }
+
+#[derive(Copy, Clone)]
+pub(in crate::notation::fen) enum ActiveColor {
+    White,
+    Black,
+}
+
+impl ActiveColor {
+    pub fn as_char(&self) -> char {
+        match self {
+            ActiveColor::White => 'w',
+            ActiveColor::Black => 'b',
+        }
+    }
+    pub fn from_char(c: char) -> Result<ActiveColor, FenParsingError> {
+        Ok(match c {
+            'w' => ActiveColor::White,
+            'b' => ActiveColor::Black,
+            _ => return Err(FenParsingError::InvalidActiveColorChar(c)),
+        })
+    }
+    pub fn from_color(color: Color) -> ActiveColor {
+        match color {
+            Color::White => ActiveColor::White,
+            Color::Black => ActiveColor::Black,
+        }
+    }
+    pub fn as_color(&self) -> Color {
+        match self {
+            ActiveColor::White => Color::White,
+            ActiveColor::Black => Color::Black,
+        }
+    }
+}
+
