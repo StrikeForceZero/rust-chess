@@ -8,7 +8,7 @@ use crate::piece::chess_piece::ChessPiece::{
     BlackBishop, BlackKing, BlackKnight, BlackPawn, BlackQueen, BlackRook, WhiteBishop, WhiteKing,
     WhiteKnight, WhitePawn, WhiteQueen, WhiteRook,
 };
-use crate::utils::custom_struct_iterator::CustomStructIterator;
+use crate::utils::custom_struct_iterator::{CustomStructIterator, CustomStructIteratorMut};
 
 const STARTING_BOARD: Board = Board::new();
 

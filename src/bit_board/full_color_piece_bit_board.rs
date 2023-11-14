@@ -65,6 +65,13 @@ impl FullColorPieceBitBoard {
         };
         self
     }
+
+    pub fn for_color(&self, color: Color) -> &FullPieceBitBoard {
+        match color {
+            Color::White => &self.white,
+            Color::Black => &self.black,
+        }
+    }
 }
 
 impl<'a> Iterator for CustomStructIterator<'a, FullColorPieceBitBoard> {

@@ -8,7 +8,7 @@ pub enum PieceError {
     InvalidChar(char),
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Piece {
     Pawn,
     Knight,

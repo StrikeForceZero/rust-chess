@@ -44,4 +44,10 @@ impl CastleSide {
             BoardFile::H => Self::King,
         }
     }
+    pub const fn as_pgn_str(&self) -> &'static str {
+        match self {
+            CastleSide::King => "O-O",
+            CastleSide::Queen => "O-O-O",
+        }
+    }
 }
