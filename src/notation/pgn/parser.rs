@@ -1,14 +1,9 @@
-use std::io::Split;
-use std::num::ParseIntError;
 use itertools::Itertools;
-use thiserror::Error;
-use tracing::{debug, error, instrument, trace, warn};
-use crate::notation::pgn::pgn_turn_data::PgnTurnData;
+use tracing::{trace, warn};
+use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 use crate::notation::pgn::pgn_turn_data_raw::PgnTurnDataRaw;
 use crate::notation::pgn::pgn_turn_data_raw_partial::PgnTurnDataRawPartial;
 use crate::notation::pgn::pgn_roster_raw_partial::PgnRosterRawPartial;
-use crate::notation::pgn::pgn_roster_raw::PgnRosterRaw;
-use crate::notation::pgn::tag_pairs::{parse_tag_pair, PgnTagPairParseError, TagPair, TagPairNameValueTuple};
 
 #[derive(Default, PartialEq, Debug)]
 enum LexerState {
@@ -68,28 +63,12 @@ impl LexerState {
     }
 }
 
-#[derive(Debug, Clone, Error, PartialEq)]
-pub enum PgnParsingError {
-    #[error("Invalid PGN - {1:?} @{2}:{3}:{0:?}")]
-    InvalidPgn(String, String, usize, usize),
-    #[error("Invalid PGN - {0}")]
-    InvalidTagPair(String),
-}
-
-impl PgnParsingError {
-    #[instrument]
-    pub fn create(parsing_context: &ParsingContext) -> Self {
-        let LineWordPosTuple(line, word, col) = parsing_context.resolve_line_word_pos_tuple();
-        Self::InvalidPgn(line, word, parsing_context.line_ix + 1, col + 1)
-    }
-}
-
 type Word = String;
 type Line = String;
 type Pos = usize;
 
 #[derive(Debug)]
-pub struct LineWordPosTuple(Line, Word, Pos);
+pub struct LineWordPosTuple(pub Line, pub Word, pub Pos);
 
 #[derive(Debug)]
 pub struct ParsingContext<'a> {
@@ -496,8 +475,6 @@ impl Parser {
 mod tests {
     use std::ops::Index;
     use rstest::rstest;
-    use tracing_subscriber::EnvFilter;
-    use tracing_subscriber::fmt::format::FmtSpan;
     use super::*;
 
     #[rstest]
@@ -508,6 +485,7 @@ mod tests {
                 turn_number: Some("1.".to_string()),
                 white: Some("Nxb5".to_string()),
                 white_comment: Some("{white comment}".to_string()),
+                turn_number_continuation: Some("1...".into()),
                 black: Some("Kh8".to_string()),
                 black_comment: Some("{black comment}".to_string()),
                 comment: Some(";line comment".to_string()),
@@ -522,6 +500,7 @@ mod tests {
                 turn_number: Some("1.".to_string()),
                 white: Some("Nxb5".to_string()),
                 white_comment: Some("{white comment}".to_string()),
+                turn_number_continuation: Some("1...".into()),
                 black: Some("Kh8".to_string()),
                 black_comment: Some("{black comment}".to_string()),
                 comment: Some(";line comment".to_string()),
@@ -529,6 +508,7 @@ mod tests {
             PgnTurnDataRawPartial {
                 turn_number: Some("2.".to_string()),
                 white: Some("f7".to_string()),
+                turn_number_continuation: None,
                 white_comment: None,
                 black: Some("b6".to_string()),
                 black_comment: None,
@@ -538,6 +518,7 @@ mod tests {
                 turn_number: Some("3.".to_string()),
                 white: Some("Qa1#".to_string()),
                 white_comment: None,
+                turn_number_continuation: None,
                 black: None,
                 black_comment: None,
                 comment: None,

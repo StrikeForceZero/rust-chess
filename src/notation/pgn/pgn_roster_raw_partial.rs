@@ -1,4 +1,4 @@
-use crate::notation::pgn::parser::PgnParsingError;
+use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 use crate::notation::pgn::pgn_roster_raw::PgnRosterRaw;
 use crate::notation::pgn::tag_pairs::*;
 
