@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use tracing::{trace, warn};
+use tracing::{instrument, trace, warn};
 use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 use crate::notation::pgn::pgn_turn_data_raw::PgnTurnDataRaw;
 use crate::notation::pgn::pgn_turn_data_raw_partial::PgnTurnDataRawPartial;
@@ -7,7 +7,7 @@ use crate::notation::pgn::pgn_roster_raw_partial::PgnRosterRawPartial;
 use crate::notation::pgn::util::{LineWordPosTuple, NEW_LINE, SPACE};
 
 #[derive(Default, PartialEq, Debug)]
-enum LexerState {
+enum SimpleParserState {
     #[default]
     TagPair,
 
@@ -27,7 +27,7 @@ enum LexerState {
     Result,
 }
 
-impl LexerState {
+impl SimpleParserState {
     pub const fn next(&self) -> Self {
         match self {
             Self::TagPair => Self::TagPair,
@@ -65,13 +65,13 @@ impl LexerState {
 }
 
 #[derive(Debug)]
-pub struct LexerContext<'a> {
+pub struct SimpleParserContext<'a> {
     pub(crate) data: &'a str,
     pub(crate) line_ix: usize,
     pub(crate) word_ix: usize,
 }
 
-impl<'a> LexerContext<'a> {
+impl<'a> SimpleParserContext<'a> {
     pub fn create(data: &'a str) -> Self {
         Self {
             data,
@@ -93,11 +93,17 @@ impl<'a> LexerContext<'a> {
     fn get_line(&self) -> String {
         self.data.split(NEW_LINE).collect_vec().get(self.line_ix).expect("context has invalid line index").to_string()
     }
+
+    #[instrument]
+    pub fn create_parsing_error(&self) -> PgnParsingError {
+        let LineWordPosTuple(line, word, col) = self.resolve_line_word_pos_tuple();
+        PgnParsingError::InvalidPgn(line, word, self.line_ix + 1, col + 1)
+    }
 }
 
 #[derive(Default, Debug)]
-pub struct Lexer {
-    state: LexerState,
+pub struct SimpleParser {
+    state: SimpleParserState,
     roster_raw: Vec<String>,
     roster: Option<PgnRosterRawPartial>,
     current_turn: Option<PgnTurnDataRawPartial>,
@@ -115,10 +121,10 @@ fn is_result_word(word: &str) -> bool {
     word.contains("1-0") || word.contains("0-1") || word.contains("1/2-1/2") || word.contains("*")
 }
 
-impl Lexer {
+impl SimpleParser {
     fn next_turn(&mut self) {
         trace!("next_turn");
-        self.state = LexerState::New;
+        self.state = SimpleParserState::New;
     }
     fn next(&mut self) {
         trace!("next");
@@ -132,13 +138,13 @@ impl Lexer {
 
     fn handle_word(
         &mut self,
-        context: &LexerContext,
+        context: &SimpleParserContext,
         word: &str,
     ) -> Result<HandleWordResult, PgnParsingError> {
         trace!("parser state: {:?}", self.state);
         trace!("current word: \"{word}\"");
         let res = match self.state {
-            LexerState::TagPair => {
+            SimpleParserState::TagPair => {
                 if word.is_empty() || word.ends_with('.') {
                     trace!("not tag pair 1");
                     self.next_section();
@@ -150,14 +156,14 @@ impl Lexer {
                     let line = context.get_line();
                     if !word.starts_with('[') || !line.ends_with(']') {
                         trace!("not tag pair 2");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     }
                     trace!("pushing to roster_raw: \"{line}\"");
                     self.roster_raw.push(line.to_string());
                 }
                 HandleWordResult::NextLine
             }
-            LexerState::New => {
+            SimpleParserState::New => {
                 if word.is_empty() {
                     trace!("empty");
                     return Ok(HandleWordResult::NextWord);
@@ -171,7 +177,7 @@ impl Lexer {
                         trace!("reparse");
                         return self.handle_word(context, word)
                     }
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 }
                 /*
                 let parts = word.split('.').collect_vec();
@@ -194,30 +200,30 @@ impl Lexer {
                 }
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 current_turn.turn_number = Some(word.to_string());
                 trace!("current_turn.turn_number = {:?}", current_turn.turn_number);
                 self.next();
                 HandleWordResult::NextWord
             }
-            LexerState::WhiteMove => {
+            SimpleParserState::WhiteMove => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 current_turn.white = Some(word.to_string());
                 trace!("current_turn.white = {:?}", current_turn.white);
                 self.next();
                 HandleWordResult::NextWord
             }
-            LexerState::WhiteCommentStart => {
+            SimpleParserState::WhiteCommentStart => {
                 self.next();
                 if word.starts_with('{') {
                     trace!("white comment start");
                     let Some(ref mut current_turn) = &mut self.current_turn else {
                         trace!("no current turn!");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     };
                     current_turn.white_comment = Some(word.to_string());
                     trace!("current_turn.white_comment = {:?}", current_turn.white_comment);
@@ -229,17 +235,17 @@ impl Lexer {
                 }
                 HandleWordResult::NextWord
             }
-            LexerState::WhiteCommentEnd => {
+            SimpleParserState::WhiteCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 if !word.ends_with('}') {
                     trace!("not white comment end");
                     // comment not terminated
                     if current_turn.white_comment.is_some() {
                         trace!("white comment not terminated");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     }
                     self.next();
                     // reparse current word
@@ -248,7 +254,7 @@ impl Lexer {
                 }
                 let Some(ref mut current_comment) = &mut current_turn.white_comment else {
                     trace!("no white comment!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 let word_with_space_added_back = format!(" {word}");
                 trace!("current_comment.push_str({:?})", word);
@@ -260,10 +266,10 @@ impl Lexer {
                 }
                 HandleWordResult::NextWord
             }
-            LexerState::MoveContinuationAfterComment => {
-                let Some(current_turn) = &self.current_turn else {
+            SimpleParserState::MoveContinuationAfterComment => {
+                let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 if current_turn.white_comment.is_some() {
                     trace!("white comment exists");
@@ -277,18 +283,20 @@ impl Lexer {
                             return self.handle_word(context, word)
                         }
                         trace!("missing move number continuation!");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     }
                     let Some(move_str) = &current_turn.turn_number else {
                         trace!("missing move number!");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     };
                     // make sure move numbers match
                     if !word.contains(move_str) {
                         trace!("{word:?} does not contain {move_str:?}!");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     }
                     trace!("{word:?} contains {move_str:?}!");
+                    current_turn.turn_number_continuation = Some(word.into());
+                    trace!("current_turn.turn_number_continuation = {:?}", current_turn.turn_number_continuation);
                     self.next();
                     HandleWordResult::NextWord
                 } else {
@@ -299,7 +307,7 @@ impl Lexer {
                     self.handle_word(context, word)?
                 }
             }
-            LexerState::BlackMove => {
+            SimpleParserState::BlackMove => {
                 if is_result_word(word) {
                     trace!("not black move; is result");
                     self.next_section();
@@ -317,20 +325,20 @@ impl Lexer {
                 trace!("is black move");
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 current_turn.black = Some(word.to_string());
                 trace!("current_turn.black = {:?}", current_turn.black);
                 self.next();
                 HandleWordResult::NextWord
             }
-            LexerState::BlackCommentStart => {
+            SimpleParserState::BlackCommentStart => {
                 self.next();
                 if word.starts_with('{') {
                     trace!("is black comment start");
                     let Some(ref mut current_turn) = &mut self.current_turn else {
                         trace!("no current turn!");
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     };
                     current_turn.black_comment = Some(word.to_string());
                     trace!("current_turn.black_comment = {:?}", current_turn.black_comment);
@@ -342,16 +350,16 @@ impl Lexer {
                 }
                 HandleWordResult::NextWord
             }
-            LexerState::BlackCommentEnd => {
+            SimpleParserState::BlackCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 if !word.ends_with('}') {
                     // comment not terminated
                     if current_turn.black_comment.is_some() {
                         trace!("black comment not terminated! {:?}", current_turn.black_comment);
-                        return Err(PgnParsingError::create(&context));
+                        return Err(context.create_parsing_error());
                     }
                     trace!("not black comment");
                     self.next();
@@ -362,7 +370,7 @@ impl Lexer {
                 trace!("is black comment");
                 let Some(ref mut current_comment) = &mut current_turn.black_comment else {
                     trace!("no current comment!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 let word_with_space_added_back = format!(" {word}");
                 trace!("current_comment.push_str({:?})", word);
@@ -374,7 +382,7 @@ impl Lexer {
                 }
                 HandleWordResult::NextWord
             }
-            LexerState::CommentUntilEndOfTheLineStart => {
+            SimpleParserState::CommentUntilEndOfTheLineStart => {
                 if !word.starts_with(';') {
                     trace!("not end of line comment");
                     self.next_turn();
@@ -384,21 +392,21 @@ impl Lexer {
                 }
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 current_turn.comment = Some(word.to_string());
                 trace!("current_turn.comment = {:?}", current_turn.comment);
                 self.next();
                 HandleWordResult::NextWord
             }
-            LexerState::CommentUntilEndOfTheLineEnd => {
+            SimpleParserState::CommentUntilEndOfTheLineEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 let Some(ref mut current_comment) = &mut current_turn.comment else {
                     trace!("no current comment!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 };
                 let word_with_space_added_back = format!(" {word}");
                 trace!("current_comment.push_str({:?})", word);
@@ -410,10 +418,10 @@ impl Lexer {
                 }
                 HandleWordResult::NextWord
             }
-            LexerState::Result => {
+            SimpleParserState::Result => {
                 if !is_result_word(word) {
                     trace!("not result!");
-                    return Err(PgnParsingError::create(&context));
+                    return Err(context.create_parsing_error());
                 }
                 warn!("TODO: handle result");
                 // TODO: handle result
@@ -427,13 +435,13 @@ impl Lexer {
     #[tracing::instrument]
     pub fn parse(data: &str) -> Result<Self, PgnParsingError> {
         let mut parser = Self::default();
-        let mut context = LexerContext::create(data);
+        let mut context = SimpleParserContext::create(data);
         let lines = data.split(NEW_LINE);
         for (line_ix, line) in lines.enumerate() {
             let line_num = line_ix + 1;
             trace!("line {line_num}: \"{line}\"");
-            if parser.state != LexerState::TagPair {
-                parser.state = LexerState::New;
+            if parser.state != SimpleParserState::TagPair {
+                parser.state = SimpleParserState::New;
             }
             let words = line.split(" ");
             trace!("words: {:?}", words.clone().collect_vec());
@@ -521,7 +529,7 @@ mod tests {
         #[case] expected: Vec<PgnTurnDataRawPartial>,
     ) -> Result<(), PgnParsingError> {
         // crate::utils::tracing::init_tracing();
-        let parser = Lexer::parse(input)?;
+        let parser = SimpleParser::parse(input)?;
         assert_eq!(expected, parser.raw_turns);
         Ok(())
     }
@@ -538,13 +546,13 @@ mod tests {
         #[case] expected: Vec<&'static str>,
     ) -> Result<(), PgnParsingError> {
         // crate::utils::tracing::init_tracing();
-        let parser = Lexer::parse(input)?;
+        let parser = SimpleParser::parse(input)?;
         assert_eq!(expected, parser.roster_raw);
         Ok(())
     }
 
     fn resolve_col(line: &str, word_ix: usize) -> usize {
-        let mut context = LexerContext::create(line);
+        let mut context = SimpleParserContext::create(line);
         context.word_ix = word_ix;
         let LineWordPosTuple(_line, _word, pos) = context.resolve_line_word_pos_tuple();
         pos
@@ -578,7 +586,7 @@ mod tests {
     ) {
         // crate::utils::tracing::init_tracing();
         let MatchinErrorTuple { data, error } = input;
-        let parser_result = Lexer::parse(data);
+        let parser_result = SimpleParser::parse(data);
         assert_eq!(Some(error), parser_result.err());
     }
 }

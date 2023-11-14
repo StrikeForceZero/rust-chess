@@ -1,4 +1,4 @@
-mod lexer;
+mod simple_parser;
 mod pgn_move_detail;
 mod pgn_turn_data;
 mod pgn_roster_raw;
@@ -13,6 +13,8 @@ mod pgn_move;
 mod pgn_move_builder;
 mod pgn_parsing_error;
 mod util;
+mod parser;
+mod lexer;
 
 #[repr(transparent)]
 #[derive(Clone)]
