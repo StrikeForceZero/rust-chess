@@ -4,6 +4,7 @@ use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 use crate::notation::pgn::pgn_turn_data_raw::PgnTurnDataRaw;
 use crate::notation::pgn::pgn_turn_data_raw_partial::PgnTurnDataRawPartial;
 use crate::notation::pgn::pgn_roster_raw_partial::PgnRosterRawPartial;
+use crate::notation::pgn::util::{LineWordPosTuple, NEW_LINE, SPACE};
 
 #[derive(Default, PartialEq, Debug)]
 enum LexerState {
@@ -63,21 +64,14 @@ impl LexerState {
     }
 }
 
-type Word = String;
-type Line = String;
-type Pos = usize;
-
 #[derive(Debug)]
-pub struct LineWordPosTuple(pub Line, pub Word, pub Pos);
-
-#[derive(Debug)]
-pub struct ParsingContext<'a> {
+pub struct LexerContext<'a> {
     pub(crate) data: &'a str,
     pub(crate) line_ix: usize,
     pub(crate) word_ix: usize,
 }
 
-impl<'a> ParsingContext<'a> {
+impl<'a> LexerContext<'a> {
     pub fn create(data: &'a str) -> Self {
         Self {
             data,
@@ -102,7 +96,7 @@ impl<'a> ParsingContext<'a> {
 }
 
 #[derive(Default, Debug)]
-pub struct Parser {
+pub struct Lexer {
     state: LexerState,
     roster_raw: Vec<String>,
     roster: Option<PgnRosterRawPartial>,
@@ -111,11 +105,8 @@ pub struct Parser {
     turns: Vec<PgnTurnDataRaw>,
 }
 
-const NEW_LINE: char = '\n';
-const SPACE: char = ' ';
-
 #[derive(Debug)]
-pub enum WordHandleResult {
+pub enum HandleWordResult {
     NextWord,
     NextLine,
 }
@@ -124,7 +115,7 @@ fn is_result_word(word: &str) -> bool {
     word.contains("1-0") || word.contains("0-1") || word.contains("1/2-1/2") || word.contains("*")
 }
 
-impl Parser {
+impl Lexer {
     fn next_turn(&mut self) {
         trace!("next_turn");
         self.state = LexerState::New;
@@ -141,9 +132,9 @@ impl Parser {
 
     fn handle_word(
         &mut self,
-        context: &ParsingContext,
+        context: &LexerContext,
         word: &str,
-    ) -> Result<WordHandleResult, PgnParsingError> {
+    ) -> Result<HandleWordResult, PgnParsingError> {
         trace!("parser state: {:?}", self.state);
         trace!("current word: \"{word}\"");
         let res = match self.state {
@@ -164,12 +155,12 @@ impl Parser {
                     trace!("pushing to roster_raw: \"{line}\"");
                     self.roster_raw.push(line.to_string());
                 }
-                WordHandleResult::NextLine
+                HandleWordResult::NextLine
             }
             LexerState::New => {
                 if word.is_empty() {
                     trace!("empty");
-                    return Ok(WordHandleResult::NextWord);
+                    return Ok(HandleWordResult::NextWord);
                 }
                 if !word.ends_with('.') {
                     trace!("not move number");
@@ -208,7 +199,7 @@ impl Parser {
                 current_turn.turn_number = Some(word.to_string());
                 trace!("current_turn.turn_number = {:?}", current_turn.turn_number);
                 self.next();
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::WhiteMove => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
@@ -218,7 +209,7 @@ impl Parser {
                 current_turn.white = Some(word.to_string());
                 trace!("current_turn.white = {:?}", current_turn.white);
                 self.next();
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::WhiteCommentStart => {
                 self.next();
@@ -236,7 +227,7 @@ impl Parser {
                     trace!("reparse");
                     return self.handle_word(context, word)
                 }
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::WhiteCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
@@ -267,7 +258,7 @@ impl Parser {
                     trace!("white comment end");
                     self.next();
                 }
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::MoveContinuationAfterComment => {
                 let Some(current_turn) = &self.current_turn else {
@@ -299,7 +290,7 @@ impl Parser {
                     }
                     trace!("{word:?} contains {move_str:?}!");
                     self.next();
-                    WordHandleResult::NextWord
+                    HandleWordResult::NextWord
                 } else {
                     trace!("not move continuation");
                     self.next();
@@ -331,7 +322,7 @@ impl Parser {
                 current_turn.black = Some(word.to_string());
                 trace!("current_turn.black = {:?}", current_turn.black);
                 self.next();
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::BlackCommentStart => {
                 self.next();
@@ -349,7 +340,7 @@ impl Parser {
                     trace!("reparse");
                     return self.handle_word(context, word);
                 }
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::BlackCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
@@ -381,7 +372,7 @@ impl Parser {
                     trace!("black comment end");
                     self.next();
                 }
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::CommentUntilEndOfTheLineStart => {
                 if !word.starts_with(';') {
@@ -398,7 +389,7 @@ impl Parser {
                 current_turn.comment = Some(word.to_string());
                 trace!("current_turn.comment = {:?}", current_turn.comment);
                 self.next();
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::CommentUntilEndOfTheLineEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
@@ -417,7 +408,7 @@ impl Parser {
                     trace!("end of line comment");
                     self.next()
                 }
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
             LexerState::Result => {
                 if !is_result_word(word) {
@@ -426,7 +417,7 @@ impl Parser {
                 }
                 warn!("TODO: handle result");
                 // TODO: handle result
-                WordHandleResult::NextWord
+                HandleWordResult::NextWord
             }
         };
         Ok(res)
@@ -436,7 +427,7 @@ impl Parser {
     #[tracing::instrument]
     pub fn parse(data: &str) -> Result<Self, PgnParsingError> {
         let mut parser = Self::default();
-        let mut context = ParsingContext::create(data);
+        let mut context = LexerContext::create(data);
         let lines = data.split(NEW_LINE);
         for (line_ix, line) in lines.enumerate() {
             let line_num = line_ix + 1;
@@ -453,8 +444,8 @@ impl Parser {
                 let res = parser.handle_word(&context, word)?;
                 trace!("handle_word res: {res:?}");
                 match res {
-                    WordHandleResult::NextWord => continue,
-                    WordHandleResult::NextLine => break,
+                    HandleWordResult::NextWord => continue,
+                    HandleWordResult::NextLine => break,
                 }
             }
         }
@@ -530,7 +521,7 @@ mod tests {
         #[case] expected: Vec<PgnTurnDataRawPartial>,
     ) -> Result<(), PgnParsingError> {
         // crate::utils::tracing::init_tracing();
-        let parser = Parser::parse(input)?;
+        let parser = Lexer::parse(input)?;
         assert_eq!(expected, parser.raw_turns);
         Ok(())
     }
@@ -547,13 +538,13 @@ mod tests {
         #[case] expected: Vec<&'static str>,
     ) -> Result<(), PgnParsingError> {
         // crate::utils::tracing::init_tracing();
-        let parser = Parser::parse(input)?;
+        let parser = Lexer::parse(input)?;
         assert_eq!(expected, parser.roster_raw);
         Ok(())
     }
 
     fn resolve_col(line: &str, word_ix: usize) -> usize {
-        let mut context = ParsingContext::create(line);
+        let mut context = LexerContext::create(line);
         context.word_ix = word_ix;
         let LineWordPosTuple(_line, _word, pos) = context.resolve_line_word_pos_tuple();
         pos
@@ -587,7 +578,7 @@ mod tests {
     ) {
         // crate::utils::tracing::init_tracing();
         let MatchinErrorTuple { data, error } = input;
-        let parser_result = Parser::parse(data);
+        let parser_result = Lexer::parse(data);
         assert_eq!(Some(error), parser_result.err());
     }
 }

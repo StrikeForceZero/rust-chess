@@ -1,6 +1,7 @@
 use thiserror::Error;
 use tracing::instrument;
-use crate::notation::pgn::parser::{LineWordPosTuple, ParsingContext};
+use crate::notation::pgn::lexer::LexerContext;
+use crate::notation::pgn::util::LineWordPosTuple;
 
 #[derive(Debug, Clone, Error, PartialEq)]
 pub enum PgnParsingError {
@@ -12,7 +13,7 @@ pub enum PgnParsingError {
 
 impl PgnParsingError {
     #[instrument]
-    pub fn create(parsing_context: &ParsingContext) -> Self {
+    pub fn create(parsing_context: &LexerContext) -> Self {
         let LineWordPosTuple(line, word, col) = parsing_context.resolve_line_word_pos_tuple();
         Self::InvalidPgn(line, word, parsing_context.line_ix + 1, col + 1)
     }
