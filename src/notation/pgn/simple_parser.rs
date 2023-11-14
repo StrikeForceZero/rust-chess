@@ -4,7 +4,8 @@ use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 use crate::notation::pgn::pgn_turn_data_raw::PgnTurnDataRaw;
 use crate::notation::pgn::pgn_turn_data_raw_partial::PgnTurnDataRawPartial;
 use crate::notation::pgn::pgn_roster_raw_partial::PgnRosterRawPartial;
-use crate::notation::pgn::util::{LineWordPosTuple, NEW_LINE, SPACE};
+use crate::notation::pgn::util::LineWordPosTuple;
+use crate::utils::char::{NEW_LINE, SPACE};
 
 #[derive(Default, PartialEq, Debug)]
 enum SimpleParserState {
@@ -412,7 +413,7 @@ impl SimpleParser {
                 trace!("current_comment.push_str({:?})", word);
                 current_comment.push_str(&word_with_space_added_back);
                 trace!("current_comment: {:?}", current_comment);
-                if word.ends_with('\n') {
+                if word.ends_with(NEW_LINE) {
                     trace!("end of line comment");
                     self.next()
                 }

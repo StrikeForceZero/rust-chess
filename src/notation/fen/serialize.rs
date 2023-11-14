@@ -5,9 +5,9 @@ use crate::notation::fen::ActiveColor;
 use crate::piece::chess_piece::ChessPiece;
 use crate::state::color_castle_rights::ColorCastleRights;
 use crate::state::game_state::GameState;
+use crate::utils::char::SPACE;
 
 const EMPTY: &str = "";
-const SPACE: char = ' ';
 const DASH: char = '-';
 
 struct FenData {

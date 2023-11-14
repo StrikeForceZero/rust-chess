@@ -5,6 +5,7 @@ use crate::board::position;
 use crate::direction::direction::Direction;
 use crate::utils::custom_struct_iterator::CustomStructIterator;
 use bitmaps::Bitmap;
+use crate::utils::char::NEW_LINE;
 
 pub const SIZE: usize = 64;
 const PLACES: usize = 8;
@@ -439,7 +440,7 @@ impl BitBoard {
             if ix % PLACES == 0 {
                 res.push('|');
                 res.push_str(ix.to_string().as_str());
-                res.push('\n');
+                res.push(NEW_LINE);
                 res.push(BoardRank::from_zero_based_index(ix / 8).unwrap().as_char());
                 res.push('|');
             }
