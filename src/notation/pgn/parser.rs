@@ -10,3 +10,20 @@ pub struct Parser {
     raw_turns: Vec<PgnTurnDataRawPartial>,
     turns: Vec<PgnTurnDataRaw>,
 }
+
+//  FIDE Examples: d8Q, f8N, b1B, g1R
+//  SAN Examples: d8=Q, f8=N, b1=B, g1=R
+//  Alt Examples: d8(Q), f8/N
+#[derive(PartialEq, Debug)]
+pub enum PromotionFormat {
+    FIDE,
+    SAN,
+    Parenthesis,
+    ForwardSlash,
+}
+#[derive(PartialEq, Debug)]
+pub enum AnnotationFormat {
+    Parenthesis,
+    CurlyBracket,
+    SemiColonEOL,
+}
