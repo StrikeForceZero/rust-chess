@@ -3,6 +3,7 @@ use crate::board::board_file::BoardFile;
 use crate::board::board_position::BoardPosition;
 use crate::board::board_rank::BoardRank;
 use crate::chess_move::chess_move::{ChessMove, ChessMoveType};
+use crate::direction::castle_side::CastleSide;
 use crate::piece::chess_piece::ChessPiece;
 use crate::piece::piece::Piece;
 use crate::piece::promotion_piece::PromotionPiece;
@@ -60,10 +61,28 @@ impl PgnMoveDetail {
             promotion,
         }
     }
+
+    pub fn looks_like_castle(&self) -> bool {
+        if self.chess_piece.as_piece() == Piece::King {
+            if let Some(board_file) = self.from_board_file {
+                if board_file == BoardFile::E
+                    // if a king is moving 2 places away its probably a castle
+                    && (*self.to_pos.file() == BoardFile::G || *self.to_pos.file() == BoardFile::C
+                ) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }
 
 impl Display for PgnMoveDetail {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        // handled in PgnMove.to_string()
+        // if self.looks_like_castle() {
+        //     return write!(f, "{}", CastleSide::from_pos(self.to_pos).as_pgn_str());
+        // }
         let piece = match self.chess_piece.as_piece() {
             Piece::Pawn => String::from(""),
             _ => self.chess_piece.as_piece().as_char().to_string(),

@@ -47,7 +47,7 @@ impl PgnMoveDetailBuilder {
         }
         entry
     }
-    pub fn reset(
+    pub fn refresh(
         &mut self,
         chess_piece: ChessPiece,
         board: &Board,
@@ -84,11 +84,17 @@ impl PgnMoveDetailBuilder {
         self
     }
     pub fn build(self) -> Result<PgnMoveDetail, &'static str> {
+        let Some(chess_piece) = self.chess_piece else {
+            return Err("missing chess_piece!")
+        };
+        let Some(to_pos) = self.to_pos else {
+            return Err("missing to_pos!")
+        };
         Ok(PgnMoveDetail {
-            chess_piece: self.chess_piece.expect("missing chess_piece!"),
+            chess_piece,
             from_board_file: self.from_board_file,
             from_board_rank: self.from_board_rank,
-            to_pos: self.to_pos.expect("missing to_pos!"),
+            to_pos,
             is_capture: self.is_capture.unwrap_or(false),
             check_flag: self.check_flag,
             comment: self.comment,

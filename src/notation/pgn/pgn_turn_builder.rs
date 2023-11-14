@@ -28,9 +28,9 @@ impl PgnTurnBuilder {
         self.comment = Some(comment);
         self
     }
-    pub fn build(self) -> Result<PgnTurnData, &'static str> {
+    pub fn build(self) -> Result<PgnTurnData, String> {
         let Some(white_move_builder) = self.white else {
-            return Err("white move data required to build!");
+            return Err("white move data required to build!".into());
         };
 
         let mut black = None;
@@ -91,7 +91,7 @@ mod tests {
         let (from, to) = from_to_tuple;
         // TODO: use move handler
         let (chess_piece, captured_piece) = perform_move(game_state, from, to);
-        turn_builder.get_or_insert(color).get_move_detail_mut().reset(chess_piece, &game_state.board, from, to);
+        turn_builder.get_or_insert(color).get_move_detail_mut().refresh(chess_piece, &game_state.board, from, to);
         turn_builder.get_or_insert(color).get_move_detail_mut().comment = static_str_option_to_string_option(comment);
         match game_state.game_status {
             GameStatus::Check(_) => {
