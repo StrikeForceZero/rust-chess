@@ -1,11 +1,11 @@
 use std::fmt::{Display, Formatter};
-use crate::notation::pgn::pgn_move_detail::PgnMoveDetail;
+use crate::notation::pgn::pgn_move::PgnMove;
 
 #[derive(Debug)]
 pub struct PgnTurnData {
     pub turn_number: usize,
-    pub white: PgnMoveDetail,
-    pub black: Option<PgnMoveDetail>,
+    pub white: PgnMove,
+    pub black: Option<PgnMove>,
     pub comment: Option<String>,
 }
 
@@ -15,7 +15,7 @@ impl Display for PgnTurnData {
         let white = self.white.to_string();
         let mut continuation: String = String::from("");
         let black = if let Some(black) = &self.black {
-            if self.white.comment.is_some() {
+            if self.white.get_move_detail().comment.is_some() {
                 continuation = format!(" {turn_number}...");
             }
             format!(" {black}")

@@ -1,26 +1,27 @@
 use crate::color::Color;
+use crate::notation::pgn::pgn_move_builder::PgnMoveBuilder;
 use crate::notation::pgn::pgn_move_detail_builder::PgnMoveDetailBuilder;
 use crate::notation::pgn::pgn_turn_data::PgnTurnData;
 
 #[derive(Debug, Default)]
 pub struct PgnTurnBuilder {
-    move_number: usize,
-    white: Option<PgnMoveDetailBuilder>,
-    black: Option<PgnMoveDetailBuilder>,
+    turn_number: usize,
+    white: Option<PgnMoveBuilder>,
+    black: Option<PgnMoveBuilder>,
     comment: Option<String>,
 }
 
 impl PgnTurnBuilder {
-    pub fn new(move_number: usize) -> Self {
+    pub fn new(turn_number: usize) -> Self {
         Self {
-            move_number,
+            turn_number,
             ..Default::default()
         }
     }
-    pub fn get_or_insert(&mut self, color: Color) -> &mut PgnMoveDetailBuilder {
+    pub fn get_or_insert(&mut self, color: Color) -> &mut PgnMoveBuilder {
         match color {
-            Color::White => self.white.get_or_insert(PgnMoveDetailBuilder::default()),
-            Color::Black => self.black.get_or_insert(PgnMoveDetailBuilder::default()),
+            Color::White => self.white.get_or_insert(PgnMoveBuilder::default()),
+            Color::Black => self.black.get_or_insert(PgnMoveBuilder::default()),
         }
     }
     pub fn set_comment(&mut self, comment: String) -> &mut Self {
@@ -28,18 +29,18 @@ impl PgnTurnBuilder {
         self
     }
     pub fn build(self) -> Result<PgnTurnData, &'static str> {
-        let Some(white_move_entry_builder) = self.white else {
+        let Some(white_move_builder) = self.white else {
             return Err("white move data required to build!");
         };
 
         let mut black = None;
-        if let Some(black_move_entry_builder) = self.black {
-            black = Some(black_move_entry_builder.build()?);
+        if let Some(black_move_builder) = self.black {
+            black = Some(black_move_builder.build()?);
         };
 
         Ok(PgnTurnData {
-            turn_number: self.move_number,
-            white: white_move_entry_builder.build()?,
+            turn_number: self.turn_number,
+            white: white_move_builder.build()?,
             black,
             comment: self.comment,
         })
@@ -67,7 +68,7 @@ mod tests {
         Some(s.to_string())
     }
 
-    fn handle_move(game_state: &mut GameState, from_pos: BoardPosition, to_pos: BoardPosition) -> (ChessPiece, Option<ChessPiece>) {
+    fn perform_move(game_state: &mut GameState, from_pos: BoardPosition, to_pos: BoardPosition) -> (ChessPiece, Option<ChessPiece>) {
         let chess_piece = game_state.board.get_mut(from_pos).take().expect(&format!("no piece at pos: {from_pos}"));
         let captured_piece = game_state.board.replace(to_pos, Some(chess_piece));
         game_state.active_color = chess_piece.as_color().as_inverse();
@@ -80,8 +81,8 @@ mod tests {
         (chess_piece, captured_piece)
     }
 
-    fn move_and_update_entry(
-        move_builder: &mut PgnTurnBuilder,
+    fn perform_move_and_update_turn_builder(
+        turn_builder: &mut PgnTurnBuilder,
         game_state: &mut GameState,
         from_to_tuple: (BoardPosition, BoardPosition),
         comment: Option<&'static str>,
@@ -89,19 +90,19 @@ mod tests {
         let color = game_state.active_color;
         let (from, to) = from_to_tuple;
         // TODO: use move handler
-        let (chess_piece, captured_piece) = handle_move(game_state, from, to);
-        move_builder.get_or_insert(color).reset(chess_piece, &game_state.board, from, to);
-        move_builder.get_or_insert(color).comment = static_str_option_to_string_option(comment);
+        let (chess_piece, captured_piece) = perform_move(game_state, from, to);
+        turn_builder.get_or_insert(color).get_move_detail_mut().reset(chess_piece, &game_state.board, from, to);
+        turn_builder.get_or_insert(color).get_move_detail_mut().comment = static_str_option_to_string_option(comment);
         match game_state.game_status {
             GameStatus::Check(_) => {
-                move_builder.get_or_insert(color).set_check_flag(PgnCheckFlag::Check);
+                turn_builder.get_or_insert(color).get_move_detail_mut().set_check_flag(PgnCheckFlag::Check);
             },
             GameStatus::CheckMate(_) => {
-                move_builder.get_or_insert(color).set_check_flag(PgnCheckFlag::Mate);
+                turn_builder.get_or_insert(color).get_move_detail_mut().set_check_flag(PgnCheckFlag::Mate);
             },
             _ => {},
         };
-        move_builder.get_or_insert(color).set_is_capture(captured_piece.is_some());
+        turn_builder.get_or_insert(color).get_move_detail_mut().set_is_capture(captured_piece.is_some());
     }
 
     #[rstest]
@@ -143,16 +144,16 @@ mod tests {
     ) -> Result<(), Box<dyn Error>> {
         let mut game_state = deserialize(fen_str)?;
 
-        let mut move_builder = PgnTurnBuilder::new(1);
+        let mut turn_builder = PgnTurnBuilder::new(1);
 
-        move_and_update_entry(&mut move_builder, &mut game_state, a, a_comment);
+        perform_move_and_update_turn_builder(&mut turn_builder, &mut game_state, a, a_comment);
         if let Some(b) = b {
-            move_and_update_entry(&mut move_builder, &mut game_state, b, b_comment);
+            perform_move_and_update_turn_builder(&mut turn_builder, &mut game_state, b, b_comment);
         }
 
-        move_builder.comment = static_str_option_to_string_option(comment);
+        turn_builder.comment = static_str_option_to_string_option(comment);
 
-        assert_eq!(expected, move_builder.build()?.to_string());
+        assert_eq!(expected, turn_builder.build()?.to_string());
 
         Ok(())
     }
