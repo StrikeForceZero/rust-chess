@@ -11,7 +11,7 @@ use crate::notation::pgn::pgn_roster_raw::PgnRosterRaw;
 use crate::notation::pgn::tag_pairs::{parse_tag_pair, PgnTagPairParseError, TagPair, TagPairNameValueTuple};
 
 #[derive(Default, PartialEq, Debug)]
-enum ParserLookingForState {
+enum LexerState {
     #[default]
     TagPair,
 
@@ -31,7 +31,7 @@ enum ParserLookingForState {
     Result,
 }
 
-impl ParserLookingForState {
+impl LexerState {
     pub const fn next(&self) -> Self {
         match self {
             Self::TagPair => Self::TagPair,
@@ -93,9 +93,9 @@ pub struct LineWordPosTuple(Line, Word, Pos);
 
 #[derive(Debug)]
 pub struct ParsingContext<'a> {
-    data: &'a str,
-    line_ix: usize,
-    word_ix: usize,
+    pub(crate) data: &'a str,
+    pub(crate) line_ix: usize,
+    pub(crate) word_ix: usize,
 }
 
 impl<'a> ParsingContext<'a> {
@@ -110,7 +110,7 @@ impl<'a> ParsingContext<'a> {
         self.line_ix = line_ix;
         self.word_ix = word_ix;
     }
-    fn resolve_line_word_pos_tuple(&self) -> LineWordPosTuple {
+    pub(crate) fn resolve_line_word_pos_tuple(&self) -> LineWordPosTuple {
         let lines = self.data.split(NEW_LINE).map(|line| line.split(SPACE).collect_vec()).collect_vec();
         let line_words = lines.get(self.line_ix).expect("context has invalid line index");
         let word = line_words.get(self.word_ix).expect("context has invalid word index");
@@ -124,7 +124,7 @@ impl<'a> ParsingContext<'a> {
 
 #[derive(Default, Debug)]
 pub struct Parser {
-    state: ParserLookingForState,
+    state: LexerState,
     roster_raw: Vec<String>,
     roster: Option<PgnRosterRawPartial>,
     current_turn: Option<PgnTurnDataRawPartial>,
@@ -148,7 +148,7 @@ fn is_result_word(word: &str) -> bool {
 impl Parser {
     fn next_turn(&mut self) {
         trace!("next_turn");
-        self.state = ParserLookingForState::New;
+        self.state = LexerState::New;
     }
     fn next(&mut self) {
         trace!("next");
@@ -168,7 +168,7 @@ impl Parser {
         trace!("parser state: {:?}", self.state);
         trace!("current word: \"{word}\"");
         let res = match self.state {
-            ParserLookingForState::TagPair => {
+            LexerState::TagPair => {
                 if word.is_empty() || word.ends_with('.') {
                     trace!("not tag pair 1");
                     self.next_section();
@@ -187,7 +187,7 @@ impl Parser {
                 }
                 WordHandleResult::NextLine
             }
-            ParserLookingForState::New => {
+            LexerState::New => {
                 if word.is_empty() {
                     trace!("empty");
                     return Ok(WordHandleResult::NextWord);
@@ -231,7 +231,7 @@ impl Parser {
                 self.next();
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::WhiteMove => {
+            LexerState::WhiteMove => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
                     return Err(PgnParsingError::create(&context));
@@ -241,7 +241,7 @@ impl Parser {
                 self.next();
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::WhiteCommentStart => {
+            LexerState::WhiteCommentStart => {
                 self.next();
                 if word.starts_with('{') {
                     trace!("white comment start");
@@ -259,7 +259,7 @@ impl Parser {
                 }
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::WhiteCommentEnd => {
+            LexerState::WhiteCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
                     return Err(PgnParsingError::create(&context));
@@ -290,7 +290,7 @@ impl Parser {
                 }
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::MoveContinuationAfterComment => {
+            LexerState::MoveContinuationAfterComment => {
                 let Some(current_turn) = &self.current_turn else {
                     trace!("no current turn!");
                     return Err(PgnParsingError::create(&context));
@@ -329,7 +329,7 @@ impl Parser {
                     self.handle_word(context, word)?
                 }
             }
-            ParserLookingForState::BlackMove => {
+            LexerState::BlackMove => {
                 if is_result_word(word) {
                     trace!("not black move; is result");
                     self.next_section();
@@ -354,7 +354,7 @@ impl Parser {
                 self.next();
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::BlackCommentStart => {
+            LexerState::BlackCommentStart => {
                 self.next();
                 if word.starts_with('{') {
                     trace!("is black comment start");
@@ -372,7 +372,7 @@ impl Parser {
                 }
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::BlackCommentEnd => {
+            LexerState::BlackCommentEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
                     return Err(PgnParsingError::create(&context));
@@ -404,7 +404,7 @@ impl Parser {
                 }
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::CommentUntilEndOfTheLineStart => {
+            LexerState::CommentUntilEndOfTheLineStart => {
                 if !word.starts_with(';') {
                     trace!("not end of line comment");
                     self.next_turn();
@@ -421,7 +421,7 @@ impl Parser {
                 self.next();
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::CommentUntilEndOfTheLineEnd => {
+            LexerState::CommentUntilEndOfTheLineEnd => {
                 let Some(ref mut current_turn) = &mut self.current_turn else {
                     trace!("no current turn!");
                     return Err(PgnParsingError::create(&context));
@@ -440,7 +440,7 @@ impl Parser {
                 }
                 WordHandleResult::NextWord
             }
-            ParserLookingForState::Result => {
+            LexerState::Result => {
                 if !is_result_word(word) {
                     trace!("not result!");
                     return Err(PgnParsingError::create(&context));
@@ -462,8 +462,8 @@ impl Parser {
         for (line_ix, line) in lines.enumerate() {
             let line_num = line_ix + 1;
             trace!("line {line_num}: \"{line}\"");
-            if parser.state != ParserLookingForState::TagPair {
-                parser.state = ParserLookingForState::New;
+            if parser.state != LexerState::TagPair {
+                parser.state = LexerState::New;
             }
             let words = line.split(" ");
             trace!("words: {:?}", words.clone().collect_vec());

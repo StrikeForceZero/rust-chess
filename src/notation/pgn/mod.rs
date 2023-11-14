@@ -11,6 +11,7 @@ mod pgn_turn_data_raw;
 mod pgn_turn_data_raw_partial;
 mod pgn_move;
 mod pgn_move_builder;
+mod pgn_parsing_error;
 
 #[repr(transparent)]
 #[derive(Clone)]
