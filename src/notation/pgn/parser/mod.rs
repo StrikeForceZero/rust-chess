@@ -59,38 +59,60 @@ macro_rules! for_stack_push_expect_prev_token_to_be_none_or {
     };
 }
 
-fn get_move_detail_for_next<F, M>(
+fn update_move_detail<F, M>(
     turn_builder: &mut Option<PgnTurnBuilder>,
     token_context: &TokenContext,
-    prop_check_fn: F,
+    prop_check_fn: Option<F>,
     mut prop_update_fn: M,
 ) -> Result<(), PgnParsingError>
     where F: Fn(&PgnMoveDetailBuilder) -> bool,
-          M: FnMut(&mut PgnMoveDetailBuilder) -> Result<(), PgnParsingError>
+          M: FnMut(&mut PgnMoveDetailBuilder, Color) -> Result<(), PgnParsingError>
 {
     let Some(ref mut turn_builder) = *turn_builder else {
         return Err(token_context.create_error())
     };
-    let mut color_to_update: Option<Color> = None;
-    if let Some(white) = &turn_builder.white {
-        if prop_check_fn(white.get_move_detail()) {
-            // if white defined, lets check black
-            if let Some(black) = &turn_builder.black {
-                if prop_check_fn(black.get_move_detail()) {
-                    return Err(token_context.create_error());
+    let color = if let Some(prop_check_fn) = prop_check_fn {
+        // check if white has been initialized
+        if let Some(white) = &turn_builder.white {
+            if prop_check_fn(white.get_move_detail()) {
+                // if white's prop is already set, lets check black
+                if let Some(black) = &turn_builder.black {
+                    // black is defined, lets check the prop
+                    if prop_check_fn(black.get_move_detail()) {
+                        // both have it set already so we are in an invalid state
+                        return Err(token_context.create_error());
+                    }
+                    // black did not have prop set yet
+                    Color::Black
+                } else {
+                    // black not initialized yet
+                    Color::Black
                 }
-                color_to_update = Some(Color::Black);
             } else {
-                color_to_update = Some(Color::Black);
+                // white did not have prop set
+                Color::White
             }
         } else {
-            color_to_update = Some(Color::White);
+            // white not initialized yet
+            Color::White
+        }
+    }
+    // since no prop_check_fn we just check if they have been initialized or not
+    else if let Some(_) = &turn_builder.white {
+        // if white defined, lets check black
+        if let Some(_) = &turn_builder.black {
+            // shouldn't have white and black defined by yet, so we're probably more
+            // than 2 moves deep into a turn entry
+            return Err(token_context.create_error());
+        } else {
+            // black not initialized yet
+            Color::Black
         }
     } else {
-        color_to_update = Some(Color::White);
+        // white not initialized yet
+        Color::White
     };
-    let color = color_to_update.unwrap();
-    prop_update_fn(turn_builder.get_or_insert(color).get_move_detail_mut())?;
+    prop_update_fn(turn_builder.get_or_insert(color).get_move_detail_mut(), color)?;
     Ok(())
 }
 
@@ -208,6 +230,7 @@ impl<'a> Parser<'a> {
                 if !is_valid {
                     return Err(cur_token_context.create_error());
                 }
+                // build the previous turn if present
                 if let Some(ref mut turn_builder) = self.state.current_turn.replace(PgnTurnBuilder::new(number)) {
                     let turn = turn_builder.build();
                     match turn {
@@ -226,136 +249,91 @@ impl<'a> Parser<'a> {
                         let Ok(piece) = Piece::from_char(*data) else {
                             return Err(cur_token_context.create_error());
                         };
-                        let Some(ref mut turn_builder) = self.state.current_turn else {
-                            return Err(cur_token_context.create_error())
-                        };
-                        let mut color_to_update: Option<Color> = None;
-                        if let Some(white) = &turn_builder.white {
-                            // if white defined, lets check black
-                            if let Some(black) = &turn_builder.black {
-                                // shouldn't have white and black defined by yet, so probably more than 2 moves in a turn
-                                return Err(cur_token_context.create_error());
-                            } else {
-                                color_to_update = Some(Color::Black);
-                            };
-                        } else {
-                            color_to_update = Some(Color::White);
-                        };
-                        let color = color_to_update.unwrap();
-                        let move_detail = turn_builder.get_or_insert(color).get_move_detail_mut();
-                        move_detail.chess_piece = Some(piece.as_chess_piece(color));
+                        update_move_detail(
+                            &mut self.state.current_turn,
+                            cur_token_context,
+                            Option::<&dyn Fn(&PgnMoveDetailBuilder) -> bool>::None,
+                            |move_detail, color| {
+                                move_detail.chess_piece = Some(piece.as_chess_piece(color));
+                                Ok(())
+                            },
+                        )?;
                     }
                     _ => return Err(cur_token_context.create_error())
                 }
             }
             Token::MovingFrom(data) => {
-                let Some(ref mut turn_builder) = self.state.current_turn else {
-                    return Err(cur_token_context.create_error())
-                };
-                let mut color_to_update: Option<Color> = None;
-                if let Some(white) = &turn_builder.white {
-                    if white.get_move_detail().has_from() {
-                        // if white defined, lets check black
-                        if let Some(black) = &turn_builder.black {
-                            if black.get_move_detail().has_from() {
-                                return Err(cur_token_context.create_error());
+                update_move_detail(
+                    &mut self.state.current_turn,
+                    cur_token_context,
+                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                        move_detail.has_from()
+                    }),
+                    |move_detail, color| {
+                        match data {
+                            char_match!(file) => {
+                                match BoardFile::from_char(*data) {
+                                    Ok(board_file) => move_detail.from_board_file = Some(board_file),
+                                    Err(err) => {
+                                        error!("error parsing file - inner error: {err:?}");
+                                        return Err(cur_token_context.create_error());
+                                    }
+                                }
+                            },
+                            char_match!(rank) => {
+                                match BoardRank::from_char(*data) {
+                                    Ok(board_rank) => move_detail.from_board_rank = Some(board_rank),
+                                    Err(err) => {
+                                        error!("error parsing rank - inner error: {err:?}");
+                                        return Err(cur_token_context.create_error());
+                                    }
+                                }
                             }
-                            color_to_update = Some(Color::Black);
-                        } else {
-                            color_to_update = Some(Color::Black);
-                        }
-                    } else {
-                        color_to_update = Some(Color::White);
-                    }
-                } else {
-                    color_to_update = Some(Color::White);
-                };
-                let color = color_to_update.unwrap();
-                let move_detail = turn_builder.get_or_insert(color).get_move_detail_mut();
-                match data {
-                    char_match!(file) => {
-                        match BoardFile::from_char(*data) {
-                            Ok(board_file) => move_detail.from_board_file = Some(board_file),
-                            Err(err) => {
-                                error!("error parsing file - inner error: {err:?}");
+                            _ => {
                                 return Err(cur_token_context.create_error());
                             }
                         }
+                        // if we don't have a piece set we should assume its a pawn
+                        if move_detail.chess_piece.is_none() {
+                            move_detail.chess_piece = Some(Piece::Pawn.as_chess_piece(color));
+                        }
+                        Ok(())
                     },
-                    char_match!(rank) => {
-                        match BoardRank::from_char(*data) {
-                            Ok(board_rank) => move_detail.from_board_rank = Some(board_rank),
-                            Err(err) => {
-                                error!("error parsing rank - inner error: {err:?}");
-                                return Err(cur_token_context.create_error());
-                            }
-                        }
-                    }
-                    _ => {
-                        return Err(cur_token_context.create_error());
-                    }
-                }
-                if move_detail.chess_piece.is_none() {
-                    move_detail.chess_piece = Some(Piece::Pawn.as_chess_piece(color));
-                }
+                )?;
             }
             Token::CaptureIndicator => {
-                let Some(ref mut turn_builder) = self.state.current_turn else {
-                    return Err(cur_token_context.create_error())
-                };
-                let mut color_to_update: Option<Color> = None;
-                if let Some(white) = &turn_builder.white {
-                    if white.get_move_detail().is_capture.is_some() {
-                        // if white defined, lets check black
-                        if let Some(black) = &turn_builder.black {
-                            if black.get_move_detail().is_capture.is_some() {
-                                return Err(cur_token_context.create_error());
-                            }
-                            color_to_update = Some(Color::Black);
-                        } else {
-                            color_to_update = Some(Color::Black);
-                        }
-                    } else {
-                        color_to_update = Some(Color::White);
+                update_move_detail(
+                    &mut self.state.current_turn,
+                    cur_token_context,
+                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                        // need to prevent setting the capture for whites move by considering
+                        // ones that already have to_pos set
+                        move_detail.to_pos.is_some() || move_detail.is_capture.is_some()
+                    }),
+                    |move_detail, color| {
+                        move_detail.is_capture = Some(true);
+                        Ok(())
                     }
-                } else {
-                    color_to_update = Some(Color::White);
-                };
-                let color = color_to_update.unwrap();
-                let move_detail = turn_builder.get_or_insert(color).get_move_detail_mut();
-                move_detail.is_capture = Some(true);
+                )?;
             }
             Token::MovingTo(data) => {
-                let Some(ref mut turn_builder) = self.state.current_turn else {
-                    return Err(cur_token_context.create_error())
-                };
-                let mut color_to_update: Option<Color> = None;
-                if let Some(white) = &turn_builder.white {
-                    if white.get_move_detail().to_pos.is_some() {
-                        // if white defined, lets check black
-                        if let Some(black) = &turn_builder.black {
-                            if black.get_move_detail().to_pos.is_some() {
+                update_move_detail(
+                    &mut self.state.current_turn,
+                    cur_token_context,
+                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                        move_detail.to_pos.is_some()
+                    }),
+                    |move_detail, color| {
+                        match BoardPosition::from_str(data) {
+                            Ok(board_pos) => move_detail.to_pos = Some(board_pos),
+                            Err(err) => {
+                                error!("error parsing to pos - inner error: {err:?}");
                                 return Err(cur_token_context.create_error());
                             }
-                            color_to_update = Some(Color::Black);
-                        } else {
-                            color_to_update = Some(Color::Black);
                         }
-                    } else {
-                        color_to_update = Some(Color::White);
+                        Ok(())
                     }
-                } else {
-                    color_to_update = Some(Color::White);
-                };
-                let color = color_to_update.unwrap();
-                let move_detail = turn_builder.get_or_insert(color).get_move_detail_mut();
-                match BoardPosition::from_str(data) {
-                    Ok(board_pos) => move_detail.to_pos = Some(board_pos),
-                    Err(err) => {
-                        error!("error parsing to pos - inner error: {err:?}");
-                        return Err(cur_token_context.create_error());
-                    }
-                }
+                )?;
             }
             Token::PromotionStart(_) => {}
             Token::Promotion(_) => {}
