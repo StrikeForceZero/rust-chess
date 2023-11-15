@@ -4,8 +4,12 @@ use crate::notation::pgn::lexer::{Lexer, };
 use crate::notation::pgn::lexer::token::{Token, WhiteSpaceToken};
 use crate::notation::pgn::lexer::token_with_context::TokenWithContext;
 use crate::notation::pgn::pgn_data_partial::PgnDataPartial;
+use crate::notation::pgn::pgn_move_builder::PgnMoveBuilder;
+use crate::notation::pgn::pgn_move_detail_builder::PgnMoveDetailBuilder;
 use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
+use crate::notation::pgn::pgn_roster_partial::PgnRosterPartial;
 use crate::notation::pgn::pgn_roster_raw_partial::PgnRosterRawPartial;
+use crate::notation::pgn::pgn_turn_builder::PgnTurnBuilder;
 use crate::notation::pgn::pgn_turn_data::PgnTurnData;
 use crate::notation::pgn::tag_pairs::{parse_tag_pair, PgnTagPairParseError, resolve_tag_pair, TagPair, TagPairNameValueTuple};
 use crate::utils::char::{NEW_LINE, SPACE};
@@ -13,7 +17,7 @@ use crate::utils::char::{NEW_LINE, SPACE};
 #[derive(Default, Debug)]
 pub struct ParserState {
     token_stack: VecDeque<Token>,
-    roster: Option<PgnRosterRawPartial>,
+    roster: Option<PgnRosterPartial>,
     current_turn: Option<PgnTurnData>,
     turns: Vec<PgnTurnData>,
 }
@@ -31,7 +35,7 @@ macro_rules! for_stack_push_expect_prev_token_to_be {
                 $self.state.token_stack.push_back(token);
             },
             _ => return Err(token_context.create_error())
-        }
+        };
     };
 }
 
@@ -43,7 +47,7 @@ macro_rules! for_stack_push_expect_prev_token_to_be_none_or {
                 $self.state.token_stack.push_back(token);
             },
             _ => return Err(token_context.create_error())
-        }
+        };
     };
 }
 
@@ -88,16 +92,6 @@ impl Parser {
         }
         res
     }
-    fn unwrap_result_or_bubble_context_error<T>(token_with_context: &TokenWithContext, res: Result<T, PgnParsingError>) -> Result<T, PgnParsingError> {
-        Ok(match res {
-            Ok(value) => value,
-            Err(err) => {
-                let TokenWithContext(ref token, ref token_context) = token_with_context;
-                error!("inner error: {err:?}");
-                return Err(token_context.create_error());
-            }
-        })
-    }
     pub fn parse(data: &str) -> Result<PgnDataPartial, PgnParsingError> {
         let mut parser = Self::init();
         let mut pgn_data = PgnDataPartial::default();
@@ -107,7 +101,7 @@ impl Parser {
         }
 
         if let Some(ref mut raw_roster) = parser.state.roster.take() {
-            pgn_data.roster = Some(raw_roster.build()?.build()?);
+            pgn_data.roster = Some(raw_roster.build()?);
         }
         if !parser.state.turns.is_empty() {
             pgn_data.turns = Some(parser.state.turns);
@@ -143,18 +137,79 @@ impl Parser {
                     }
                 };
                 match tag_pair {
-                    TagPair::Event(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).event = Some(data),
-                    TagPair::Site(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).site = Some(data),
-                    TagPair::Date(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).date = Some(data),
-                    TagPair::Round(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).round = Some(data),
-                    TagPair::White(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).white = Some(data),
-                    TagPair::Black(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).black = Some(data),
-                    TagPair::Result(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).result = Some(data),
-                    TagPair::Fen(data) => self.state.roster.get_or_insert(PgnRosterRawPartial::default()).fen = Some(data),
+                    TagPair::Event(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).event = Some(data),
+                    TagPair::Site(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).site = Some(data),
+                    TagPair::Date(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).date = Some(data),
+                    TagPair::Round(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).round = Some(data),
+                    TagPair::White(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).white = Some(data),
+                    TagPair::Black(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).black = Some(data),
+                    TagPair::Result(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).result = Some(data),
+                    TagPair::Fen(data) => self.state.roster.get_or_insert(PgnRosterPartial::default()).fen = Some(data),
                 }
                 self.state.token_stack.clear();
             }
-            Token::TurnBegin(_) => {}
+            Token::TurnBegin(_) => {
+                match self.state.token_stack.back() {
+                    None
+                    | Some(Token::NewLine(_))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterMovingTo))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterPromotion))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterPromotionEnd))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterCheckIndicator))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterCheckMateIndicator))
+                    | Some(Token::WhiteSpace(WhiteSpaceToken::AfterAnnotation))
+                    | Some(Token::MovingTo(_))
+                    | Some(Token::Promotion(_))
+                    | Some(Token::PromotionEnd(_))
+                    | Some(Token::CheckIndicator(_))
+                    | Some(Token::CheckMateIndicator(_))
+                    | Some(Token::Annotation(_))
+                    | Some(Token::AnnotationEnd(_)) => {
+                        let old_entry = self.build_string_from_stack();
+                        if !old_entry.trim().is_empty() {
+                            let mut turn_builder: Option<PgnTurnBuilder> = None;
+                            for token in self.state.token_stack.iter() {
+                                match token {
+                                    Token::TurnBegin(data) => {
+                                        let number_str = &data[0..data.len() - 1];
+                                        let Ok(number) = number_str.parse::<usize>() else {
+                                            return Err(token_context.create_error());
+                                        };
+                                        let mut last_number = if let Some(last_turn) = self.state.turns.last() {
+                                            last_turn.turn_number
+                                        } else {
+                                            0
+                                        };
+                                        let expected_number = last_number + 1;
+                                        let is_valid = number.is_ok() && data.ends_with('.') && expected_number == number;
+                                        turn_builder.get_or_insert(PgnTurnBuilder::new())
+                                    }
+                                    Token::PieceMoving(data) => {}
+                                    Token::MovingFrom(data) => {}
+                                    Token::CaptureIndicator => {}
+                                    Token::MovingTo(data) => {}
+                                    Token::PromotionStart(data) => {}
+                                    Token::Promotion(data) => {}
+                                    Token::PromotionEnd(data) => {}
+                                    Token::CheckIndicator(data) => {}
+                                    Token::CheckMateIndicator(data) => {}
+                                    Token::AnnotationStart(data) => {}
+                                    Token::Annotation(data) => {}
+                                    Token::AnnotationEnd(data) => {}
+                                    Token::MoveQuality(data) => {}
+                                    Token::Nag(data) => {}
+                                    Token::TurnContinuation(data) => {}
+                                    _ => {}
+                                }
+                            }
+                        }
+                        self.state.token_stack.clear();
+                        let TokenWithContext(token, _) = token_with_context;
+                        self.state.token_stack.push_back(token);
+                    },
+                    _ => return Err(token_context.create_error())
+                };
+            }
             Token::PieceMoving(_) => {}
             Token::MovingFrom(_) => {}
             Token::CaptureIndicator => {}

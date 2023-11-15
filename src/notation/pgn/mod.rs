@@ -17,6 +17,7 @@ mod parser;
 mod lexer;
 mod pgn_data;
 mod pgn_data_partial;
+mod pgn_roster_partial;
 
 #[repr(transparent)]
 #[derive(Clone)]
