@@ -59,46 +59,17 @@ macro_rules! for_stack_push_expect_prev_token_to_be_none_or {
     };
 }
 
-fn update_move_detail<F, M>(
+fn init_move_detail<F>(
     turn_builder: &mut Option<PgnTurnBuilder>,
     token_context: &TokenContext,
-    prop_check_fn: Option<F>,
-    mut prop_update_fn: M,
+    mut prop_update_fn: F,
 ) -> Result<(), PgnParsingError>
-    where F: Fn(&PgnMoveDetailBuilder) -> bool,
-          M: FnMut(&mut PgnMoveDetailBuilder, Color) -> Result<(), PgnParsingError>
+    where F: FnMut(&mut PgnMoveDetailBuilder, Color) -> Result<(), PgnParsingError>
 {
     let Some(ref mut turn_builder) = *turn_builder else {
         return Err(token_context.create_error())
     };
-    let color = if let Some(prop_check_fn) = prop_check_fn {
-        // check if white has been initialized
-        if let Some(white) = &turn_builder.white {
-            if prop_check_fn(white.get_move_detail()) {
-                // if white's prop is already set, lets check black
-                if let Some(black) = &turn_builder.black {
-                    // black is defined, lets check the prop
-                    if prop_check_fn(black.get_move_detail()) {
-                        // both have it set already so we are in an invalid state
-                        return Err(token_context.create_error());
-                    }
-                    // black did not have prop set yet
-                    Color::Black
-                } else {
-                    // black not initialized yet
-                    Color::Black
-                }
-            } else {
-                // white did not have prop set
-                Color::White
-            }
-        } else {
-            // white not initialized yet
-            Color::White
-        }
-    }
-    // since no prop_check_fn we just check if they have been initialized or not
-    else if let Some(_) = &turn_builder.white {
+    let color = if let Some(_) = &turn_builder.white {
         // if white defined, lets check black
         if let Some(_) = &turn_builder.black {
             // shouldn't have white and black defined by yet, so we're probably more
@@ -107,6 +78,46 @@ fn update_move_detail<F, M>(
         } else {
             // black not initialized yet
             Color::Black
+        }
+    } else {
+        // white not initialized yet
+        Color::White
+    };
+    prop_update_fn(turn_builder.get_or_insert(color).get_move_detail_mut(), color)?;
+    Ok(())
+}
+
+fn update_move_detail<F, M>(
+    turn_builder: &mut Option<PgnTurnBuilder>,
+    token_context: &TokenContext,
+    prop_check_fn: F,
+    mut prop_update_fn: M,
+) -> Result<(), PgnParsingError>
+    where F: Fn(&PgnMoveDetailBuilder) -> bool,
+          M: FnMut(&mut PgnMoveDetailBuilder, Color) -> Result<(), PgnParsingError>
+{
+    let Some(ref mut turn_builder) = *turn_builder else {
+        return Err(token_context.create_error())
+    };
+    // check if white has been initialized
+    let color = if let Some(white) = &turn_builder.white {
+        if prop_check_fn(white.get_move_detail()) {
+            // if white's prop is already set, lets check black
+            if let Some(black) = &turn_builder.black {
+                // black is defined, lets check the prop
+                if prop_check_fn(black.get_move_detail()) {
+                    // both have it set already so we are in an invalid state
+                    return Err(token_context.create_error());
+                }
+                // black did not have prop set yet
+                Color::Black
+            } else {
+                // black not initialized yet
+                Color::Black
+            }
+        } else {
+            // white did not have prop set
+            Color::White
         }
     } else {
         // white not initialized yet
@@ -249,10 +260,9 @@ impl<'a> Parser<'a> {
                         let Ok(piece) = Piece::from_char(*data) else {
                             return Err(cur_token_context.create_error());
                         };
-                        update_move_detail(
+                        init_move_detail(
                             &mut self.state.current_turn,
                             cur_token_context,
-                            Option::<&dyn Fn(&PgnMoveDetailBuilder) -> bool>::None,
                             |move_detail, color| {
                                 move_detail.chess_piece = Some(piece.as_chess_piece(color));
                                 Ok(())
@@ -266,9 +276,9 @@ impl<'a> Parser<'a> {
                 update_move_detail(
                     &mut self.state.current_turn,
                     cur_token_context,
-                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                    |move_detail| {
                         move_detail.has_from()
-                    }),
+                    },
                     |move_detail, color| {
                         match data {
                             char_match!(file) => {
@@ -305,11 +315,11 @@ impl<'a> Parser<'a> {
                 update_move_detail(
                     &mut self.state.current_turn,
                     cur_token_context,
-                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                    |move_detail| {
                         // need to prevent setting the capture for whites move by considering
                         // ones that already have to_pos set
                         move_detail.to_pos.is_some() || move_detail.is_capture.is_some()
-                    }),
+                    },
                     |move_detail, color| {
                         move_detail.is_capture = Some(true);
                         Ok(())
@@ -320,9 +330,9 @@ impl<'a> Parser<'a> {
                 update_move_detail(
                     &mut self.state.current_turn,
                     cur_token_context,
-                    Some(|move_detail: &PgnMoveDetailBuilder| {
+                    |move_detail| {
                         move_detail.to_pos.is_some()
-                    }),
+                    },
                     |move_detail, color| {
                         match BoardPosition::from_str(data) {
                             Ok(board_pos) => move_detail.to_pos = Some(board_pos),
