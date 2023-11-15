@@ -1,3 +1,5 @@
+use tracing::{debug, instrument};
+
 #[derive(PartialEq, Debug)]
 pub enum WhiteSpaceToken {
     AfterNewLine,
@@ -43,10 +45,4 @@ pub enum Token {
     NewLine,
     WhiteSpace(WhiteSpaceToken),
     MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String),
-}
-
-impl PartialEq<&Token> for Token {
-    fn eq(&self, other: &&Token) -> bool {
-        *self == *other
-    }
 }

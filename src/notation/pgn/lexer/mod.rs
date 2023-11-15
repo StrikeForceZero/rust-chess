@@ -91,7 +91,7 @@ impl<'a> Lexer<'a> {
             '0' | '1' | '2' => {
                 self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
             },
-            'a'..='f' | '1'..='8' => {
+            'a'..='h' | '1'..='8' => {
                 self.state.push_token(Token::MovingFrom(current_char))
             },
             _ => self.state.push_token(Token::Unknown(String::from(current_char))),
@@ -115,7 +115,7 @@ impl<'a> Lexer<'a> {
                 'K' | 'Q' | 'B' | 'N' | 'R' => {
                     self.state.push_token(Token::PieceMoving(current_char));
                 },
-                'a'..='f' => {
+                'a'..='h' => {
                     self.state.push_token(Token::MovingFrom(current_char))
                 },
                 '*' => {
@@ -196,7 +196,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::PieceMoving(char) => {
                         match current_char {
-                            'a'..='f' | '1'..='8' => {
+                            'a'..='h' | '1'..='8' => {
                                 self.state.push_token(Token::MovingFrom(current_char))
                             },
                             _ => {
@@ -206,7 +206,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::MovingFrom(char) => {
                         match current_char {
-                            'a'..='f' | '1'..='8' => {
+                            'a'..='h' | '1'..='8' => {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
                             },
                             'x' => {
@@ -219,7 +219,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::CaptureIndicator => {
                         match current_char {
-                            'a'..='f' | '1'..='8' => {
+                            'a'..='h' | '1'..='8' => {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
                             },
                             _ => {
@@ -229,7 +229,7 @@ impl<'a> Lexer<'a> {
                     }
                     Token::MovingTo(str) => {
                         match current_char {
-                            'a'..='f' | '1'..='8' => {
+                            'a'..='h' | '1'..='8' => {
                                 if str.len() <= 2 {
                                     self.state.push_token(Token::MovingTo(String::from(current_char)))
                                 } else {
@@ -459,7 +459,7 @@ impl<'a> Lexer<'a> {
                                     'K' | 'Q' | 'B' | 'N' | 'R' => {
                                         self.state.push_token(Token::PieceMoving(current_char));
                                     },
-                                    'a'..='f' | '1'..='8' => {
+                                    'a'..='h' | '1'..='8' => {
                                         self.state.push_token(Token::MovingFrom(current_char))
                                     },
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char)))
@@ -495,7 +495,7 @@ impl<'a> Lexer<'a> {
                                         'K' | 'Q' | 'B' | 'N' | 'R' => {
                                             self.state.push_token(Token::PieceMoving(current_char));
                                         },
-                                        'a'..='f' => {
+                                        'a'..='h' => {
                                             self.state.push_token(Token::MovingFrom(current_char))
                                         },
                                         '*' => {
@@ -528,7 +528,7 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    'a'..='f' | '1'..='8' => {
+                                    'a'..='h' | '1'..='8' => {
                                         self.state.push_token(Token::MovingFrom(current_char))
                                     },
                                     _ => {
@@ -569,7 +569,7 @@ impl<'a> Lexer<'a> {
                                         *token = Token::Unknown(format!("{str}{current_char}"));
                                     }
                                 },
-                                'a'..='f' | '1'..='8' => {
+                                'a'..='h' | '1'..='8' => {
                                     if str.len() == 1 {
                                         trace!("replacing with MovingFrom");
                                         *token = Token::MovingFrom(str.chars().next().expect("impossible"));
@@ -613,6 +613,7 @@ impl<'a> Lexer<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::hint::black_box;
     use itertools::Itertools;
     use super::*;
     use rstest::rstest;
@@ -644,6 +645,63 @@ mod tests {
             GameTermination("*".into()),
         ],
     )]
+    #[case(
+        "[Event \"Some Event\"]\n\
+        \n\
+        1. e4 {white comment} 1... d5 {black comment} 2. e4 !! d5 !? ; end of line comment\n\
+        3. Qh8# $1\n\
+        1-0",
+        vec![
+            TagPairStart('['),
+            TagPairName("Event".into()),
+            WhiteSpace(AfterTagPairName),
+            TagPairValue("\"Some Event\"".into()),
+            TagPairEnd(']'),
+            NewLine,
+            NewLine,
+            TurnBegin("1.".into()),
+            WhiteSpace(AfterTurnBegin),
+            MovingFrom('e'),
+            MovingTo("4".into()),
+            WhiteSpace(AfterMovingTo),
+            AnnotationStart('{'),
+            Annotation("white comment".into()),
+            AnnotationEnd('}'),
+            WhiteSpace(AfterAnnotationEnd),
+            TurnContinuation("1... ".into()),
+            WhiteSpace(AfterTurnContinuation),
+            MovingFrom('d'),
+            MovingTo("5".into()),
+            WhiteSpace(AfterMovingTo),
+            AnnotationStart('{'),
+            Annotation("black comment".into()),
+            AnnotationEnd('}'),
+            WhiteSpace(AfterAnnotationEnd),
+            TurnBegin("2. ".into()),
+            WhiteSpace(AfterTurnBegin),
+            MovingFrom('e'),
+            MovingTo("4".into()),
+            WhiteSpace(AfterMovingTo),
+            MoveQuality("!!".into()),
+            WhiteSpace(AfterMoveQuality),
+            MovingFrom('d'),
+            MovingTo("5".into()),
+            WhiteSpace(AfterMovingTo),
+            MoveQuality("!?".into()),
+            WhiteSpace(AfterMoveQuality),
+            Annotation("; end of line comment".into()),
+            NewLine,
+            TurnBegin("3.".into()),
+            WhiteSpace(AfterTurnBegin),
+            PieceMoving('Q'),
+            MovingFrom('h'),
+            MovingTo("8".into()),
+            CheckMateIndicator('#'),
+            WhiteSpace(AfterCheckMateIndicator),
+            Nag("$1".into()),
+            GameTermination("1-0".into()),
+        ],
+    )]
     fn test_lex(
         #[case] input: &'static str,
         #[case] expected: Vec<Token>,
@@ -651,7 +709,7 @@ mod tests {
         init_tracing();
         let tokens_with_context = Lexer::lex(input);
         let tokens = tokens_with_context.iter().map(|TokenWithContext(token, _)| token).collect_vec();
-        assert_eq!(expected, tokens);
+        assert_eq!(expected.iter().collect_vec(), tokens);
     }
 }
 
