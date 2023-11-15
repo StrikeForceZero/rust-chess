@@ -8,6 +8,13 @@ use crate::utils::char;
 mod token;
 mod token_context;
 mod token_with_context;
+macro_rules! char_match {
+    (rank) => { '1'..='8' };
+    (file) => { 'a'..='h' };
+    (promotion) => { 'K' | 'Q' | 'B' | 'N' | 'R' };
+}
+
+
 
 #[derive(Debug, Default)]
 pub struct LexerState<'a> {
@@ -51,7 +58,7 @@ impl<'a> Lexer<'a> {
         } else {
             match current_char {
                 '[' => self.state.push_token(Token::TagPairStart(current_char)),
-                char::NEW_LINE => self.state.push_token(Token::NewLine),
+                char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNewLine)),
                 char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNewLine)),
                 '0' | '1' | '2' | '/' | '-' | '*' => {
                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
@@ -82,7 +89,7 @@ impl<'a> Lexer<'a> {
             '{' | ';' => {
                 self.state.push_token(Token::AnnotationStart(current_char));
             }
-            'K' | 'Q' | 'B' | 'N' | 'R' => {
+            char_match!(promotion) => {
                 self.state.push_token(Token::PieceMoving(current_char));
             },
             '*' => {
@@ -91,7 +98,7 @@ impl<'a> Lexer<'a> {
             '0' | '1' | '2' => {
                 self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
             },
-            'a'..='h' | '1'..='8' => {
+            char_match!(file) | char_match!(rank) => {
                 self.state.push_token(Token::MovingFrom(current_char))
             },
             _ => self.state.push_token(Token::Unknown(String::from(current_char))),
@@ -110,12 +117,12 @@ impl<'a> Lexer<'a> {
                     trace!("skipping ' '");
                 },
                 char::NEW_LINE => {
-                    self.state.push_token(Token::NewLine);
+                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNag));
                 }
-                'K' | 'Q' | 'B' | 'N' | 'R' => {
+                char_match!(promotion) => {
                     self.state.push_token(Token::PieceMoving(current_char));
                 },
-                'a'..='h' => {
+                char_match!(file) => {
                     self.state.push_token(Token::MovingFrom(current_char))
                 },
                 '*' => {
@@ -124,7 +131,7 @@ impl<'a> Lexer<'a> {
                 '0' | '1' | '2' => {
                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                 },
-                '1'..='9' => {
+                char_match!(rank) => {
                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                 },
                 ';' => {
@@ -157,7 +164,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::TagPairName(ref mut str) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine),
+                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairName)),
                             char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTagPairName)),
                             ']' => self.state.push_token(Token::TagPairEnd(current_char)),
                             _ => str.push(current_char),
@@ -171,7 +178,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::TagPairEnd(_) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine),
+                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairEnd)),
                             char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTagPairEnd)),
                             _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                         }
@@ -196,7 +203,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::PieceMoving(char) => {
                         match current_char {
-                            'a'..='h' | '1'..='8' => {
+                            char_match!(file) | char_match!(rank) => {
                                 self.state.push_token(Token::MovingFrom(current_char))
                             },
                             _ => {
@@ -206,7 +213,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::MovingFrom(char) => {
                         match current_char {
-                            'a'..='h' | '1'..='8' => {
+                            char_match!(file) | char_match!(rank) => {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
                             },
                             'x' => {
@@ -219,7 +226,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::CaptureIndicator => {
                         match current_char {
-                            'a'..='h' | '1'..='8' => {
+                            char_match!(file) | char_match!(rank) => {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
                             },
                             _ => {
@@ -229,14 +236,14 @@ impl<'a> Lexer<'a> {
                     }
                     Token::MovingTo(str) => {
                         match current_char {
-                            'a'..='h' | '1'..='8' => {
+                            char_match!(file) | char_match!(rank) => {
                                 if str.len() <= 2 {
                                     self.state.push_token(Token::MovingTo(String::from(current_char)))
                                 } else {
                                     self.state.push_token(Token::Unknown(String::from(current_char)));
                                 }
                             },
-                            'K' | 'Q' | 'B' | 'N' | 'R' => {
+                            char_match!(promotion) => {
                                 self.state.push_token(Token::Promotion(current_char));
                             }
                             '=' | '(' | '/' => {
@@ -258,7 +265,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::PromotionStart(char) => {
                         match current_char {
-                            'K' | 'Q' | 'B' | 'N' | 'R' => {
+                            char_match!(promotion) => {
                                 self.state.push_token(Token::Promotion(current_char));
                             }
                             _ => {
@@ -358,7 +365,7 @@ impl<'a> Lexer<'a> {
                     Token::Annotation(str) => {
                         match current_char {
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine);
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotation));
                             }
                             '}' => {
                                 self.state.push_token(Token::AnnotationEnd(current_char));
@@ -371,7 +378,7 @@ impl<'a> Lexer<'a> {
                     Token::AnnotationEnd(char) => {
                         match current_char {
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine);
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotationEnd));
                             }
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterAnnotationEnd));
@@ -416,14 +423,11 @@ impl<'a> Lexer<'a> {
                     },
                     Token::Unknown(ref mut str) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine),
+                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterUnknown)),
                             _ => str.push(current_char),
                         }
                     },
-                    Token::NewLine => {
-                        self.handle_char_after_newline(&current_char);
-                    },
-                    Token::WhiteSpace(white_space_token) => {
+                    Token::NewLine(white_space_token) | Token::WhiteSpace(white_space_token) => {
                         match white_space_token {
                             WhiteSpaceToken::AfterNewLine => self.handle_char_after_newline(&current_char),
                             WhiteSpaceToken::AfterTagPairName => {
@@ -446,7 +450,7 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    char::NEW_LINE => self.state.push_token(Token::NewLine),
+                                    char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairEnd)),
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                                 }
                             }
@@ -456,10 +460,10 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    'K' | 'Q' | 'B' | 'N' | 'R' => {
+                                    char_match!(promotion) => {
                                         self.state.push_token(Token::PieceMoving(current_char));
                                     },
-                                    'a'..='h' | '1'..='8' => {
+                                    char_match!(file) | char_match!(rank) => {
                                         self.state.push_token(Token::MovingFrom(current_char))
                                     },
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char)))
@@ -490,12 +494,12 @@ impl<'a> Lexer<'a> {
                                             trace!("skipping ' '");
                                         },
                                         char::NEW_LINE => {
-                                            self.state.push_token(Token::NewLine);
+                                            self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotationEnd));
                                         }
-                                        'K' | 'Q' | 'B' | 'N' | 'R' => {
+                                        char_match!(promotion) => {
                                             self.state.push_token(Token::PieceMoving(current_char));
                                         },
-                                        'a'..='h' => {
+                                        char_match!(file) => {
                                             self.state.push_token(Token::MovingFrom(current_char))
                                         },
                                         '*' => {
@@ -504,7 +508,7 @@ impl<'a> Lexer<'a> {
                                         '0' | '1' | '2' => {
                                             self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                         },
-                                        '1'..='8' => {
+                                        char_match!(rank) => {
                                             self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                         },
                                         ';' => {
@@ -528,13 +532,19 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    'a'..='h' | '1'..='8' => {
+                                    char_match!(file) | char_match!(rank) => {
                                         self.state.push_token(Token::MovingFrom(current_char))
                                     },
                                     _ => {
                                         self.state.push_token(Token::Unknown(String::from(current_char)));
                                     }
                                 }
+                            }
+                            WhiteSpaceToken::AfterAnnotation => {
+                                self.handle_char_after_newline(&current_char);
+                            }
+                            WhiteSpaceToken::AfterUnknown => {
+                                self.handle_char_after_newline(&current_char);
                             }
                         }
                     }
@@ -569,7 +579,7 @@ impl<'a> Lexer<'a> {
                                         *token = Token::Unknown(format!("{str}{current_char}"));
                                     }
                                 },
-                                'a'..='h' | '1'..='8' => {
+                                char_match!(file) | char_match!(rank) => {
                                     if str.len() == 1 {
                                         trace!("replacing with MovingFrom");
                                         *token = Token::MovingFrom(str.chars().next().expect("impossible"));
@@ -582,7 +592,7 @@ impl<'a> Lexer<'a> {
                                 char::NEW_LINE => {
                                     trace!("replacing with Unknown");
                                     *token = Token::Unknown(str.clone());
-                                    self.state.push_token(Token::NewLine);
+                                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterUnknown));
                                 },
                                 _ => {
                                     trace!("replacing with Unknown");
@@ -632,8 +642,8 @@ mod tests {
             WhiteSpace(AfterTagPairName),
             TagPairValue("\"Some Event\"".into()),
             TagPairEnd(']'),
-            NewLine,
-            NewLine,
+            NewLine(AfterTagPairEnd),
+            NewLine(AfterNewLine),
             TurnBegin("1.".into()),
             WhiteSpace(AfterTurnBegin),
             MovingFrom('e'),
@@ -657,8 +667,8 @@ mod tests {
             WhiteSpace(AfterTagPairName),
             TagPairValue("\"Some Event\"".into()),
             TagPairEnd(']'),
-            NewLine,
-            NewLine,
+            NewLine(AfterTagPairEnd),
+            NewLine(AfterNewLine),
             TurnBegin("1.".into()),
             WhiteSpace(AfterTurnBegin),
             MovingFrom('e'),
@@ -690,7 +700,7 @@ mod tests {
             MoveQuality("!?".into()),
             WhiteSpace(AfterMoveQuality),
             Annotation("; end of line comment".into()),
-            NewLine,
+            NewLine(AfterAnnotation),
             TurnBegin("3.".into()),
             WhiteSpace(AfterTurnBegin),
             PieceMoving('Q'),

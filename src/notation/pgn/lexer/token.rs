@@ -11,10 +11,12 @@ pub enum WhiteSpaceToken {
     AfterPromotionEnd,
     AfterCheckIndicator,
     AfterCheckMateIndicator,
+    AfterAnnotation,
     AfterAnnotationEnd,
     AfterMoveQuality,
     AfterNag,
     AfterTurnContinuation,
+    AfterUnknown,
 }
 
 
@@ -42,7 +44,7 @@ pub enum Token {
     TurnContinuation(String),
     GameTermination(String),
     Unknown(String),
-    NewLine,
+    NewLine(WhiteSpaceToken),
     WhiteSpace(WhiteSpaceToken),
     MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String),
 }
