@@ -1,12 +1,31 @@
 #[derive(PartialEq, Debug)]
+pub enum WhiteSpaceToken {
+    AfterNewLine,
+    AfterTagPairName,
+    AfterTagPairEnd,
+    AfterTurnBegin,
+    AfterMovingTo,
+    AfterPromotion,
+    AfterPromotionEnd,
+    AfterCheckIndicator,
+    AfterCheckMateIndicator,
+    AfterAnnotationEnd,
+    AfterMoveQuality,
+    AfterNag,
+    AfterTurnContinuation,
+    AfterGameTermination,
+}
+
+
+#[derive(PartialEq, Debug)]
 pub enum Token {
     TagPairStart(char),
     TagPairName(String),
-    TagPairValue(Option<String>),
+    TagPairValue(String),
     TagPairEnd(char),
     TurnBegin(String),
-    PieceMoving(Option<char>),
-    MovingFrom(Option<char>),
+    PieceMoving(char),
+    MovingFrom(char),
     CaptureIndicator,
     MovingTo(String),
     PromotionStart(char),
@@ -23,4 +42,5 @@ pub enum Token {
     GameTermination(String),
     Unknown(String),
     NewLine,
+    WhiteSpace(WhiteSpaceToken),
 }
