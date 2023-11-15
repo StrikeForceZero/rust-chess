@@ -258,6 +258,9 @@ impl<'a> Lexer<'a> {
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMovingTo))
                             }
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterMovingTo));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -287,6 +290,9 @@ impl<'a> Lexer<'a> {
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotion));
                             }
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterPromotion));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -302,7 +308,10 @@ impl<'a> Lexer<'a> {
                             }
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotionEnd));
-                            }
+                            },
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterPromotionEnd));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -316,6 +325,9 @@ impl<'a> Lexer<'a> {
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMoveQuality));
                             }
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterMoveQuality));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -328,7 +340,10 @@ impl<'a> Lexer<'a> {
                             match current_char {
                                 char::SPACE => {
                                     self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNag));
-                                }
+                                },
+                                char::NEW_LINE => {
+                                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNag));
+                                },
                                 _ => {
                                     self.state.push_token(Token::Unknown(String::from(current_char)));
                                 }
@@ -340,6 +355,9 @@ impl<'a> Lexer<'a> {
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckIndicator));
                             }
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterCheckIndicator));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -350,6 +368,9 @@ impl<'a> Lexer<'a> {
                             char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckMateIndicator));
                             }
+                            char::NEW_LINE => {
+                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterCheckMateIndicator));
+                            },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -450,8 +471,10 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairEnd)),
-                                    _ => self.state.push_token(Token::Unknown(String::from(current_char))),
+                                    // TODO: technically we dont know if its after a new line
+                                    //  add WhiteSpaceToken::AfterNewLineOrWhiteSpace?
+                                    char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNewLine)),
+                                    _ => self.handle_char_after_newline(&current_char),
                                 }
                             }
                             WhiteSpaceToken::AfterTurnBegin => {
@@ -709,6 +732,7 @@ mod tests {
             CheckMateIndicator('#'),
             WhiteSpace(AfterCheckMateIndicator),
             Nag("$1".into()),
+            NewLine(AfterNag),
             GameTermination("1-0".into()),
         ],
     )]
