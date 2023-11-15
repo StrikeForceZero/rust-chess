@@ -43,4 +43,5 @@ pub enum Token {
     Unknown(String),
     NewLine,
     WhiteSpace(WhiteSpaceToken),
+    MaybeTurnBeginOrContinuationOrMovingFrom(String),
 }

@@ -49,6 +49,61 @@ impl<'a> Lexer<'a> {
             };
         }
     }
+
+    fn handle_char_after_move(&mut self, &current_char: &char) {
+        match current_char {
+            char::SPACE => {/* skip */}
+            '$' => {
+                self.state.push_token(Token::Nag(String::from(current_char)));
+            },
+            '!' | '?' => {
+                self.state.push_token(Token::MoveQuality(String::from(current_char)));
+            }
+            '(' => {
+                // move variation
+                todo!("implement")
+            },
+            '{' | ';' => {
+                self.state.push_token(Token::AnnotationStart(current_char));
+            }
+            'K' | 'Q' | 'B' | 'N' | 'R' => {
+                self.state.push_token(Token::PieceMoving(current_char));
+            },
+            'a'..='f' | '1'..='8' => {
+                self.state.push_token(Token::MovingFrom(current_char))
+            },
+            _ => self.state.push_token(Token::Unknown(String::from(current_char))),
+        }
+    }
+
+    fn handle_char_after_nag(&mut self, &current_char: &char) {
+        if current_char.is_ascii_digit() {
+            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+        } else {
+            match current_char {
+                char::SPACE => { /* skip */ },
+                char::NEW_LINE => {
+                    self.state.push_token(Token::NewLine);
+                }
+                'K' | 'Q' | 'B' | 'N' | 'R' => {
+                    self.state.push_token(Token::PieceMoving(current_char));
+                },
+                'a'..='f' => {
+                    self.state.push_token(Token::MovingFrom(current_char))
+                },
+                '1'..='9' => {
+                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                },
+                ';' => {
+                    self.state.push_token(Token::Annotation(String::from(current_char)));
+                }
+                _ => {
+                    self.state.push_token(Token::Unknown(String::from(current_char)))
+                }
+            }
+        }
+    }
+
     pub fn handle_char(&mut self, &current_char: &char) {
         match self.state.tokens.last_mut() {
             None => {
@@ -354,12 +409,14 @@ impl<'a> Lexer<'a> {
                             }
                             WhiteSpaceToken::AfterTagPairEnd => {
                                 match current_char {
+                                    char::SPACE => {/* skip */}
                                     char::NEW_LINE => self.state.push_token(Token::NewLine),
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                                 }
                             }
                             WhiteSpaceToken::AfterTurnBegin => {
                                 match current_char {
+                                    char::SPACE => {/* skip */}
                                     'K' | 'Q' | 'B' | 'N' | 'R' => {
                                         self.state.push_token(Token::PieceMoving(current_char));
                                     },
@@ -370,32 +427,72 @@ impl<'a> Lexer<'a> {
                                 }
                             }
                             WhiteSpaceToken::AfterMovingTo => {
-                                match current_char {
-                                    '$' => {
-                                        self.state.push_token(Token::Nag(String::from(current_char)));
-                                    },
-                                    '!' | '?' => {
-                                        self.state.push_token(Token::MoveQuality(String::from(current_char)));
+                                self.handle_char_after_move(&current_char);
+                            }
+                            WhiteSpaceToken::AfterPromotion => {
+                                self.handle_char_after_move(&current_char);
+                            }
+                            WhiteSpaceToken::AfterPromotionEnd => {
+                                self.handle_char_after_move(&current_char);
+                            }
+                            WhiteSpaceToken::AfterCheckIndicator => {
+                                self.handle_char_after_move(&current_char);
+                            }
+                            WhiteSpaceToken::AfterCheckMateIndicator => {
+                                self.handle_char_after_move(&current_char);
+                            }
+                            WhiteSpaceToken::AfterAnnotationEnd => {
+                                if current_char.is_ascii_digit() {
+                                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                                } else {
+                                    match current_char {
+                                        char::SPACE => { /* skip */ },
+                                        char::NEW_LINE => {
+                                            self.state.push_token(Token::NewLine);
+                                        }
+                                        'K' | 'Q' | 'B' | 'N' | 'R' => {
+                                            self.state.push_token(Token::PieceMoving(current_char));
+                                        },
+                                        'a'..='f' => {
+                                            self.state.push_token(Token::MovingFrom(current_char))
+                                        },
+                                        '1'..='9' => {
+                                            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                                        },
+                                        ';' => {
+                                            self.state.push_token(Token::Annotation(String::from(current_char)));
+                                        }
+                                        _ => {
+                                            self.state.push_token(Token::Unknown(String::from(current_char)))
+                                        }
                                     }
-                                    '(' => {
-                                        // move variation
-                                        todo!("implement")
-                                    },
-                                    '{' | ';' => {
-                                        self.state.push_token(Token::AnnotationStart(current_char));
-                                    }
-                                    _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                                 }
                             }
-                            WhiteSpaceToken::AfterPromotion => {}
-                            WhiteSpaceToken::AfterPromotionEnd => {}
-                            WhiteSpaceToken::AfterCheckIndicator => {}
-                            WhiteSpaceToken::AfterCheckMateIndicator => {}
-                            WhiteSpaceToken::AfterAnnotationEnd => {}
-                            WhiteSpaceToken::AfterMoveQuality => {}
-                            WhiteSpaceToken::AfterNag => {}
-                            WhiteSpaceToken::AfterTurnContinuation => {}
-                            WhiteSpaceToken::AfterGameTermination => {}
+                            WhiteSpaceToken::AfterMoveQuality => {
+                                self.handle_char_after_nag(&current_char);
+                            }
+                            WhiteSpaceToken::AfterNag => {
+                                self.handle_char_after_nag(&current_char);
+                            }
+                            WhiteSpaceToken::AfterTurnContinuation => {
+                                match current_char {
+                                    char::SPACE => {/* skip */},
+                                    'a'..='f' | '1'..='8' => {
+                                        self.state.push_token(Token::MovingFrom(current_char))
+                                    },
+                                    _ => {
+                                        self.state.push_token(Token::Unknown(String::from(current_char)));
+                                    }
+                                }
+                            }
+                            WhiteSpaceToken::AfterGameTermination => {
+                                match current_char {
+                                    char::SPACE | char::NEW_LINE => {/* skip */},
+                                    _ => {
+                                        self.state.push_token(Token::Unknown(String::from(current_char)))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
