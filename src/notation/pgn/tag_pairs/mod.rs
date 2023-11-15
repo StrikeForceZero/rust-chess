@@ -43,6 +43,7 @@ macro_rules! impl_named_tag_pair_for {
     };
 }
 pub(crate) use impl_named_tag_pair_for;
+use crate::notation::pgn::pgn_parsing_error::PgnParsingError;
 
 
 #[derive(Error, Debug, Clone, PartialEq)]
@@ -82,8 +83,8 @@ pub fn parse_tag_pair(line: &str) -> Result<TagPairNameValueTuple, PgnTagPairPar
     Ok(TagPairNameValueTuple(tag_name.to_string(), value.to_string()))
 }
 
-pub fn resolve_tag_pair(line: &str) -> Result<TagPair, PgnTagPairParseError> {
-    let TagPairNameValueTuple(tag_name, value) = parse_tag_pair(line)?;
+pub fn resolve_tag_pair(tag_pair_name_value_tuple: TagPairNameValueTuple) -> Result<TagPair, PgnTagPairParseError> {
+    let TagPairNameValueTuple(tag_name, value) = tag_pair_name_value_tuple;
     let tag_pair= match tag_name.as_str() {
         event::PgnTagPairEvent::NAME => TagPair::Event(event::PgnTagPairEvent::from_str(&value)),
         site::PgnTagPairSite::NAME => TagPair::Site(site::PgnTagPairSite::from_str(&value)?),
@@ -94,7 +95,7 @@ pub fn resolve_tag_pair(line: &str) -> Result<TagPair, PgnTagPairParseError> {
         result::PgnTagPairResult::NAME => TagPair::Result(result::PgnTagPairResult::from_str(&value)?),
         // optional
         fen::PgnTagPairFen::NAME => TagPair::Fen(fen::PgnTagPairFen::from_str(&value)?),
-        _ => return Err(PgnTagPairParseError::UnknownTagPair(line.to_string())),
+        _ => return Err(PgnTagPairParseError::UnknownTagPair(format!("[{tag_name} \"{value}\"]"))),
     };
     Ok(tag_pair)
 }
@@ -154,7 +155,9 @@ mod tests {
     fn test_resolve_tag_pair(
         #[case] input: &'static str,
         #[case] expected: Result<TagPair, PgnTagPairParseError>
-    ) {
-        assert_eq!(expected, resolve_tag_pair(input));
+    ) -> Result<(), PgnTagPairParseError> {
+        let tag_pair_tuple = parse_tag_pair(input)?;
+        assert_eq!(expected, resolve_tag_pair(tag_pair_tuple));
+        Ok(())
     }
 }

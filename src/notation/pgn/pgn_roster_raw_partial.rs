@@ -54,15 +54,36 @@ impl PgnRosterRawPartial {
         Ok(roster)
     }
 
-    pub fn build(&mut self) -> PgnRosterRaw {
+    pub fn build(&mut self) -> Result<PgnRosterRaw, PgnParsingError> {
+        let Some(event) = self.event.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("event"))
+        };
+        let Some(site) = self.site.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("site"))
+        };
+        let Some(date) = self.date.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("date"))
+        };
+        let Some(round) = self.round.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("round"))
+        };
+        let Some(white) = self.white.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("white"))
+        };
+        let Some(black) = self.black.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("black"))
+        };
+        let Some(result) = self.result.take() else {
+            return Err(PgnParsingError::RosterMissingRequiredField("result"))
+        };
         let mut roster = PgnRosterRaw {
-            event: self.event.take().expect("event required"),
-            site: self.site.take().expect("site required"),
-            date: self.date.take().expect("date required"),
-            round: self.round.take().expect("round required"),
-            white: self.white.take().expect("white required"),
-            black: self.black.take().expect("black required"),
-            result: self.result.take().expect("result required"),
+            event,
+            site,
+            date,
+            round,
+            white,
+            black,
+            result,
             ..Default::default()
         };
         if let Some(annotator) = self.annotator.take() {
@@ -89,6 +110,6 @@ impl PgnRosterRawPartial {
         if let Some(set_up) = self.set_up.take() {
             roster.set_up = Some(set_up);
         };
-        roster
+        Ok(roster)
     }
 }

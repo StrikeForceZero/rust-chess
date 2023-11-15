@@ -7,6 +7,7 @@ use crate::notation::pgn::tag_pairs::round::PgnTagPairRound;
 use crate::notation::pgn::tag_pairs::site::PgnTagPairSite;
 use crate::notation::pgn::tag_pairs::white::PgnTagPairWhite;
 
+#[derive(Debug)]
 pub struct PgnRoster {
     pub event: PgnTagPairEvent,
     // City, Region ThreeLetterCountryCode

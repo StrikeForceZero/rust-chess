@@ -15,6 +15,8 @@ mod pgn_parsing_error;
 mod util;
 mod parser;
 mod lexer;
+mod pgn_data;
+mod pgn_data_partial;
 
 #[repr(transparent)]
 #[derive(Clone)]

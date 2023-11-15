@@ -5,9 +5,9 @@ use crate::notation::pgn::lexer::token::WhiteSpaceToken;
 use crate::notation::pgn::lexer::token_with_context::TokenWithContext;
 use crate::utils::char;
 
-mod token;
-mod token_context;
-mod token_with_context;
+pub mod token;
+pub mod token_context;
+pub mod token_with_context;
 macro_rules! char_match {
     (rank) => { '1'..='8' };
     (file) => { 'a'..='h' };
@@ -646,7 +646,6 @@ impl<'a> Lexer<'a> {
 
 #[cfg(test)]
 mod tests {
-    use std::hint::black_box;
     use itertools::Itertools;
     use super::*;
     use rstest::rstest;
