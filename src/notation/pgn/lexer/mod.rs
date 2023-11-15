@@ -85,9 +85,12 @@ impl<'a> Lexer<'a> {
             'K' | 'Q' | 'B' | 'N' | 'R' => {
                 self.state.push_token(Token::PieceMoving(current_char));
             },
-            '0' | '1' | '2' | '/' | '-' | '*' => {
-                self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+            '*' => {
+                self.state.push_token(Token::GameTermination(String::from(current_char)));
             }
+            '0' | '1' | '2' => {
+                self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+            },
             'a'..='f' | '1'..='8' => {
                 self.state.push_token(Token::MovingFrom(current_char))
             },
@@ -115,9 +118,12 @@ impl<'a> Lexer<'a> {
                 'a'..='f' => {
                     self.state.push_token(Token::MovingFrom(current_char))
                 },
-                '0' | '1' | '2' | '/' | '-' | '*' => {
-                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+                '*' => {
+                    self.state.push_token(Token::GameTermination(String::from(current_char)));
                 }
+                '0' | '1' | '2' => {
+                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+                },
                 '1'..='9' => {
                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                 },
@@ -399,7 +405,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::GameTermination(str) => {
                         match current_char {
-                            '0' | '1' | '2' | '/' | '-' | '*' => {
+                            '0' | '1' | '2' | '/' | '-' => {
                                 str.push(current_char)
                             },
                             char::SPACE | char::NEW_LINE => {/* skip */},
@@ -492,7 +498,10 @@ impl<'a> Lexer<'a> {
                                         'a'..='f' => {
                                             self.state.push_token(Token::MovingFrom(current_char))
                                         },
-                                        '0' | '1' | '2' | '/' | '-' | '*' => {
+                                        '*' => {
+                                            self.state.push_token(Token::GameTermination(String::from(current_char)));
+                                        }
+                                        '0' | '1' | '2' => {
                                             self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                         },
                                         '1'..='8' => {
@@ -631,7 +640,8 @@ mod tests {
             WhiteSpace(AfterMovingTo),
             MovingFrom('d'),
             MovingTo("5".into()),
-            Unknown("\n".into())
+            WhiteSpace(AfterMovingTo),
+            GameTermination("*".into()),
         ],
     )]
     fn test_lex(
