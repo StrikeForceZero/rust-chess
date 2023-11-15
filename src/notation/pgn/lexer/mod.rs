@@ -372,12 +372,7 @@ impl<'a> Lexer<'a> {
                             '0' | '1' | '/' | '-' | '*' => {
                                 str.push(current_char)
                             },
-                            char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterGameTermination))
-                            },
-                            char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine)
-                            },
+                            char::SPACE | char::NEW_LINE => {/* skip */},
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
@@ -456,7 +451,7 @@ impl<'a> Lexer<'a> {
                                         'a'..='f' => {
                                             self.state.push_token(Token::MovingFrom(current_char))
                                         },
-                                        '1'..='9' => {
+                                        '1'..='8' => {
                                             self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
                                         },
                                         ';' => {
@@ -485,13 +480,47 @@ impl<'a> Lexer<'a> {
                                     }
                                 }
                             }
-                            WhiteSpaceToken::AfterGameTermination => {
-                                match current_char {
-                                    char::SPACE | char::NEW_LINE => {/* skip */},
-                                    _ => {
+                        }
+                    }
+                    Token::MaybeTurnBeginOrContinuationOrMovingFrom(str) => {
+                        if current_char.is_ascii_digit() && str.chars().last().unwrap_or_default().is_ascii_digit() {
+                            str.push(current_char)
+                        } else {
+                            match current_char {
+                                '.' => {
+                                    if str.ends_with("...") {
                                         self.state.push_token(Token::Unknown(String::from(current_char)))
+                                    } else {
+                                        str.push(current_char);
                                     }
-                                }
+                                },
+                                char::SPACE => {
+                                    let first_char_is_digit = str.chars().next().unwrap_or_default().is_ascii_digit();
+                                    if first_char_is_digit && str.ends_with("...") {
+                                        *token = Token::TurnContinuation(format!("{str}{current_char}"));
+                                        self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation));
+                                    } else if first_char_is_digit && str.ends_with('.') {
+                                        *token = Token::TurnBegin(format!("{str}{current_char}"));
+                                        self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin));
+                                    } else {
+                                        *token = Token::Unknown(format!("{str}{current_char}"));
+                                    }
+                                },
+                                'a'..='f' | '1'..='8' => {
+                                    if str.len() == 1 {
+                                        *token = Token::MovingFrom(str.chars().next().expect("impossible"));
+                                        self.state.push_token(Token::MovingTo(String::from(current_char)));
+                                    } else {
+                                        *token = Token::Unknown(format!("{str}{current_char}"));
+                                    }
+                                },
+                                char::NEW_LINE => {
+                                    *token = Token::Unknown(str.clone());
+                                    self.state.push_token(Token::NewLine);
+                                },
+                                _ => {
+                                    *token = Token::Unknown(format!("{str}{current_char}"));
+                                },
                             }
                         }
                     }

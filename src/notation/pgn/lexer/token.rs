@@ -13,7 +13,6 @@ pub enum WhiteSpaceToken {
     AfterMoveQuality,
     AfterNag,
     AfterTurnContinuation,
-    AfterGameTermination,
 }
 
 
