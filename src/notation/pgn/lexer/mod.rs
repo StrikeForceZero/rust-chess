@@ -11,7 +11,8 @@ pub mod token_with_context;
 macro_rules! char_match {
     (rank) => { '1'..='8' };
     (file) => { 'a'..='h' };
-    (promotion) => { 'K' | 'Q' | 'B' | 'N' | 'R' };
+    (promotion) => { 'Q' | 'B' | 'N' | 'R' };
+    (from_piece) => { 'K' | 'Q' | 'B' | 'N' | 'R' };
 }
 
 
@@ -89,7 +90,7 @@ impl<'a> Lexer<'a> {
             '{' | ';' => {
                 self.state.push_token(Token::AnnotationStart(current_char));
             }
-            char_match!(promotion) => {
+            char_match!(from_piece) => {
                 self.state.push_token(Token::PieceMoving(current_char));
             },
             '*' => {
@@ -483,7 +484,7 @@ impl<'a> Lexer<'a> {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    char_match!(promotion) => {
+                                    char_match!(from_piece) => {
                                         self.state.push_token(Token::PieceMoving(current_char));
                                     },
                                     char_match!(file) | char_match!(rank) => {
@@ -519,7 +520,7 @@ impl<'a> Lexer<'a> {
                                         char::NEW_LINE => {
                                             self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotationEnd));
                                         }
-                                        char_match!(promotion) => {
+                                        char_match!(from_piece) => {
                                             self.state.push_token(Token::PieceMoving(current_char));
                                         },
                                         char_match!(file) => {
