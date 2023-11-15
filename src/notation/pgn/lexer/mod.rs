@@ -1,3 +1,4 @@
+use tracing::{instrument, trace};
 use token::Token;
 use token_context::TokenContext;
 use crate::notation::pgn::lexer::token::WhiteSpaceToken;
@@ -27,6 +28,7 @@ impl<'a> LexerState<'a> {
     }
 }
 
+#[derive(Debug)]
 pub struct Lexer<'a> {
     state: LexerState<'a>,
 }
@@ -37,22 +39,36 @@ impl<'a> Lexer<'a> {
             state: LexerState::new(data),
         }
     }
+
+    fn log_last(&self) {
+        trace!("last: {:?}", self.state.tokens.last());
+    }
+
     fn handle_char_after_newline(&mut self, &current_char: &char) {
+        trace!("handle_char_after_newline - current_char: {current_char}");
         if current_char.is_ascii_digit() {
-            self.state.push_token(Token::TurnBegin(String::from(current_char)))
+            self.state.push_token(Token::TurnBegin(String::from(current_char)));
         } else {
             match current_char {
                 '[' => self.state.push_token(Token::TagPairStart(current_char)),
                 char::NEW_LINE => self.state.push_token(Token::NewLine),
                 char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNewLine)),
+                '0' | '1' | '2' | '/' | '-' | '*' => {
+                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+                }
                 _ => self.state.push_token(Token::Unknown(String::from(current_char))),
             };
         }
+        self.log_last();
     }
 
     fn handle_char_after_move(&mut self, &current_char: &char) {
+        trace!("handle_char_after_move - current_char: {current_char}");
         match current_char {
-            char::SPACE => {/* skip */}
+            char::SPACE => {
+                /* skip */
+                trace!("skipping ' '");
+            },
             '$' => {
                 self.state.push_token(Token::Nag(String::from(current_char)));
             },
@@ -69,19 +85,27 @@ impl<'a> Lexer<'a> {
             'K' | 'Q' | 'B' | 'N' | 'R' => {
                 self.state.push_token(Token::PieceMoving(current_char));
             },
+            '0' | '1' | '2' | '/' | '-' | '*' => {
+                self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+            }
             'a'..='f' | '1'..='8' => {
                 self.state.push_token(Token::MovingFrom(current_char))
             },
             _ => self.state.push_token(Token::Unknown(String::from(current_char))),
         }
+        self.log_last();
     }
 
     fn handle_char_after_nag(&mut self, &current_char: &char) {
+        trace!("handle_char_after_nag - current_char: {current_char}");
         if current_char.is_ascii_digit() {
-            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
         } else {
             match current_char {
-                char::SPACE => { /* skip */ },
+                char::SPACE => {
+                    /* skip */
+                    trace!("skipping ' '");
+                },
                 char::NEW_LINE => {
                     self.state.push_token(Token::NewLine);
                 }
@@ -91,8 +115,11 @@ impl<'a> Lexer<'a> {
                 'a'..='f' => {
                     self.state.push_token(Token::MovingFrom(current_char))
                 },
+                '0' | '1' | '2' | '/' | '-' | '*' => {
+                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+                }
                 '1'..='9' => {
-                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                 },
                 ';' => {
                     self.state.push_token(Token::Annotation(String::from(current_char)));
@@ -102,15 +129,18 @@ impl<'a> Lexer<'a> {
                 }
             }
         }
+        self.log_last();
     }
 
     pub fn handle_char(&mut self, &current_char: &char) {
+        trace!("handle_char - current_char: {current_char}");
         match self.state.tokens.last_mut() {
             None => {
                 self.handle_char_after_newline(&current_char);
             }
             Some(ref mut token_with_context) => {
                 let TokenWithContext(token, _) = token_with_context;
+                trace!("matching last: {token:?}");
                 match token {
                     Token::TagPairStart(_) => {
                         if current_char.is_ascii_alphabetic() {
@@ -369,7 +399,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::GameTermination(str) => {
                         match current_char {
-                            '0' | '1' | '/' | '-' | '*' => {
+                            '0' | '1' | '2' | '/' | '-' | '*' => {
                                 str.push(current_char)
                             },
                             char::SPACE | char::NEW_LINE => {/* skip */},
@@ -377,7 +407,6 @@ impl<'a> Lexer<'a> {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
                         }
-                        self.state.push_token(Token::Unknown(String::from(current_char)))
                     },
                     Token::Unknown(ref mut str) => {
                         match current_char {
@@ -393,7 +422,10 @@ impl<'a> Lexer<'a> {
                             WhiteSpaceToken::AfterNewLine => self.handle_char_after_newline(&current_char),
                             WhiteSpaceToken::AfterTagPairName => {
                                 match current_char {
-                                    char::SPACE => {/* skip */}
+                                    char::SPACE => {
+                                        /* skip */
+                                        trace!("skipping ' '");
+                                    },
                                     '"' => {
                                         self.state.push_token(Token::TagPairValue(String::from(current_char)));
                                     },
@@ -404,14 +436,20 @@ impl<'a> Lexer<'a> {
                             }
                             WhiteSpaceToken::AfterTagPairEnd => {
                                 match current_char {
-                                    char::SPACE => {/* skip */}
+                                    char::SPACE => {
+                                        /* skip */
+                                        trace!("skipping ' '");
+                                    },
                                     char::NEW_LINE => self.state.push_token(Token::NewLine),
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                                 }
                             }
                             WhiteSpaceToken::AfterTurnBegin => {
                                 match current_char {
-                                    char::SPACE => {/* skip */}
+                                    char::SPACE => {
+                                        /* skip */
+                                        trace!("skipping ' '");
+                                    },
                                     'K' | 'Q' | 'B' | 'N' | 'R' => {
                                         self.state.push_token(Token::PieceMoving(current_char));
                                     },
@@ -438,10 +476,13 @@ impl<'a> Lexer<'a> {
                             }
                             WhiteSpaceToken::AfterAnnotationEnd => {
                                 if current_char.is_ascii_digit() {
-                                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                                    self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                 } else {
                                     match current_char {
-                                        char::SPACE => { /* skip */ },
+                                        char::SPACE => {
+                                            /* skip */
+                                            trace!("skipping ' '");
+                                        },
                                         char::NEW_LINE => {
                                             self.state.push_token(Token::NewLine);
                                         }
@@ -451,8 +492,11 @@ impl<'a> Lexer<'a> {
                                         'a'..='f' => {
                                             self.state.push_token(Token::MovingFrom(current_char))
                                         },
+                                        '0' | '1' | '2' | '/' | '-' | '*' => {
+                                            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
+                                        },
                                         '1'..='8' => {
-                                            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFrom(String::from(current_char)));
+                                            self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                         },
                                         ';' => {
                                             self.state.push_token(Token::Annotation(String::from(current_char)));
@@ -471,7 +515,10 @@ impl<'a> Lexer<'a> {
                             }
                             WhiteSpaceToken::AfterTurnContinuation => {
                                 match current_char {
-                                    char::SPACE => {/* skip */},
+                                    char::SPACE => {
+                                        /* skip */
+                                        trace!("skipping ' '");
+                                    },
                                     'a'..='f' | '1'..='8' => {
                                         self.state.push_token(Token::MovingFrom(current_char))
                                     },
@@ -482,11 +529,15 @@ impl<'a> Lexer<'a> {
                             }
                         }
                     }
-                    Token::MaybeTurnBeginOrContinuationOrMovingFrom(str) => {
+                    Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(str) => {
                         if current_char.is_ascii_digit() && str.chars().last().unwrap_or_default().is_ascii_digit() {
                             str.push(current_char)
                         } else {
                             match current_char {
+                                '/' | '-' | '*' => {
+                                    trace!("replacing with GameTermination");
+                                    *token = Token::GameTermination(format!("{str}{current_char}"));
+                                }
                                 '.' => {
                                     if str.ends_with("...") {
                                         self.state.push_token(Token::Unknown(String::from(current_char)))
@@ -497,28 +548,35 @@ impl<'a> Lexer<'a> {
                                 char::SPACE => {
                                     let first_char_is_digit = str.chars().next().unwrap_or_default().is_ascii_digit();
                                     if first_char_is_digit && str.ends_with("...") {
+                                        trace!("replacing with TurnContinuation");
                                         *token = Token::TurnContinuation(format!("{str}{current_char}"));
                                         self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation));
                                     } else if first_char_is_digit && str.ends_with('.') {
+                                        trace!("replacing with TurnBegin");
                                         *token = Token::TurnBegin(format!("{str}{current_char}"));
                                         self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin));
                                     } else {
+                                        trace!("replacing with Unknown");
                                         *token = Token::Unknown(format!("{str}{current_char}"));
                                     }
                                 },
                                 'a'..='f' | '1'..='8' => {
                                     if str.len() == 1 {
+                                        trace!("replacing with MovingFrom");
                                         *token = Token::MovingFrom(str.chars().next().expect("impossible"));
                                         self.state.push_token(Token::MovingTo(String::from(current_char)));
                                     } else {
+                                        trace!("replacing with Unknown");
                                         *token = Token::Unknown(format!("{str}{current_char}"));
                                     }
                                 },
                                 char::NEW_LINE => {
+                                    trace!("replacing with Unknown");
                                     *token = Token::Unknown(str.clone());
                                     self.state.push_token(Token::NewLine);
                                 },
                                 _ => {
+                                    trace!("replacing with Unknown");
                                     *token = Token::Unknown(format!("{str}{current_char}"));
                                 },
                             }
@@ -527,6 +585,7 @@ impl<'a> Lexer<'a> {
                 }
             }
         }
+        self.log_last();
     }
 
     pub fn lex(data: &'a str) -> Vec<TokenWithContext<'a>> {
@@ -537,9 +596,52 @@ impl<'a> Lexer<'a> {
                 lexer.handle_char(&char);
             }
             lexer.state.context.update(line_ix, line.len());
-            lexer.handle_char(&crate::utils::char::NEW_LINE);
+            lexer.handle_char(&char::NEW_LINE);
         }
         lexer.state.tokens
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use itertools::Itertools;
+    use super::*;
+    use rstest::rstest;
+    use crate::utils::tracing::init_tracing;
+    use token::Token::*;
+    use token::WhiteSpaceToken::*;
+
+    #[rstest]
+    #[case(
+        "[Event \"Some Event\"]\n\
+        \n\
+        1. e4 d5 *",
+        vec![
+            TagPairStart('['),
+            TagPairName("Event".into()),
+            WhiteSpace(AfterTagPairName),
+            TagPairValue("\"Some Event\"".into()),
+            TagPairEnd(']'),
+            NewLine,
+            NewLine,
+            TurnBegin("1.".into()),
+            WhiteSpace(AfterTurnBegin),
+            MovingFrom('e'),
+            MovingTo("4".into()),
+            WhiteSpace(AfterMovingTo),
+            MovingFrom('d'),
+            MovingTo("5".into()),
+            Unknown("\n".into())
+        ],
+    )]
+    fn test_lex(
+        #[case] input: &'static str,
+        #[case] expected: Vec<Token>,
+    ) {
+        init_tracing();
+        let tokens_with_context = Lexer::lex(input);
+        let tokens = tokens_with_context.iter().map(|TokenWithContext(token, _)| token).collect_vec();
+        assert_eq!(expected, tokens);
     }
 }
 

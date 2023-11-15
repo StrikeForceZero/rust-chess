@@ -16,7 +16,7 @@ pub enum WhiteSpaceToken {
 }
 
 
-#[derive(PartialEq, Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
     TagPairStart(char),
     TagPairName(String),
@@ -42,5 +42,11 @@ pub enum Token {
     Unknown(String),
     NewLine,
     WhiteSpace(WhiteSpaceToken),
-    MaybeTurnBeginOrContinuationOrMovingFrom(String),
+    MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String),
+}
+
+impl PartialEq<&Token> for Token {
+    fn eq(&self, other: &&Token) -> bool {
+        *self == *other
+    }
 }
