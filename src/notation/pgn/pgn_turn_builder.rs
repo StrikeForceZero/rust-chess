@@ -5,10 +5,10 @@ use crate::notation::pgn::pgn_turn_data::PgnTurnData;
 
 #[derive(Debug, Default)]
 pub struct PgnTurnBuilder {
-    turn_number: usize,
-    white: Option<PgnMoveBuilder>,
-    black: Option<PgnMoveBuilder>,
-    comment: Option<String>,
+    pub turn_number: usize,
+    pub white: Option<PgnMoveBuilder>,
+    pub black: Option<PgnMoveBuilder>,
+    pub comment: Option<String>,
 }
 
 impl PgnTurnBuilder {

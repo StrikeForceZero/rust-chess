@@ -8,6 +8,8 @@ use crate::utils::char;
 pub mod token;
 pub mod token_context;
 pub mod token_with_context;
+
+#[macro_export]
 macro_rules! char_match {
     (rank) => { '1'..='8' };
     (file) => { 'a'..='h' };

@@ -58,7 +58,7 @@ impl PgnMoveDetailBuilder {
         self.from_board_file = None;
         self.from_board_rank = None;
         self.to_pos = Some(to_pos);
-        self.is_capture = Some(false);
+        self.is_capture = None;
         self.check_flag = None;
         self.promotion = None;
         match resolve_from_discriminator_dynamic(board, chess_piece, from_pos, to_pos) {
@@ -70,6 +70,9 @@ impl PgnMoveDetailBuilder {
                 self.from_board_rank = Some(rank);
             },
         }
+    }
+    pub fn has_from(&self) -> bool {
+        self.from_board_file.is_some() || self.from_board_rank.is_some()
     }
     pub fn set_is_capture(&mut self, value: bool) -> &mut Self {
         self.is_capture = Some(value);
