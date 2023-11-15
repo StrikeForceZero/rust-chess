@@ -28,13 +28,13 @@ impl PgnTurnBuilder {
         self.comment = Some(comment);
         self
     }
-    pub fn build(self) -> Result<PgnTurnData, String> {
-        let Some(white_move_builder) = self.white else {
+    pub fn build(&mut self) -> Result<PgnTurnData, String> {
+        let Some(white_move_builder) = self.white.take() else {
             return Err("white move data required to build!".into());
         };
 
         let mut black = None;
-        if let Some(black_move_builder) = self.black {
+        if let Some(black_move_builder) = self.black.take() {
             black = Some(black_move_builder.build()?);
         };
 
@@ -42,7 +42,7 @@ impl PgnTurnBuilder {
             turn_number: self.turn_number,
             white: white_move_builder.build()?,
             black,
-            comment: self.comment,
+            comment: self.comment.take(),
         })
     }
 }
