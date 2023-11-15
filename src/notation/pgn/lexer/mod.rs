@@ -591,11 +591,11 @@ impl<'a> Lexer<'a> {
                                     let first_char_is_digit = str.chars().next().unwrap_or_default().is_ascii_digit();
                                     if first_char_is_digit && str.ends_with("...") {
                                         trace!("replacing with TurnContinuation");
-                                        *token = Token::TurnContinuation(format!("{str}{current_char}"));
+                                        *token = Token::TurnContinuation(format!("{str}"));
                                         self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation));
                                     } else if first_char_is_digit && str.ends_with('.') {
                                         trace!("replacing with TurnBegin");
-                                        *token = Token::TurnBegin(format!("{str}{current_char}"));
+                                        *token = Token::TurnBegin(format!("{str}"));
                                         self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin));
                                     } else {
                                         trace!("replacing with Unknown");
@@ -701,7 +701,7 @@ mod tests {
             Annotation("white comment".into()),
             AnnotationEnd('}'),
             WhiteSpace(AfterAnnotationEnd),
-            TurnContinuation("1... ".into()),
+            TurnContinuation("1...".into()),
             WhiteSpace(AfterTurnContinuation),
             MovingFrom('d'),
             MovingTo("5".into()),
@@ -710,7 +710,7 @@ mod tests {
             Annotation("black comment".into()),
             AnnotationEnd('}'),
             WhiteSpace(AfterAnnotationEnd),
-            TurnBegin("2. ".into()),
+            TurnBegin("2.".into()),
             WhiteSpace(AfterTurnBegin),
             MovingFrom('e'),
             MovingTo("4".into()),
