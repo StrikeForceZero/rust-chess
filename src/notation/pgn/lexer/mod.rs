@@ -98,7 +98,7 @@ impl<'a> Lexer<'a> {
                                         str.push(current_char);
                                     }
                                 },
-                                ' ' => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin)),
+                                char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin)),
                                 _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                             }
                         }
@@ -157,7 +157,7 @@ impl<'a> Lexer<'a> {
                             '#' => {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMovingTo))
                             }
                             _ => {
@@ -186,7 +186,7 @@ impl<'a> Lexer<'a> {
                             '#' => {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotion));
                             }
                             _ => {
@@ -202,7 +202,7 @@ impl<'a> Lexer<'a> {
                             '#' => {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotionEnd));
                             }
                             _ => {
@@ -215,7 +215,7 @@ impl<'a> Lexer<'a> {
                             '!' | '?' => {
                                 str.push(current_char);
                             },
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMoveQuality));
                             }
                             _ => {
@@ -228,7 +228,7 @@ impl<'a> Lexer<'a> {
                             str.push(current_char)
                         } else {
                             match current_char {
-                                ' ' => {
+                                char::SPACE => {
                                     self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNag));
                                 }
                                 _ => {
@@ -239,7 +239,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::CheckIndicator(char) => {
                         match current_char {
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckIndicator));
                             }
                             _ => {
@@ -249,7 +249,7 @@ impl<'a> Lexer<'a> {
                     },
                     Token::CheckMateIndicator(char) => {
                         match current_char {
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckMateIndicator));
                             }
                             _ => {
@@ -282,7 +282,7 @@ impl<'a> Lexer<'a> {
                             char::NEW_LINE => {
                                 self.state.push_token(Token::NewLine);
                             }
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterAnnotationEnd));
                             }
                             ')' => {
@@ -307,7 +307,7 @@ impl<'a> Lexer<'a> {
                                         str.push(current_char);
                                     }
                                 },
-                                ' ' => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation)),
+                                char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation)),
                                 _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                             }
                         }
@@ -317,7 +317,7 @@ impl<'a> Lexer<'a> {
                             '0' | '1' | '/' | '-' | '*' => {
                                 str.push(current_char)
                             },
-                            ' ' => {
+                            char::SPACE => {
                                 self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterGameTermination))
                             },
                             char::NEW_LINE => {
@@ -341,8 +341,23 @@ impl<'a> Lexer<'a> {
                     Token::WhiteSpace(white_space_token) => {
                         match white_space_token {
                             WhiteSpaceToken::AfterNewLine => self.handle_char_after_newline(&current_char),
-                            WhiteSpaceToken::AfterTagPairName => {}
-                            WhiteSpaceToken::AfterTagPairEnd => {}
+                            WhiteSpaceToken::AfterTagPairName => {
+                                match current_char {
+                                    char::SPACE => {/* skip */}
+                                    '"' => {
+                                        self.state.push_token(Token::TagPairValue(String::from(current_char)));
+                                    },
+                                    _ => {
+                                        self.state.push_token(Token::Unknown(String::from(current_char)));
+                                    }
+                                }
+                            }
+                            WhiteSpaceToken::AfterTagPairEnd => {
+                                match current_char {
+                                    char::NEW_LINE => self.state.push_token(Token::NewLine),
+                                    _ => self.state.push_token(Token::Unknown(String::from(current_char))),
+                                }
+                            }
                             WhiteSpaceToken::AfterTurnBegin => {
                                 match current_char {
                                     'K' | 'Q' | 'B' | 'N' | 'R' => {
@@ -354,7 +369,24 @@ impl<'a> Lexer<'a> {
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                                 }
                             }
-                            WhiteSpaceToken::AfterMovingTo => {}
+                            WhiteSpaceToken::AfterMovingTo => {
+                                match current_char {
+                                    '$' => {
+                                        self.state.push_token(Token::Nag(String::from(current_char)));
+                                    },
+                                    '!' | '?' => {
+                                        self.state.push_token(Token::MoveQuality(String::from(current_char)));
+                                    }
+                                    '(' => {
+                                        // move variation
+                                        todo!("implement")
+                                    },
+                                    '{' | ';' => {
+                                        self.state.push_token(Token::AnnotationStart(current_char));
+                                    }
+                                    _ => self.state.push_token(Token::Unknown(String::from(current_char))),
+                                }
+                            }
                             WhiteSpaceToken::AfterPromotion => {}
                             WhiteSpaceToken::AfterPromotionEnd => {}
                             WhiteSpaceToken::AfterCheckIndicator => {}
