@@ -1,22 +1,29 @@
 use tracing::{debug, instrument};
 
 #[derive(PartialEq, Debug)]
-pub enum WhiteSpaceToken {
-    AfterNewLine,
-    AfterTagPairName,
-    AfterTagPairEnd,
-    AfterTurnBegin,
-    AfterMovingTo,
-    AfterPromotion,
-    AfterPromotionEnd,
-    AfterCheckIndicator,
-    AfterCheckMateIndicator,
-    AfterAnnotation,
-    AfterAnnotationEnd,
-    AfterMoveQuality,
-    AfterNag,
-    AfterTurnContinuation,
-    AfterUnknown,
+pub enum After {
+    Space,
+    NewLine,
+    TagPairName,
+    TagPairEnd,
+    TurnBegin,
+    MovingTo,
+    Promotion,
+    PromotionEnd,
+    CheckIndicator,
+    CheckMateIndicator,
+    Annotation,
+    AnnotationEnd,
+    MoveQuality,
+    Nag,
+    TurnContinuation,
+    Unknown,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WhiteSpace {
+    NewLine,
+    Space,
 }
 
 
@@ -29,7 +36,7 @@ pub enum Token {
     TurnBegin(String),
     PieceMoving(char),
     MovingFrom(char),
-    CaptureIndicator,
+    CaptureIndicator(char),
     MovingTo(String),
     PromotionStart(char),
     Promotion(char),
@@ -44,7 +51,14 @@ pub enum Token {
     TurnContinuation(String),
     GameTermination(String),
     Unknown(String),
-    NewLine(WhiteSpaceToken),
-    WhiteSpace(WhiteSpaceToken),
+    WhiteSpace(char, WhiteSpace, After),
     MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String),
+}
+
+pub fn ws_new_line(value: char, after: After) -> Token {
+    Token::WhiteSpace(value, WhiteSpace::NewLine, after)
+}
+
+pub fn ws_space(value: char, after: After) -> Token {
+    Token::WhiteSpace(value, WhiteSpace::Space, after)
 }

@@ -6,7 +6,7 @@ use crate::board::board_rank::BoardRank;
 use crate::char_match;
 use crate::color::Color;
 use crate::notation::pgn::lexer::{Lexer, };
-use crate::notation::pgn::lexer::token::{Token, WhiteSpaceToken};
+use crate::notation::pgn::lexer::token::{Token, WhiteSpace, After};
 use crate::notation::pgn::lexer::token_context::TokenContext;
 use crate::notation::pgn::lexer::token_with_context::TokenWithContext;
 use crate::notation::pgn::pgn_data_partial::PgnDataPartial;
@@ -127,6 +127,16 @@ fn update_move_detail<F, M>(
     Ok(())
 }
 
+fn validate_move_token_sequence(stack: &VecDeque<Token>, token_context: &TokenContext) -> Result<(), PgnParsingError> {
+    let mut expecting_one_of: Vec<Token> = vec![
+
+    ];
+    for token in stack.iter() {
+
+    }
+    Ok(())
+}
+
 impl<'a> Parser<'a> {
     fn init() -> Self {
         Self {
@@ -144,7 +154,7 @@ impl<'a> Parser<'a> {
                 Token::TurnBegin(data) => { res.push_str(data) }
                 Token::PieceMoving(data) => { res.push(*data) }
                 Token::MovingFrom(data) => { res.push(*data) }
-                Token::CaptureIndicator => { res.push('x') }
+                Token::CaptureIndicator(data) => { res.push(*data) }
                 Token::MovingTo(data) => { res.push_str(data) }
                 Token::PromotionStart(data) => { res.push(*data) }
                 Token::Promotion(data) => { res.push(*data) }
@@ -158,8 +168,7 @@ impl<'a> Parser<'a> {
                 Token::Nag(data) => { res.push_str(data) }
                 Token::TurnContinuation(data) => { res.push_str(data) }
                 Token::GameTermination(data) => { res.push_str(data) }
-                Token::NewLine(_) => { res.push(NEW_LINE) }
-                Token::WhiteSpace(_) => { res.push(SPACE) }
+                Token::WhiteSpace(data, _, _) => { res.push(*data) }
 
                 _ => {
                     panic!("trying to build string of bad data")
@@ -190,13 +199,13 @@ impl<'a> Parser<'a> {
         let TokenWithContext(ref cur_token, ref cur_token_context) = &token_with_context;
         match cur_token {
             Token::TagPairStart(_) => {
-                for_stack_push_expect_prev_token_to_be_none_or!(self, &token_with_context, Token::NewLine(_));
+                for_stack_push_expect_prev_token_to_be_none_or!(self, &token_with_context, Token::WhiteSpace(_, _, _));
             }
             Token::TagPairName(_) => {
                 for_stack_push_expect_prev_token_to_be!(self, &token_with_context, Token::TagPairStart(_));
             }
             Token::TagPairValue(_) => {
-                for_stack_push_expect_prev_token_to_be!(self, &token_with_context, Token::WhiteSpace(WhiteSpaceToken::AfterTagPairName));
+                for_stack_push_expect_prev_token_to_be!(self, &token_with_context, Token::WhiteSpace(_, WhiteSpace::Space, After::TagPairName));
             }
             Token::TagPairEnd(_) => {
                 for_stack_push_expect_prev_token_to_be!(self, &token_with_context, Token::TagPairValue(_));
@@ -227,11 +236,12 @@ impl<'a> Parser<'a> {
                 self.state.token_stack.clear();
             }
             Token::TurnBegin(data) => {
+                self.state.token_stack.clear();
                 let number_str = &data[0..data.len() - 1];
                 let Ok(number) = number_str.parse::<usize>() else {
                     return Err(cur_token_context.create_error());
                 };
-                let mut last_number = if let Some(last_turn) = self.state.turns.last() {
+                let last_number = if let Some(last_turn) = self.state.turns.last() {
                     last_turn.turn_number
                 } else {
                     0
@@ -311,7 +321,7 @@ impl<'a> Parser<'a> {
                     },
                 )?;
             }
-            Token::CaptureIndicator => {
+            Token::CaptureIndicator(data) => {
                 update_move_detail(
                     &mut self.state.current_turn,
                     cur_token_context,
@@ -360,42 +370,24 @@ impl<'a> Parser<'a> {
             Token::Unknown(_) => {
                 return Err(cur_token_context.create_error());
             }
-            Token::NewLine(after) => {
+            Token::WhiteSpace(_, white_space, after) => {
                 match after {
-                    WhiteSpaceToken::AfterNewLine => {}
-                    WhiteSpaceToken::AfterTagPairName => {}
-                    WhiteSpaceToken::AfterTagPairEnd => {}
-                    WhiteSpaceToken::AfterTurnBegin => {}
-                    WhiteSpaceToken::AfterMovingTo => {}
-                    WhiteSpaceToken::AfterPromotion => {}
-                    WhiteSpaceToken::AfterPromotionEnd => {}
-                    WhiteSpaceToken::AfterCheckIndicator => {}
-                    WhiteSpaceToken::AfterCheckMateIndicator => {}
-                    WhiteSpaceToken::AfterAnnotation => {}
-                    WhiteSpaceToken::AfterAnnotationEnd => {}
-                    WhiteSpaceToken::AfterMoveQuality => {}
-                    WhiteSpaceToken::AfterNag => {}
-                    WhiteSpaceToken::AfterTurnContinuation => {}
-                    WhiteSpaceToken::AfterUnknown => {}
-                }
-            }
-            Token::WhiteSpace(after) => {
-                match after {
-                    WhiteSpaceToken::AfterNewLine => {}
-                    WhiteSpaceToken::AfterTagPairName => {}
-                    WhiteSpaceToken::AfterTagPairEnd => {}
-                    WhiteSpaceToken::AfterTurnBegin => {}
-                    WhiteSpaceToken::AfterMovingTo => {}
-                    WhiteSpaceToken::AfterPromotion => {}
-                    WhiteSpaceToken::AfterPromotionEnd => {}
-                    WhiteSpaceToken::AfterCheckIndicator => {}
-                    WhiteSpaceToken::AfterCheckMateIndicator => {}
-                    WhiteSpaceToken::AfterAnnotation => {}
-                    WhiteSpaceToken::AfterAnnotationEnd => {}
-                    WhiteSpaceToken::AfterMoveQuality => {}
-                    WhiteSpaceToken::AfterNag => {}
-                    WhiteSpaceToken::AfterTurnContinuation => {}
-                    WhiteSpaceToken::AfterUnknown => {}
+                    After::Space => {}
+                    After::NewLine => {}
+                    After::TagPairName => {}
+                    After::TagPairEnd => {}
+                    After::TurnBegin => {}
+                    After::MovingTo => {}
+                    After::Promotion => {}
+                    After::PromotionEnd => {}
+                    After::CheckIndicator => {}
+                    After::CheckMateIndicator => {}
+                    After::Annotation => {}
+                    After::AnnotationEnd => {}
+                    After::MoveQuality => {}
+                    After::Nag => {}
+                    After::TurnContinuation => {}
+                    After::Unknown => {}
                 }
             }
             Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(_) => {

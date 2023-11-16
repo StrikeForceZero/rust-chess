@@ -1,7 +1,6 @@
 use tracing::{instrument, trace};
-use token::Token;
 use token_context::TokenContext;
-use crate::notation::pgn::lexer::token::WhiteSpaceToken;
+use crate::notation::pgn::lexer::token::{WhiteSpace, Token, After, ws_new_line, ws_space};
 use crate::notation::pgn::lexer::token_with_context::TokenWithContext;
 use crate::utils::char;
 
@@ -61,8 +60,8 @@ impl<'a> Lexer<'a> {
         } else {
             match current_char {
                 '[' => self.state.push_token(Token::TagPairStart(current_char)),
-                char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNewLine)),
-                char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNewLine)),
+                char::NEW_LINE => self.state.push_token(ws_new_line(current_char, After::NewLine)),
+                char::SPACE => self.state.push_token(ws_space(current_char, After::NewLine)),
                 '0' | '1' | '2' | '/' | '-' | '*' => {
                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                 }
@@ -120,7 +119,7 @@ impl<'a> Lexer<'a> {
                     trace!("skipping ' '");
                 },
                 char::NEW_LINE => {
-                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNag));
+                    self.state.push_token(ws_new_line(current_char, After::Nag));
                 }
                 char_match!(promotion) => {
                     self.state.push_token(Token::PieceMoving(current_char));
@@ -167,8 +166,8 @@ impl<'a> Lexer<'a> {
                     },
                     Token::TagPairName(ref mut str) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairName)),
-                            char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTagPairName)),
+                            char::NEW_LINE => self.state.push_token(ws_new_line(current_char, After::TagPairName)),
+                            char::SPACE => self.state.push_token(ws_space(current_char, After::TagPairName)),
                             ']' => self.state.push_token(Token::TagPairEnd(current_char)),
                             _ => str.push(current_char),
                         }
@@ -181,8 +180,8 @@ impl<'a> Lexer<'a> {
                     },
                     Token::TagPairEnd(_) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterTagPairEnd)),
-                            char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTagPairEnd)),
+                            char::NEW_LINE => self.state.push_token(ws_new_line(current_char, After::TagPairEnd)),
+                            char::SPACE => self.state.push_token(ws_space(current_char, After::TagPairEnd)),
                             _ => self.state.push_token(Token::Unknown(String::from(current_char))),
                         }
                     },
@@ -199,7 +198,7 @@ impl<'a> Lexer<'a> {
                                         str.push(current_char);
                                     }
                                 },
-                                char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin)),
+                                char::SPACE => self.state.push_token(ws_space(current_char, After::TurnBegin)),
                                 _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                             }
                         }
@@ -220,14 +219,14 @@ impl<'a> Lexer<'a> {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
                             },
                             'x' => {
-                                self.state.push_token(Token::CaptureIndicator)
+                                self.state.push_token(Token::CaptureIndicator(current_char))
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
                             }
                         }
                     },
-                    Token::CaptureIndicator => {
+                    Token::CaptureIndicator(char) => {
                         match current_char {
                             char_match!(file) | char_match!(rank) => {
                                 self.state.push_token(Token::MovingTo(String::from(current_char)))
@@ -259,10 +258,10 @@ impl<'a> Lexer<'a> {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMovingTo))
+                                self.state.push_token(ws_space(current_char, After::MovingTo))
                             }
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterMovingTo));
+                                self.state.push_token(ws_new_line(current_char, After::MovingTo));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -291,10 +290,10 @@ impl<'a> Lexer<'a> {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotion));
+                                self.state.push_token(ws_space(current_char, After::Promotion));
                             }
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterPromotion));
+                                self.state.push_token(ws_new_line(current_char, After::Promotion));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -310,10 +309,10 @@ impl<'a> Lexer<'a> {
                                 self.state.push_token(Token::CheckMateIndicator(current_char))
                             }
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterPromotionEnd));
+                                self.state.push_token(ws_space(current_char, After::PromotionEnd));
                             },
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterPromotionEnd));
+                                self.state.push_token(ws_new_line(current_char, After::PromotionEnd));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -326,10 +325,10 @@ impl<'a> Lexer<'a> {
                                 str.push(current_char);
                             },
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterMoveQuality));
+                                self.state.push_token(ws_space(current_char, After::MoveQuality));
                             }
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterMoveQuality));
+                                self.state.push_token(ws_new_line(current_char, After::MoveQuality));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -342,10 +341,10 @@ impl<'a> Lexer<'a> {
                         } else {
                             match current_char {
                                 char::SPACE => {
-                                    self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterNag));
+                                    self.state.push_token(ws_space(current_char, After::Nag));
                                 },
                                 char::NEW_LINE => {
-                                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNag));
+                                    self.state.push_token(ws_new_line(current_char, After::Nag));
                                 },
                                 _ => {
                                     self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -356,10 +355,10 @@ impl<'a> Lexer<'a> {
                     Token::CheckIndicator(char) => {
                         match current_char {
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckIndicator));
+                                self.state.push_token(ws_space(current_char, After::CheckIndicator));
                             }
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterCheckIndicator));
+                                self.state.push_token(ws_new_line(current_char, After::CheckIndicator));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -369,10 +368,10 @@ impl<'a> Lexer<'a> {
                     Token::CheckMateIndicator(char) => {
                         match current_char {
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterCheckMateIndicator));
+                                self.state.push_token(ws_space(current_char, After::CheckMateIndicator));
                             }
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterCheckMateIndicator));
+                                self.state.push_token(ws_new_line(current_char, After::CheckMateIndicator));
                             },
                             _ => {
                                 self.state.push_token(Token::Unknown(String::from(current_char)));
@@ -389,7 +388,7 @@ impl<'a> Lexer<'a> {
                     Token::Annotation(str) => {
                         match current_char {
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotation));
+                                self.state.push_token(ws_new_line(current_char, After::Annotation));
                             }
                             '}' => {
                                 self.state.push_token(Token::AnnotationEnd(current_char));
@@ -402,10 +401,10 @@ impl<'a> Lexer<'a> {
                     Token::AnnotationEnd(char) => {
                         match current_char {
                             char::NEW_LINE => {
-                                self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotationEnd));
+                                self.state.push_token(ws_new_line(current_char, After::AnnotationEnd));
                             }
                             char::SPACE => {
-                                self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterAnnotationEnd));
+                                self.state.push_token(ws_space(current_char, After::AnnotationEnd));
                             }
                             ')' => {
                                 // variation end
@@ -429,7 +428,7 @@ impl<'a> Lexer<'a> {
                                         str.push(current_char);
                                     }
                                 },
-                                char::SPACE => self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation)),
+                                char::SPACE => self.state.push_token(ws_space(current_char, After::TurnContinuation)),
                                 _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                             }
                         }
@@ -447,14 +446,18 @@ impl<'a> Lexer<'a> {
                     },
                     Token::Unknown(ref mut str) => {
                         match current_char {
-                            char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterUnknown)),
+                            char::NEW_LINE => self.state.push_token(ws_new_line(current_char, After::Unknown)),
                             _ => str.push(current_char),
                         }
                     },
-                    Token::NewLine(white_space_token) | Token::WhiteSpace(white_space_token) => {
+                    Token::WhiteSpace(_, white_space, white_space_token) => {
                         match white_space_token {
-                            WhiteSpaceToken::AfterNewLine => self.handle_char_after_newline(&current_char),
-                            WhiteSpaceToken::AfterTagPairName => {
+                            After::Space => {
+                                /* skip */
+                                trace!("skipping ' '");
+                            },
+                            After::NewLine => self.handle_char_after_newline(&current_char),
+                            After::TagPairName => {
                                 match current_char {
                                     char::SPACE => {
                                         /* skip */
@@ -468,19 +471,23 @@ impl<'a> Lexer<'a> {
                                     }
                                 }
                             }
-                            WhiteSpaceToken::AfterTagPairEnd => {
+                            After::TagPairEnd => {
                                 match current_char {
                                     char::SPACE => {
                                         /* skip */
                                         trace!("skipping ' '");
                                     },
-                                    // TODO: technically we dont know if its after a new line
-                                    //  add WhiteSpaceToken::AfterNewLineOrWhiteSpace?
-                                    char::NEW_LINE => self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterNewLine)),
+                                    char::NEW_LINE => {
+                                        let after = match white_space {
+                                            WhiteSpace::NewLine => After::NewLine,
+                                            WhiteSpace::Space => After::Space,
+                                        };
+                                        self.state.push_token(ws_new_line(current_char, after))
+                                    },
                                     _ => self.handle_char_after_newline(&current_char),
                                 }
                             }
-                            WhiteSpaceToken::AfterTurnBegin => {
+                            After::TurnBegin => {
                                 match current_char {
                                     char::SPACE => {
                                         /* skip */
@@ -495,22 +502,22 @@ impl<'a> Lexer<'a> {
                                     _ => self.state.push_token(Token::Unknown(String::from(current_char)))
                                 }
                             }
-                            WhiteSpaceToken::AfterMovingTo => {
+                            After::MovingTo => {
                                 self.handle_char_after_move(&current_char);
                             }
-                            WhiteSpaceToken::AfterPromotion => {
+                            After::Promotion => {
                                 self.handle_char_after_move(&current_char);
                             }
-                            WhiteSpaceToken::AfterPromotionEnd => {
+                            After::PromotionEnd => {
                                 self.handle_char_after_move(&current_char);
                             }
-                            WhiteSpaceToken::AfterCheckIndicator => {
+                            After::CheckIndicator => {
                                 self.handle_char_after_move(&current_char);
                             }
-                            WhiteSpaceToken::AfterCheckMateIndicator => {
+                            After::CheckMateIndicator => {
                                 self.handle_char_after_move(&current_char);
                             }
-                            WhiteSpaceToken::AfterAnnotationEnd => {
+                            After::AnnotationEnd => {
                                 if current_char.is_ascii_digit() {
                                     self.state.push_token(Token::MaybeTurnBeginOrContinuationOrMovingFromOrGameTermination(String::from(current_char)));
                                 } else {
@@ -520,7 +527,7 @@ impl<'a> Lexer<'a> {
                                             trace!("skipping ' '");
                                         },
                                         char::NEW_LINE => {
-                                            self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterAnnotationEnd));
+                                            self.state.push_token(ws_new_line(current_char, After::AnnotationEnd));
                                         }
                                         char_match!(from_piece) => {
                                             self.state.push_token(Token::PieceMoving(current_char));
@@ -546,13 +553,13 @@ impl<'a> Lexer<'a> {
                                     }
                                 }
                             }
-                            WhiteSpaceToken::AfterMoveQuality => {
+                            After::MoveQuality => {
                                 self.handle_char_after_nag(&current_char);
                             }
-                            WhiteSpaceToken::AfterNag => {
+                            After::Nag => {
                                 self.handle_char_after_nag(&current_char);
                             }
-                            WhiteSpaceToken::AfterTurnContinuation => {
+                            After::TurnContinuation => {
                                 match current_char {
                                     char::SPACE => {
                                         /* skip */
@@ -566,10 +573,10 @@ impl<'a> Lexer<'a> {
                                     }
                                 }
                             }
-                            WhiteSpaceToken::AfterAnnotation => {
+                            After::Annotation => {
                                 self.handle_char_after_newline(&current_char);
                             }
-                            WhiteSpaceToken::AfterUnknown => {
+                            After::Unknown => {
                                 self.handle_char_after_newline(&current_char);
                             }
                         }
@@ -595,11 +602,11 @@ impl<'a> Lexer<'a> {
                                     if first_char_is_digit && str.ends_with("...") {
                                         trace!("replacing with TurnContinuation");
                                         *token = Token::TurnContinuation(format!("{str}"));
-                                        self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnContinuation));
+                                        self.state.push_token(ws_space(current_char, After::TurnContinuation));
                                     } else if first_char_is_digit && str.ends_with('.') {
                                         trace!("replacing with TurnBegin");
                                         *token = Token::TurnBegin(format!("{str}"));
-                                        self.state.push_token(Token::WhiteSpace(WhiteSpaceToken::AfterTurnBegin));
+                                        self.state.push_token(ws_space(current_char, After::TurnBegin));
                                     } else {
                                         trace!("replacing with Unknown");
                                         *token = Token::Unknown(format!("{str}{current_char}"));
@@ -618,7 +625,7 @@ impl<'a> Lexer<'a> {
                                 char::NEW_LINE => {
                                     trace!("replacing with Unknown");
                                     *token = Token::Unknown(str.clone());
-                                    self.state.push_token(Token::NewLine(WhiteSpaceToken::AfterUnknown));
+                                    self.state.push_token(ws_new_line(current_char, After::Unknown));
                                 },
                                 _ => {
                                     trace!("replacing with Unknown");
@@ -654,7 +661,7 @@ mod tests {
     use rstest::rstest;
     use crate::utils::tracing::init_tracing;
     use token::Token::*;
-    use token::WhiteSpaceToken::*;
+    use token::After::*;
 
     #[rstest]
     #[case(
@@ -663,20 +670,20 @@ mod tests {
         1. e4 d5 *",
         vec![
             TagPairStart('['),
-            TagPairName("Event".into()),
-            WhiteSpace(AfterTagPairName),
+            Token::TagPairName("Event".into()),
+            ws_space(char::SPACE, After::TagPairName),
             TagPairValue("\"Some Event\"".into()),
-            TagPairEnd(']'),
-            NewLine(AfterTagPairEnd),
-            NewLine(AfterNewLine),
-            TurnBegin("1.".into()),
-            WhiteSpace(AfterTurnBegin),
+            Token::TagPairEnd(']'),
+            ws_new_line(char::NEW_LINE, After::TagPairEnd),
+            ws_new_line(char::NEW_LINE, NewLine),
+            Token::TurnBegin("1.".into()),
+            ws_space(char::SPACE, After::TurnBegin),
             MovingFrom('e'),
-            MovingTo("4".into()),
-            WhiteSpace(AfterMovingTo),
+            Token::MovingTo("4".into()),
+            ws_space(char::SPACE, After::MovingTo),
             MovingFrom('d'),
-            MovingTo("5".into()),
-            WhiteSpace(AfterMovingTo),
+            Token::MovingTo("5".into()),
+            ws_space(char::SPACE, After::MovingTo),
             GameTermination("*".into()),
         ],
     )]
@@ -688,53 +695,53 @@ mod tests {
         1-0",
         vec![
             TagPairStart('['),
-            TagPairName("Event".into()),
-            WhiteSpace(AfterTagPairName),
+            Token::TagPairName("Event".into()),
+            ws_space(char::SPACE, After::TagPairName),
             TagPairValue("\"Some Event\"".into()),
-            TagPairEnd(']'),
-            NewLine(AfterTagPairEnd),
-            NewLine(AfterNewLine),
-            TurnBegin("1.".into()),
-            WhiteSpace(AfterTurnBegin),
+            Token::TagPairEnd(']'),
+            ws_new_line(char::NEW_LINE, After::TagPairEnd),
+            ws_new_line(char::NEW_LINE, NewLine),
+            Token::TurnBegin("1.".into()),
+            ws_space(char::SPACE, After::TurnBegin),
             MovingFrom('e'),
-            MovingTo("4".into()),
-            WhiteSpace(AfterMovingTo),
+            Token::MovingTo("4".into()),
+            ws_space(char::SPACE, After::MovingTo),
             AnnotationStart('{'),
-            Annotation("white comment".into()),
-            AnnotationEnd('}'),
-            WhiteSpace(AfterAnnotationEnd),
-            TurnContinuation("1...".into()),
-            WhiteSpace(AfterTurnContinuation),
+            Token::Annotation("white comment".into()),
+            Token::AnnotationEnd('}'),
+            ws_space(char::SPACE, After::AnnotationEnd),
+            Token::TurnContinuation("1...".into()),
+            ws_space(char::SPACE, After::TurnContinuation),
             MovingFrom('d'),
-            MovingTo("5".into()),
-            WhiteSpace(AfterMovingTo),
+            Token::MovingTo("5".into()),
+            ws_space(char::SPACE, After::MovingTo),
             AnnotationStart('{'),
-            Annotation("black comment".into()),
-            AnnotationEnd('}'),
-            WhiteSpace(AfterAnnotationEnd),
-            TurnBegin("2.".into()),
-            WhiteSpace(AfterTurnBegin),
+            Token::Annotation("black comment".into()),
+            Token::AnnotationEnd('}'),
+            ws_space(char::SPACE, After::AnnotationEnd),
+            Token::TurnBegin("2.".into()),
+            ws_space(char::SPACE, After::TurnBegin),
             MovingFrom('e'),
-            MovingTo("4".into()),
-            WhiteSpace(AfterMovingTo),
-            MoveQuality("!!".into()),
-            WhiteSpace(AfterMoveQuality),
+            Token::MovingTo("4".into()),
+            ws_space(char::SPACE, After::MovingTo),
+            Token::MoveQuality("!!".into()),
+            ws_space(char::SPACE, After::MoveQuality),
             MovingFrom('d'),
-            MovingTo("5".into()),
-            WhiteSpace(AfterMovingTo),
-            MoveQuality("!?".into()),
-            WhiteSpace(AfterMoveQuality),
-            Annotation("; end of line comment".into()),
-            NewLine(AfterAnnotation),
-            TurnBegin("3.".into()),
-            WhiteSpace(AfterTurnBegin),
+            Token::MovingTo("5".into()),
+            ws_space(char::SPACE, After::MovingTo),
+            Token::MoveQuality("!?".into()),
+            ws_space(char::SPACE, After::MoveQuality),
+            Token::Annotation("; end of line comment".into()),
+            ws_new_line(char::NEW_LINE, After::Annotation),
+            Token::TurnBegin("3.".into()),
+            ws_space(char::SPACE, After::TurnBegin),
             PieceMoving('Q'),
             MovingFrom('h'),
-            MovingTo("8".into()),
-            CheckMateIndicator('#'),
-            WhiteSpace(AfterCheckMateIndicator),
-            Nag("$1".into()),
-            NewLine(AfterNag),
+            Token::MovingTo("8".into()),
+            Token::CheckMateIndicator('#'),
+            ws_space(char::SPACE, After::CheckMateIndicator),
+            Token::Nag("$1".into()),
+            ws_new_line(char::NEW_LINE, After::Nag),
             GameTermination("1-0".into()),
         ],
     )]
