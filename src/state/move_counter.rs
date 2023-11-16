@@ -12,3 +12,10 @@ impl MoveCounter {
         }
     }
 }
+
+// TODO: might not want full_move: 1 for default but it might be required by bevy?
+impl Default for MoveCounter {
+    fn default() -> Self {
+        Self::new()
+    }
+}

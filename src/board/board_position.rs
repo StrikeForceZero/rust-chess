@@ -1,9 +1,10 @@
-use crate::board::board_file::BoardFile;
-use crate::board::board_rank::BoardRank;
+use crate::board::board_file::{BoardFile, BoardFileError};
+use crate::board::board_rank::{BoardRank, BoardRankError};
 use crate::board::position;
 use crate::direction::direction::Direction;
 use std::fmt::{Debug, Display, Formatter};
 use std::str::FromStr;
+use itertools::Either;
 use thiserror::Error;
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd)]
@@ -25,6 +26,20 @@ impl BoardPosition {
         let rank_index = self.rank().as_zero_based_index();
         let file_index = self.file().as_zero_based_index();
         rank_index * 8 + file_index
+    }
+
+    pub fn from_pos_index(index: usize) -> Result<Self, Either<BoardFileError, BoardRankError>> {
+        let file = index % 8; // File is determined by the remainder
+        let rank = index / 8; // Rank is determined by integer division
+        let file = BoardFile::from_zero_based_index(file);
+        let rank = BoardRank::from_zero_based_index(rank);
+        let (file, rank) = match (file, rank) {
+            (Ok(file), Ok(rank)) => (file, rank),
+            (Err(err), _) => return Err(Either::Left(err)),
+            (_, Err(err)) => return Err(Either::Right(err)),
+        };
+        Ok(Self::from(file, rank))
+
     }
 
     pub const fn next_pos(self, direction: Direction) -> Option<Self> {

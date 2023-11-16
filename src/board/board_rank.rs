@@ -1,4 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
+use bevy::prelude::{Component, Reflect};
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, Copy)]
@@ -11,7 +12,7 @@ pub enum BoardRankError {
     InvalidChar(char),
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord, Component, Reflect)]
 pub enum BoardRank {
     One,
     Two,
@@ -139,6 +140,18 @@ impl BoardRank {
             Self::Seven => Self::Six,
             Self::Eight => Self::Seven,
         })
+    }
+    pub fn iter() -> impl Iterator<Item=BoardRank> + Clone + Debug + Send + Sync {
+        return [
+            Self::One,
+            Self::Two,
+            Self::Three,
+            Self::Four,
+            Self::Five,
+            Self::Six,
+            Self::Seven,
+            Self::Eight,
+        ].into_iter()
     }
 }
 

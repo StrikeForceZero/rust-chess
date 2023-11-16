@@ -25,3 +25,10 @@ impl History {
         }
     }
 }
+
+// TODO: might not want starting position for default but it might be required by bevy?
+impl Default for History {
+    fn default() -> Self {
+        Self::new()
+    }
+}

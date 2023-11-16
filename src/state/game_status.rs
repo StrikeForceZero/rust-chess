@@ -7,8 +7,9 @@ use crate::color::Color;
 use crate::piece::piece::Piece;
 use crate::state::game_state::GameState;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub enum GameStatus {
+    #[default]
     New,
     InProgress,
     Check(Color),

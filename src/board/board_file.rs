@@ -1,4 +1,5 @@
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
+use bevy::prelude::{Component, Reflect};
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, Copy)]
@@ -11,7 +12,7 @@ pub enum BoardFileError {
     InvalidU8(u8),
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, PartialOrd, Ord, Component, Reflect)]
 pub enum BoardFile {
     A,
     B,
@@ -140,6 +141,19 @@ impl BoardFile {
             Self::G => Self::F,
             Self::H => Self::G,
         })
+    }
+
+    pub fn iter() -> impl Iterator<Item=BoardFile> + Clone + Debug + Send + Sync {
+        return [
+            Self::A,
+            Self::B,
+            Self::C,
+            Self::D,
+            Self::E,
+            Self::F,
+            Self::G,
+            Self::H,
+        ].into_iter()
     }
 }
 

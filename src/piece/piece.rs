@@ -1,3 +1,5 @@
+use std::fmt::{Display, Formatter};
+use bevy::prelude::Reflect;
 use crate::color::Color;
 use crate::piece::chess_piece::ChessPiece;
 use thiserror::Error;
@@ -8,7 +10,7 @@ pub enum PieceError {
     InvalidChar(char),
 }
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Hash, Eq, Debug, Reflect)]
 pub enum Piece {
     Pawn,
     Knight,
@@ -52,5 +54,19 @@ impl Piece {
     }
     pub const fn as_chess_piece(self, color: Color) -> ChessPiece {
         ChessPiece::from(color, self)
+    }
+}
+
+impl Display for Piece {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            Piece::Pawn => "pawn",
+            Piece::Knight => "knight",
+            Piece::Bishop => "bishop",
+            Piece::Rook => "rook",
+            Piece::Queen => "queen",
+            Piece::King => "king",
+        };
+        write!(f, "{str}")
     }
 }

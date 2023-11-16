@@ -1,3 +1,4 @@
+use crate::bit_board::bit_board::BitBoard;
 use crate::board::board_position::BoardPosition;
 use crate::board::position;
 use crate::utils::custom_struct_iterator::CustomStructIterator;
@@ -31,6 +32,9 @@ pub const fn set_pos(
 }
 
 impl BitBoardConst {
+    pub fn as_bitboard(&self) -> BitBoard {
+        BitBoard::from_value(self.data)
+    }
     pub const fn data(&self) -> BitBoardConstData {
         self.data
     }

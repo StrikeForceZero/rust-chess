@@ -8,3 +8,4 @@ pub mod notation;
 pub mod piece;
 pub mod state;
 pub mod utils;
+pub mod gui;

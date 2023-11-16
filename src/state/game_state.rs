@@ -1,3 +1,4 @@
+use bevy::prelude::Component;
 use crate::board::board::Board;
 use crate::board::board_position::BoardPosition;
 use crate::color::Color;
@@ -6,7 +7,7 @@ use crate::state::game_status::GameStatus;
 use crate::state::history::History;
 use crate::state::move_counter::MoveCounter;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Component)]
 pub struct GameState {
     pub board: Board,
     pub history: History,
@@ -40,5 +41,11 @@ impl GameState {
             active_color: Color::White,
             game_status: GameStatus::New,
         }
+    }
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        GameState::new()
     }
 }

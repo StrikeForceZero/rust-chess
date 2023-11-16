@@ -1,7 +1,9 @@
+use std::fmt::{Display, Formatter};
 use crate::direction::facing_direction::FacingDirection;
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum Color {
+    #[default]
     White,
     Black,
 }
@@ -24,5 +26,15 @@ impl Color {
             (Self::White, Self::White) | (Self::Black, Self::Black) => 1,
             _ => -1,
         }
+    }
+}
+
+impl Display for Color {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            Color::White => "white",
+            Color::Black => "black",
+        };
+        write!(f, "{str}")
     }
 }

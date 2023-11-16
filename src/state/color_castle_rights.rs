@@ -84,3 +84,10 @@ impl ColorCastleRights {
         }))
     }
 }
+
+// TODO: might not want castle rights set to both for default but it might be required by bevy?
+impl Default for ColorCastleRights {
+    fn default() -> Self {
+        Self::new()
+    }
+}
