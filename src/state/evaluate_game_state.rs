@@ -132,36 +132,42 @@ pub fn find_best_move(game_state: &GameState, depth: u8) -> Result<ChessMove, &'
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
     use super::*;
     use crate::board::board_position::BoardPosition;
     use crate::board::position::*;
     use crate::chess_move::chess_move::ChessMoveType;
-    use crate::notation::fen::deserialize;
+    use crate::notation::fen::{FEN_STARTING_POS, deserialize};
     use crate::piece::promotion_piece::PromotionPiece;
     use rstest::rstest;
 
     #[rstest]
     // TODO: requires depth of 4 which takes 30s
-    // #[case(FEN_STARTING_POS, E2, E4, None)]
-    #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4, None)]
+    #[case(FEN_STARTING_POS, E2, E4, None, Some(4), Some(Duration::from_secs(34)))]
+    #[case("8/8/1R5p/1P2pkp1/7P/5KP1/1r6/8 w - - 0 1", G3, G4, None, None, Some(Duration::from_millis(31)))]
     #[case(
         "8/1P2R3/k7/8/1Q6/8/8/7K w - - 0 1",
         B7,
         B8,
-        Some(PromotionPiece::Knight)
+        Some(PromotionPiece::Knight),
+        None,
+        Some(Duration::from_millis(32))
     )]
     fn test_find_best_move_first_move(
         #[case] fen_str: &'static str,
         #[case] expected_from: BoardPosition,
         #[case] expected_to: BoardPosition,
         #[case] expected_promotion: Option<PromotionPiece>,
+        #[case] depth: Option<u8>,
+        #[case] max_duration: Option<Duration>,
     ) -> Result<(), &'static str> {
         let game_state = deserialize(fen_str).expect("bad fen string!");
+        let depth = depth.unwrap_or(2);
         let start = std::time::Instant::now();
-        let best_move = find_best_move(&game_state, 2)?;
+        let best_move = find_best_move(&game_state, depth)?;
         let duration = start.elapsed();
         println!("Time taken: {:?}", duration);
-        println!("{best_move}");
+        println!("{best_move} depth: {depth}");
         assert_eq!(expected_from, best_move.from);
         assert_eq!(expected_to, best_move.to);
         match best_move.move_type {
@@ -169,6 +175,9 @@ mod tests {
                 assert_eq!(expected_promotion, Some(promotion))
             }
             _ => assert_eq!(expected_promotion, None),
+        }
+        if let Some(max_duration) = max_duration {
+            assert!(duration < max_duration);
         }
         Ok(())
     }

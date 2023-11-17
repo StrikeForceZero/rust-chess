@@ -7,3 +7,4 @@ pub mod history;
 pub mod move_counter;
 pub mod move_history_entry;
 pub mod state_history;
+pub mod cache;

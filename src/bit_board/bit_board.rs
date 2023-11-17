@@ -14,7 +14,7 @@ const ZERO_INDEX_PLACES: usize = PLACES - 1;
 pub type BitBoardData = Bitmap<SIZE>;
 
 #[repr(transparent)]
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct BitBoard(BitBoardData);
 
 pub const EMPTY: u64 = 0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000;

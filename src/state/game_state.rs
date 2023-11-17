@@ -1,6 +1,7 @@
 use crate::board::board::Board;
 use crate::board::board_position::BoardPosition;
 use crate::color::Color;
+use crate::state::cache::Cache;
 use crate::state::color_castle_rights::ColorCastleRights;
 use crate::state::game_status::GameStatus;
 use crate::state::history::History;
@@ -15,6 +16,7 @@ pub struct GameState {
     pub castle_rights: ColorCastleRights,
     pub active_color: Color,
     pub game_status: GameStatus,
+    pub cache: Option<Cache>,
 }
 
 impl GameState {
@@ -27,6 +29,7 @@ impl GameState {
             castle_rights: ColorCastleRights::empty(),
             active_color: Color::White,
             game_status: GameStatus::New,
+            cache: None,
         }
     }
 
@@ -39,6 +42,7 @@ impl GameState {
             castle_rights: ColorCastleRights::new(),
             active_color: Color::White,
             game_status: GameStatus::New,
+            cache: None,
         }
     }
 }
